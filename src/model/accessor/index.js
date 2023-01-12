@@ -78,7 +78,7 @@ class Accessor {
 			}
 		} else if( this.#paths.length > MODERATE_NUM_PATHS_THRESHOLD ) {
 			const pathsObj = {};
-			for( const p of this.#paths.length ) { pathsObj[ p ] = true }
+			for( const p of this.#paths ) { pathsObj[ p ] = true }
 			for( const p in refreshPaths ) {
 				p in pathsObj && this.#setValueAt( p, atoms[ p ] );
 			}

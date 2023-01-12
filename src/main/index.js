@@ -19,70 +19,6 @@ import useRenderKeyProvider from './hooks/use-render-key-provider';
 
 import useStore from './hooks/use-store';
 
-export class UsageError extends Error {}
-
-/**
- * @readonly
- * @type {Prehooks<T>}
- * @template {State} T
- */
-const defaultPrehooks = Object.freeze({});
-
-/** @type {NonReactUsageReport} */
-const reportNonReactUsage = () => {
-	throw new UsageError( 'Detected usage outside of this context\'s Provider component tree. Please apply the exported Provider component' );
-};
-
-/** @type {FC<{child: ReactNode}>} */
-const ChildMemo = (() => {
-	const useNodeMemo = node => {
-		const nodeRef = useRef( node );
-		if( !isEqual(
-			omit( nodeRef.current, '_owner' ),
-			omit( node, '_owner' )
-		) ) { nodeRef.current = node }
-		return nodeRef.current;
-	};
-	const ChildMemo = memo(({ child }) => child );
-	ChildMemo.displayName = 'ObservableContext.Provider.Internal.Guardian.ChildMemo';
-	const Guardian = ({ child }) => ( <ChildMemo child={ useNodeMemo( child ) } /> );
-	Guardian.displayName = 'ObservableContext.Provider.Internal.Guardian';
-	return Guardian;
-})();
-
-/** @type {(children: ReactNode) => ReactNode} */
-const memoizeImmediateChildTree = children => Children.map( children, child => {
-	if( typeof child.type === 'object' && 'compare' in child.type ) { return child } // memo element
-	if( child.props?.children ) {
-		child = cloneElement(
-			child,
-			omit( child.props, 'children' ),
-			memoizeImmediateChildTree( child.props.children )
-		);
-	}
-	return ( <ChildMemo child={ child } /> );
-} );
-
-/** @param {Provider<IStore>} Provider */
-const makeObservable = Provider => {
-	/**
-	 * @type {ObservableProvider<T>}
-	 * @template {State} T
-	 */
-	const Observable = ({
-		children = null,
-		prehooks = defaultPrehooks,
-		storage = null,
-		value
-	}) => (
-		<Provider value={ useStore( prehooks, value, storage ) }>
-			{ memoizeImmediateChildTree( children ) }
-		</Provider>
-	);
-	Observable.displayName = 'ObservableContext.Provider';
-	return Observable;
-};
-
 /**
  * @param {ObservableContext<T>} context Refers to the PublicObservableContext<T> type of the ObservableContext<T>
  * @param {{[selectorKey: string]: string|keyof T}} [selectorMap] Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
@@ -94,7 +30,7 @@ const makeObservable = Provider => {
  * @see {useContext} for selectorMap sample
  */
 export const connect = ( context, selectorMap ) => WrappedComponent => {
-	if( !isPlainObject( WrappedComponent ) || !( 'compare' in WrappedComponent ) ) {
+	if( !( isPlainObject( WrappedComponent ) && 'compare' in WrappedComponent ) ) {
 		WrappedComponent = memo( WrappedComponent );
 	}
 	const ConnectedComponent = memo( ownProps => {
@@ -121,6 +57,8 @@ export const createContext = () => {
 	Context.Provider = makeObservable( provider );
 	return Context;
 };
+
+export class UsageError extends Error {}
 
 /**
  * Actively monitors the store and triggers component re-render if any of the watched keys in the state objects changes
@@ -162,8 +100,8 @@ export const useContext = ( context, selectorMap = {} ) => {
 
 	const _renderKeys = useRenderKeyProvider( selectorMap );
 
-	/** @type {{[propertyPath: string]: string}} Reversed selectorMap i.e. {selectorKey: propertyPath} => {propertyPath: selectorKey} */
-	const path2SelectorMap = useMemo(() => {
+	/** @type {{[propertyPath: string]: string}} Reverses selectorMap i.e. {selectorKey: propertyPath} => {propertyPath: selectorKey} */
+	const selectorMapInverse = useMemo(() => {
 		const map = {};
 		if( isEmpty( _renderKeys ) ) { return map };
 		for( const selectorKey in selectorMap ) {
@@ -178,7 +116,7 @@ export const useContext = ( context, selectorMap = {} ) => {
 		if( isEmpty( _renderKeys ) ) { return data }
 		const state = _getState( clientId, ..._renderKeys );
 		for( const path of _renderKeys ) {
-			data[ path2SelectorMap[ path ] ] = state[ path ];
+			data[ selectorMapInverse[ path ] ] = state[ path ];
 		}
 		return data;
 	});
@@ -187,8 +125,8 @@ export const useContext = ( context, selectorMap = {} ) => {
 		let hasChanges = false;
 		const state = _getState( clientId, ..._renderKeys );
 		for( const path of _renderKeys ) {
-			if( data[ path2SelectorMap[ path ] ] !== state[ path ] ) {
-				data[ path2SelectorMap[ path ] ] = state[ path ];
+			if( data[ selectorMapInverse[ path ] ] !== state[ path ] ) {
+				data[ selectorMapInverse[ path ] ] = state[ path ];
 				hasChanges = true;
 			}
 		}
@@ -207,7 +145,7 @@ export const useContext = ( context, selectorMap = {} ) => {
 			return;
 		}
 		for( const selectorKey in data ) {
-			if( !( selectorMap[ selectorKey ] in path2SelectorMap ) ) {
+			if( !( selectorMap[ selectorKey ] in selectorMapInverse ) ) {
 				delete data[ selectorKey ];
 			}
 		}
@@ -221,6 +159,70 @@ export const useContext = ( context, selectorMap = {} ) => {
 
 	return useMemo(() => ({ data, resetState, setState }), [ data ]);
 };
+
+/** @type {FC<{child: ReactNode}>} */
+const ChildMemo = (() => {
+	const useNodeMemo = node => {
+		const nodeRef = useRef( node );
+		if( !isEqual(
+			omit( nodeRef.current, '_owner' ),
+			omit( node, '_owner' )
+		) ) { nodeRef.current = node }
+		return nodeRef.current;
+	};
+	const ChildMemo = memo(({ child }) => child );
+	ChildMemo.displayName = 'ObservableContext.Provider.Internal.Guardian.ChildMemo';
+	const Guardian = ({ child }) => ( <ChildMemo child={ useNodeMemo( child ) } /> );
+	Guardian.displayName = 'ObservableContext.Provider.Internal.Guardian';
+	return Guardian;
+})();
+
+/**
+ * @readonly
+ * @type {Prehooks<T>}
+ * @template {State} T
+ */
+const defaultPrehooks = Object.freeze({});
+
+/** @param {Provider<IStore>} Provider */
+function makeObservable( Provider ) {
+	/**
+	 * @type {ObservableProvider<T>}
+	 * @template {State} T
+	 */
+	const Observable = ({
+		children = null,
+		prehooks = defaultPrehooks,
+		storage = null,
+		value
+	}) => (
+		<Provider value={ useStore( prehooks, value, storage ) }>
+			{ memoizeImmediateChildTree( children ) }
+		</Provider>
+	);
+	Observable.displayName = 'ObservableContext.Provider';
+	return Observable;
+}
+
+/** @type {(children: ReactNode) => ReactNode} */
+function memoizeImmediateChildTree( children ) {
+	return Children.map( children, child => {
+		if( typeof child.type === 'object' && 'compare' in child.type ) { return child } // memo element
+		if( child.props?.children ) {
+			child = cloneElement(
+				child,
+				omit( child.props, 'children' ),
+				memoizeImmediateChildTree( child.props.children )
+			);
+		}
+		return ( <ChildMemo child={ child } /> );
+	} );
+}
+
+/** @type {NonReactUsageReport} */
+function reportNonReactUsage() {
+	throw new UsageError( 'Detected usage outside of this context\'s Provider component tree. Please apply the exported Provider component' );
+}
 
 /**
  * @typedef {IObservableContext<T>|PublicObservableContext<T>} ObservableContext
