@@ -89,6 +89,12 @@ describe( 'setState(...)', () => {
 		} );
 	} );
 	describe( 'array state subtree', () => {
+		test( 'is wholly replaced if new value is neither an array nor an indexed object', () => {
+			const state = createSourceData();
+			const friends = 'TEST FRIEND STUB';
+			setState( state, { friends } );
+			expect( state.friends ).toBe( friends );
+		} );
 		describe( 'using indexed object to update array at specific indexes', () => {
 			let newState, onChangeMock;
 			let origFriendsSlice;
@@ -187,6 +193,27 @@ describe( 'setState(...)', () => {
 			} );
 			test( 'does not notify listeners due to no state changes', () => {
 				expect( onChangeMock ).not.toHaveBeenCalled();
+			} );
+		} );
+		describe( 'existing and incoming arrays of equal lengths', () => {
+			let state;
+			beforeEach(() => { state = createSourceData() });
+			test( 'results in no change when are equal', () => {
+				const friends = state.friends;
+				setState( state, { friends } );
+				expect( state.friends ).toBe( friends );
+			} );
+			test( 'results in a merge of incoming into existing when are identical', () => {
+				const friends = clonedeep( state.friends );
+				setState( state, { friends } );
+				expect( state.friends ).not.toBe( friends );
+				expect( state.friends ).toStrictEqual( friends );
+			} );
+			test( 'results in a merge of incoming into existing when non-identical', () => {
+				const friends = clonedeep( state.friends ).reverse();
+				setState( state, { friends } );
+				expect( state.friends ).not.toBe( friends );
+				expect( state.friends ).toStrictEqual( friends );
 			} );
 		} );
 		describe( 'incoming array < existing array', () => {

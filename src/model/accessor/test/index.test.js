@@ -110,7 +110,9 @@ describe( 'Accessor class', () => {
 		} );
 	} );
 	describe( 'refreshValue(...)', () => {
-		let accessor, accessedPropertyPaths, createAccessorAtoms;
+		let accessor, accessedPropertyPaths;
+		/** @type {(state?: {[x:string]:*}, paths?: string[]) => {[path: string]: Atom<string>}} */
+		let createAccessorAtoms;
 		let source, initVal, retVal, retValExpected;
 		beforeAll(() => {
 			source = createSourceData();
@@ -143,6 +145,28 @@ describe( 'Accessor class', () => {
 		test( 'returns the latest constructed value', () => expect( retVal ).toEqual( retValExpected ) );
 		test( 'ensures readonly property values', () => {
 			expect( Object.values( accessor.value ).every( isReadonly ) ).toBe( true );
+		} );
+		describe( 'when updated paths < resident accessor paths while resident accessor paths > MODERATE_NUM_PATHS_THRESHOLD', () => {
+			test( 'optimizes refresh operation (coverage test)', () => {
+				const source = createSourceData();
+				const updates = {
+					about: 'SOME TEST TEXT',
+					address: 'SOME TEST TEXT',
+					age: 52,
+					balance: 268957
+				};
+				const updatedPaths = Object.keys( updates );
+				const accessedPropertyPaths = [ 'id', ...updatedPaths, 'company', 'email', 'eyeColor', 'favoriteFruit', 'friends.name' ];
+				const accessor = new Accessor( source, accessedPropertyPaths );
+				const atomMap = createAccessorAtoms( source, accessedPropertyPaths );
+				accessor.refreshValue( atomMap );
+				updatedPaths.forEach( p => {
+					source[ p ] = updates[ p ];
+					atomMap[ p ].setValue( updates[ p ] );
+				} );
+				accessor.outdatedPaths = updatedPaths;
+				expect( accessor.refreshValue( atomMap ) ).toEqual( expect.objectContaining( updates ) );
+			} );
 		} );
 	} );
 } );

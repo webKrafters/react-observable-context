@@ -2,14 +2,12 @@ import get from 'lodash.get';
 import has from 'lodash.has';
 import isPlainObject from 'lodash.isplainobject';
 
-class None {};
-export const none = new None();
-
 /**
  * Curates the most inclusive propertyPaths from a list of property paths.
  * @example
  * arrangePropertyPaths(["a.b.c.d", "a.b", "a.b.z[4].w", "s.t"]) => ["a.b", "s.t"].
  * "a.b" is inclusive of "a.b.c.d": "a.b.c.d" is a subset of "a.b." but not vice versa.
+ * "a.b" is inclusive of "a.b.z[4].w": "a.b.z[4].w" is a subset of "a.b." but not vice versa.
  *
  * @param {Array<string>} propertyPaths
  * @returns {Array<string>}
@@ -70,7 +68,7 @@ export function makeReadonly( v ) {
 };
 
 /**
- *  Pulls propertyPath values from state and compiles them into a partial state object
+ * Pulls propertyPath values from state and compiles them into a partial state object
  *
  * @param {T} source
  * @param {Array<string>} propertyPaths

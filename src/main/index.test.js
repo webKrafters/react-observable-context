@@ -566,13 +566,19 @@ describe( 'ReactObservableContext', () => {
 	describe( 'API', () => {
 		describe( 'connect(...)', () => {
 			let connector, selectorMap;
-			let ConnectedComponent1, ConnectedComponent2;
-			let compOneProps, compTwoProps
+			let ConnectedComponent1, ConnectedComponent2, ConnectedRefForwardingComponent, ConnectedMemoizedComponent;
+			let compOneProps, compTwoProps, refForwardingCompProps, memoCompProps;
 			beforeAll(() => {
 				selectorMap = { box: 'items.1.name' };
 				connector = connect( ObservableContext, selectorMap );
 				ConnectedComponent1 = connector( props => { compOneProps = props; return null } );
 				ConnectedComponent2 = connector( props => { compTwoProps = props; return null } );
+				const RefForwardingComponent = React.forwardRef(( props, ref ) => { refForwardingCompProps = props; return null });
+				RefForwardingComponent.displayName = 'Connect.RefForwardingComponent';
+				ConnectedRefForwardingComponent = connector( RefForwardingComponent );
+				const MemoizedComponent = React.memo( props => { memoCompProps = props; return null });
+				MemoizedComponent.displayName = 'Connect.MemoizedComponent';
+				ConnectedMemoizedComponent = connector( MemoizedComponent );
 			});
 			test( 'returns a function', () => expect( connector ).toBeInstanceOf( Function ) );
 			describe( 'returned function\'s return value', () => {
@@ -586,19 +592,34 @@ describe( 'ReactObservableContext', () => {
 							{ name: 'box_3' }
 						]
 					};
+					const Ui = () => (
+						<article>
+							<header>Just a Nested Content Tester</header>
+							<main>
+								<ConnectedComponent1 />
+								<ConnectedComponent2 />
+								<ConnectedRefForwardingComponent />
+								<ConnectedMemoizedComponent />
+							</main>
+							<footer>The End</footer>
+						</article>
+					);
 					render(
 						<ObservableContext.Provider value={ state }>
-							<ConnectedComponent1 />
-							<ConnectedComponent2 />
+							<Ui />
 						</ObservableContext.Provider>
 					);
 				});
 				test( 'is always a memoized component', () => {
 					expect( 'compare' in ConnectedComponent1 ).toBe( true );
 					expect( 'compare' in ConnectedComponent2 ).toBe( true );
+					expect( 'compare' in ConnectedRefForwardingComponent ).toBe( true );
+					expect( 'compare' in ConnectedMemoizedComponent ).toBe( true );
 				} );
 				test( 'is always interested in the same context state data', () => {
 					expect( compOneProps.data ).toStrictEqual( compTwoProps.data );
+					expect( compOneProps.data ).toStrictEqual( refForwardingCompProps.data );
+					expect( compOneProps.data ).toStrictEqual( memoCompProps.data );
 				} );
 				test( 'contains the store\'s public API', () => {
 					const data = {};
@@ -669,7 +690,7 @@ describe( 'ReactObservableContext', () => {
 			} );
 		} );
 		describe( 'createContext(...)', () => {
-			test( 'returns observable context provider', () => {
+			test( 'returns observable context', () => {
 				expect( ObservableContext._currentValue ).toEqual({
 					getState: expect.any( Function ),
 					resetState: expect.any( Function ),
@@ -679,6 +700,11 @@ describe( 'ReactObservableContext', () => {
 				expect( ObservableContext._defaultValue ).toBeNull();
 				expect( ObservableContext.Consumer ).toBeInstanceOf( Object );
 				expect( ObservableContext.Provider ).toBeInstanceOf( Function );
+			} );
+			test( 'creates a context whose provider also allows for no children', () => {
+				let renderResult;
+				expect(() => { renderResult = render( <ObservableContext.Provider value={{}} /> ) }).not.toThrow();
+				expect( renderResult.container ).toBeEmptyDOMElement();
 			} );
 		} );
 		describe( 'useContext(...)', () => {
