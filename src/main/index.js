@@ -72,7 +72,7 @@ export class UsageError extends Error {}
  * a valid property path follows the `lodash` object property path convention.
  * for a state = { a: 1, b: 2, c: 3, d: { e: 5, f: [6, { x: 7, y: 8, z: 9 } ] } }
  * Any of the following is an applicable selector map.
- * {myData: 'd', count: 'a' } => {
+ * {myData: 'd', count: 'a'} => {
  * 		myData: { e: 5, f: [6, { x: 7, y: 8, z: 9 } ] },
  * 		count: 1
  * }
