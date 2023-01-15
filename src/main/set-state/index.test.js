@@ -2,6 +2,8 @@ import clonedeep from 'lodash.clonedeep';
 
 import createSourceData from '../../test-artifacts/data/create-state-obj';
 
+import { CLEAR_TAG, DELETE_TAG, REPLACE_TAG } from '../../constants';
+
 import setState from '.';
 
 describe( 'setState(...)', () => {
@@ -323,6 +325,194 @@ describe( 'setState(...)', () => {
 					expect( onChangeMock ).toHaveBeenCalledTimes( 1 );
 					expect( onChangeMock ).toHaveBeenCalledWith( newState );
 				} );
+			} );
+		} );
+	} );
+	describe( 'summary setState by the', () => {
+		let reserved, state;
+		beforeAll(() => { state = createSourceData() });
+		beforeEach(() => {
+			reserved = {
+				company: state.company,
+				friends: clonedeep( state.friends ),
+				name: clonedeep( state.name ),
+				phone: clonedeep( state.phone ),
+				tags: clonedeep( state.tags )
+			};
+		});
+		afterEach(() => { state = { ...state, ...reserved } });
+		describe( `'${ CLEAR_TAG }' tag property key`, () => {
+			test( 'sets the entire state to its default value', () => {
+				let state = createSourceData();
+				setState( state, CLEAR_TAG );
+				expect( state ).toEqual({});
+				state = createSourceData();
+				setState( state, { [ CLEAR_TAG ]: expect.anything() } );
+				expect( state ).toEqual({});
+			});
+			test( 'sets state slices to default values', () => {
+				setState( state, {
+					company: CLEAR_TAG,
+					friends: { 1: CLEAR_TAG },
+					name: CLEAR_TAG,
+					phone: CLEAR_TAG,
+					tags: CLEAR_TAG
+				});
+				expect( state ).toEqual({
+					...state,
+					company: null,
+					friends: [ state.friends[ 0 ], {}, state.friends[ 2 ] ],
+					name: {},
+					phone: {},
+					tags: []
+				});
+			} );
+			test( 'also sets host property to default when present as a key in that property', () => {
+				setState( state, {
+					company: { [ CLEAR_TAG ]: state.company },
+					friends: { 1: { [ CLEAR_TAG ]: state.friends } },
+					name: { [ CLEAR_TAG ]: state.name },
+					phone: { [ CLEAR_TAG ]: state.phone, ...state.phone },
+					tags: { [ CLEAR_TAG ]: state.tags }
+				});
+				expect( state ).toEqual({
+					...state,
+					company: null,
+					friends: [ state.friends[ 0 ], {}, state.friends[ 2 ] ],
+					name: {},
+					phone: {},
+					tags: []
+				});
+			} );
+			test( 'ignores non-existent properties', () => {
+				const onChangeMock = jest.fn();
+				setState( state, { testing: CLEAR_TAG }, onChangeMock );
+				expect( state ).toEqual( createSourceData() );
+				expect( onChangeMock ).not.toHaveBeenCalled();
+			} );
+			test( 'ignores properties already at their default states', () => {
+				const onChangeMock = jest.fn();
+				const _state = { ...state, friends: [], name: {} }
+				setState( _state, { friends: CLEAR_TAG, name: CLEAR_TAG }, onChangeMock );
+				expect( _state ).toEqual({ ...state, friends: [], name: {} });
+				expect( onChangeMock ).not.toHaveBeenCalled();
+			} );
+		} );
+		describe( `'${ DELETE_TAG }' tag property key`, () => {
+			test( 'removes all listed top level properties', () => {
+				const state = createSourceData();
+				const removedKeys = [ '_id', 'address', 'friends', 'picture' ];
+				setState( state, { [ DELETE_TAG ]: removedKeys } );
+				expect( removedKeys.every( k => !( k in state ) ) ).toBe( true );
+			});
+			test( 'removes all listed properties', () => {
+				const reserved = {
+					friends: clonedeep( state.friends ),
+					name: clonedeep( state.name ),
+					phone: clonedeep( state.phone ),
+					tags: clonedeep( state.tags )
+				};
+				setState( state, {
+					friends: { [ DELETE_TAG ]: [ 0, 2 ] },
+					name: { [ DELETE_TAG ]: [ 'first', 'last' ] },
+					phone: { [ DELETE_TAG ]: [ 'area', 'country', 'line' ] },
+					tags: { [ DELETE_TAG ]: [ 0, 1, 2, 3, 6 ] }
+				});
+				expect( state ).toEqual({
+					...state,
+					friends: [ undefined, state.friends[ 1 ], undefined ],
+					name: {},
+					phone: { local: state.phone.local },
+					tags: [ undefined, undefined, undefined, undefined, state.tags[ 4 ], state.tags[ 5 ], undefined ]
+				});
+				state = { ...state, ...reserved };
+			} );
+			test( `throws \`TypeError\` when \`${ DELETE_TAG }\` property value is not an array`, () => {
+				expect(() => setState( state, {
+					company: { [ DELETE_TAG ]: state.company },
+					friends: { 1: { [ DELETE_TAG ]: state.friends } },
+					name: { [ DELETE_TAG ]: state.name },
+					phone: { [ DELETE_TAG ]: state.phone, ...state.phone },
+					tags: { [ DELETE_TAG ]: state.tags }
+				})).toThrow( TypeError );
+			} );
+			test( `ignores non-existent property keys in the \`${ DELETE_TAG }\` property value`, () => {
+				const onChangeMock = jest.fn();
+				setState( state, {
+					friends: { [ DELETE_TAG ]: [ -1, 55, 'test' ] },
+					name: { [ DELETE_TAG ]: [ 'suffix' ] },
+					phone: { [ DELETE_TAG ]: [ 'extension', 'isp' ] },
+					tags: { [ DELETE_TAG ]: [ 101, 9, 30, 62 ] }
+				}, onChangeMock );
+				expect( state ).toEqual( createSourceData() );
+				expect( onChangeMock ).not.toHaveBeenCalled();
+			} );
+			test( `ignores \`${ DELETE_TAG }\` property with empty array value`, () => {
+				const onChangeMock = jest.fn();
+				setState( state, {
+					friends: { [ DELETE_TAG ]: [] },
+					name: { [ DELETE_TAG ]: [] },
+					phone: { [ DELETE_TAG ]: [] },
+					tags: { [ DELETE_TAG ]: [] }
+				}, onChangeMock );
+				expect( state ).toEqual( createSourceData() );
+				expect( onChangeMock ).not.toHaveBeenCalled();
+			} );
+		} );
+		describe( `'${ REPLACE_TAG }' tag property key`, () => {
+			test( 'adds new and replaces existing referenced top level properties', () => {
+				const state = createSourceData();
+				const stateReplacement = {
+					averageScore: 87, // new
+					// existing
+					isActive: expect.any( Boolean ),
+					name: expect.any( Object ),
+					registered: expect.any( Object ),
+					// new
+					test1: expect.anything(),
+					test2: expect.anything(),
+					test3: expect.anything(),
+					test4: expect.anything(),
+					zone: 33
+				};
+				setState( state, { [ REPLACE_TAG ]: stateReplacement } );
+				expect( state ).toEqual({ ...state, ...stateReplacement });
+			});
+			test( 'replaces properties with new value', () => {
+				const newValues = {
+					company: 'TEST_COMPANY',
+					friends: 'NEW TEST FRIENDS',
+					name: { first: 'Priscilla', middle: 'Samantha', last: 'Williams' },
+					phone: {},
+					tags: []
+				};
+				setState( state, {
+					company: { [ REPLACE_TAG ]: newValues.company },
+					friends: { [ REPLACE_TAG ]: newValues.friends },
+					name: { [ REPLACE_TAG ]: newValues.name },
+					phone: { [ REPLACE_TAG ]: newValues.phone },
+					tags: { [ REPLACE_TAG ]: newValues.tags }
+				});
+				expect( state ).toEqual({ ...state, ...newValues });
+			} );
+			test( 'adds new values to property when specified', () => {
+				const newValues = {
+					company: 'TEST_COMPANY',
+					friends: 'NEW TEST FRIENDS',
+					name: { first: 'Priscilla', middle: 'Samantha', last: 'Williams' },
+					phone: { extension: 'x456' }, // ADDING `extension` to state.phone
+					tags: []
+				};
+				setState( state, {
+					company: { [ REPLACE_TAG ]: newValues.company },
+					friends: { [ REPLACE_TAG ]: newValues.friends },
+					name: { [ REPLACE_TAG ]: newValues.name },
+					phone: { extension: { [ REPLACE_TAG ]: newValues.phone.extension } },
+					tags: { [ REPLACE_TAG ]: newValues.tags }
+				});
+				const expected = { ...state, ...newValues };
+				expected.phone = { ...reserved.phone, extension: newValues.phone.extension };
+				expect( state ).toEqual( expected );
 			} );
 		} );
 	} );

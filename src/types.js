@@ -15,7 +15,7 @@ export default null;
 /** @typedef {{[K in "getState"|"resetState"|"setState"|"subscribe"]: NonReactUsageReport}} IStore */
 
 /**
- * @typedef {(changes: PartialState<T>) => void} Listener
+ * @typedef {(changes: UpdatePayload<PartialState<T>>) => void} Listener
  * @template {State} T
  */
 
@@ -52,9 +52,18 @@ export default null;
  * @typedef {{
  *		data: Data,
  *		resetState: (propertyPaths?: string[]) => void,
- *		setState: (changes: PartialState<T>) => void,
+ *		setState: (changes: UpdatePayload<PartialState<T>>) => void,
  * }} Store
  * @template {State} T
  */
+
+/**
+ * @typedef {T | CLEAR_TAG | {[K in DELETE_TAG]: Array<keyof T>} | {[k in REPLACE_TAG]: T} | {[K in keyof T]?: UpdatePayload<T[K]>}} UpdatePayload
+ * @template T
+ */
+/** @typedef {typeof import("./constants").CLEAR_TAG} CLEAR_TAG */
+/** @typedef {typeof import("./constants").DELETE_TAG} DELETE_TAG */
+/** @typedef {typeof import("./constants").FULL_STATE_SELECTOR} FULL_STATE_SELECTOR */
+/** @typedef {typeof import("./constants").REPLACE_TAG} REPLACE_TAG */
 
 /** @typedef {VoidFunction} Unsubscribe */
