@@ -198,24 +198,31 @@ describe( 'setState(...)', () => {
 			} );
 		} );
 		describe( 'existing and incoming arrays of equal lengths', () => {
-			let state;
+			let onChangeMock, state;
+			beforeAll(() => { onChangeMock = jest.fn() });
 			beforeEach(() => { state = createSourceData() });
-			test( 'results in no change when are equal', () => {
+			afterEach(() => onChangeMock.mockClear());
+			test( 'results in no change when equal', () => {
 				const friends = state.friends;
-				setState( state, { friends } );
+				setState( state, { friends }, onChangeMock );
 				expect( state.friends ).toBe( friends );
+				expect( onChangeMock ).not.toHaveBeenCalled();
 			} );
-			test( 'results in a merge of incoming into existing when are identical', () => {
-				const friends = clonedeep( state.friends );
-				setState( state, { friends } );
-				expect( state.friends ).not.toBe( friends );
-				expect( state.friends ).toStrictEqual( friends );
+			test( 'results in no change when identical', () => {
+				const friends = state.friends;
+				const friendsUpdate = clonedeep( state.friends );
+				setState( state, { friends: friendsUpdate }, onChangeMock );
+				expect( state.friends ).toBe( friends );
+				expect( state.friends ).not.toBe( friendsUpdate );
+				expect( state.friends ).toStrictEqual( friendsUpdate );
+				expect( onChangeMock ).not.toHaveBeenCalled();
 			} );
 			test( 'results in a merge of incoming into existing when non-identical', () => {
 				const friends = clonedeep( state.friends ).reverse();
-				setState( state, { friends } );
+				setState( state, { friends }, onChangeMock );
 				expect( state.friends ).not.toBe( friends );
 				expect( state.friends ).toStrictEqual( friends );
+				expect( onChangeMock ).toHaveBeenCalled();
 			} );
 		} );
 		describe( 'incoming array < existing array', () => {
@@ -351,21 +358,25 @@ describe( 'setState(...)', () => {
 				expect( state ).toEqual({});
 			});
 			test( 'sets state slices to default values', () => {
+				state.nullableDefaultTester = new Map();
 				setState( state, {
 					company: CLEAR_TAG,
 					friends: { 1: CLEAR_TAG },
 					name: CLEAR_TAG,
+					nullableDefaultTester: CLEAR_TAG,
 					phone: CLEAR_TAG,
 					tags: CLEAR_TAG
 				});
 				expect( state ).toEqual({
 					...state,
-					company: null,
+					company: '',
 					friends: [ state.friends[ 0 ], {}, state.friends[ 2 ] ],
 					name: {},
+					nullableDefaultTester: null,
 					phone: {},
 					tags: []
 				});
+				delete state.nullableDefaultTester;
 			} );
 			test( 'also sets host property to default when present as a key in that property', () => {
 				setState( state, {
@@ -377,7 +388,7 @@ describe( 'setState(...)', () => {
 				});
 				expect( state ).toEqual({
 					...state,
-					company: null,
+					company: '',
 					friends: [ state.friends[ 0 ], {}, state.friends[ 2 ] ],
 					name: {},
 					phone: {},
@@ -392,9 +403,25 @@ describe( 'setState(...)', () => {
 			} );
 			test( 'ignores properties already at their default states', () => {
 				const onChangeMock = jest.fn();
-				const _state = { ...state, friends: [], name: {} }
-				setState( _state, { friends: CLEAR_TAG, name: CLEAR_TAG }, onChangeMock );
-				expect( _state ).toEqual({ ...state, friends: [], name: {} });
+				const _state = {
+					...state,
+					friends: [],
+					name: {},
+					nilValuesTester: {
+						_null: null,
+						_undefined: undefined
+					}
+				};
+				const _state2 = clonedeep( _state );
+				setState( _state, {
+					friends: CLEAR_TAG,
+					name: CLEAR_TAG,
+					nilValuesTester: {
+						_null: CLEAR_TAG,
+						_undefine: CLEAR_TAG
+					}
+				}, onChangeMock );
+				expect( _state ).toStrictEqual( _state2 );
 				expect( onChangeMock ).not.toHaveBeenCalled();
 			} );
 		} );
@@ -516,4 +543,26 @@ describe( 'setState(...)', () => {
 			} );
 		} );
 	} );
+	// describe( 'running all capabilities in a single call', () => {
+	// 	let state;
+	// 	beforeAll(() => {
+	// 		state = createSourceData();
+	// 		state.pets = [ 'Coco', 'Mimi', 'Kiki', 'Titi', 'Fifi', 'Lili' ];
+	// 		setState( state, {
+	// 			age: 97,
+	// 			friends: {
+	// 				[ DELETE_TAG ]: [ 0, 1 ],
+	// 				1: { name: { first: 'Mary' } },
+	// 				2: CLEAR_TAG
+	// 			},
+	// 			history: {
+	// 				places: {
+	// 					[ DELETE_TAG ]: [ 0, 2 ]
+	// 				}
+	// 			},
+	// 			pets: [ 'Titi', 'Deedee', 'Coco', 'Lulu', 'Lala', 'Momo', 'Chuchu' ]
+	// 		} );
+	// 	});
+	// 	test( 'testing', () => { expect( JSON.stringify( state, null, 2 ) ).toBeNull() });
+	// } );
 } );

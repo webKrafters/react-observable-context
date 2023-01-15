@@ -105,8 +105,8 @@ function isSummarilySet( state, newState, stateKey, stats ) {
 	let isSet = false;
 	for( const k in newState[ stateKey ] ) {
 		if( k in summarySetters ) {
-			const usedSetter = summarySetters[ k ]( state, stateKey, stats, newState );
-			isSet = isSet || usedSetter;
+			summarySetters[ k ]( state, stateKey, stats, newState );
+			isSet = true;
 		}
 	}
 	return isSet;
@@ -174,28 +174,33 @@ const isIndexBasedObj = obj => Object.keys( obj ).every( k => {
 
 const summarySetters = Object.freeze({
 	/** @type {SummarySetter<T>} */
-	[ CLEAR_TAG ]: ( state, stateKey, stats ) => {
-		if( !( stateKey in state ) ) { return true }
-		const value = state[ stateKey ];
-		if( isPlainObject( value ) ) {
-			let hasChanges = false;
-			for( const k in value ) {
-				delete state[ stateKey ][ k ];
-				hasChanges = true;
-			}
-			stats.hasChanges = stats.hasChanges || hasChanges;
-			return true;
-		}
-		if( Array.isArray( value ) ) {
-			if( !value.length ) { return true }
-			state[ stateKey ] = [];
+	[ CLEAR_TAG ]: (() => {
+		const defaultPredicate = () => true;
+		const hasItems = ( state, stateKey ) => state[ stateKey ].length;
+		const setDefault = ( state, stateKey, stats, predicate = defaultPredicate, value = null ) => {
+			if( !predicate( state, stateKey, stats ) ) { return }
+			state[ stateKey ] = value;
 			stats.hasChanges = true;
-			return true;
+		};
+		return ( state, stateKey, stats ) => {
+			if( !( stateKey in state ) ) { return }
+			const value = state[ stateKey ];
+			if( typeof value === 'undefined' || value === null ) { return }
+			if( isPlainObject( value ) ) {
+				let hasChanges = false;
+				for( const k in value ) { // remove properties singularly b/c where state === the setState `state` argument, we may not change its reference
+					delete state[ stateKey ][ k ];
+					hasChanges = true;
+				}
+				stats.hasChanges = stats.hasChanges || hasChanges;
+				return;
+			}
+			const type = value.constructor.name;
+			if( type === 'String' ) { return setDefault( state, stateKey, stats, hasItems, '' ) }
+			if( type === 'Array' ) { return setDefault( state, stateKey, stats, hasItems, [] ) }
+			return setDefault( state, stateKey, stats );
 		}
-		state[ stateKey ] = null;
-		stats.hasChanges = true;
-		return true;
-	},
+	})(),
 	/** @type {SummarySetter<T>} */
 	[ DELETE_TAG ]: ( state, stateKey, stats, newState ) => {
 		const deleteKeys = newState[ stateKey ][ DELETE_TAG ];
@@ -209,7 +214,6 @@ const summarySetters = Object.freeze({
 			hasChanges = true;
 		}
 		stats.hasChanges = stats.hasChanges || hasChanges;
-		return true;
 	},
 	/** @type {SummarySetter<T>} */
 	[ REPLACE_TAG ]: ( state, stateKey, stats, newState ) => {
@@ -222,7 +226,6 @@ const summarySetters = Object.freeze({
 			}
 		}
 		stats.hasChanges = true;
-		return true;
 	}
 });
 
@@ -252,10 +255,10 @@ const summarySetters = Object.freeze({
  * @param {T} state
  * @param {K} stateKey
  * @param {Stats} stats
- * @param {T & {K: State & {[B in keyof T[K]]: T[K][B]}}} [newState]
- * @returns {boolean}
+ * @param {T & {[K_1 in K]: State & {[K_2 in keyof T[K_1]]: T[K_1][K_2]}}} [newState]
+ * @returns {void}
  * @template {State} T
- * @template {keyof T} K
+ * @template {keyof T} [K=keyof T]
  */
 
 /** @typedef {number|string|symbol} KeyTypes */
