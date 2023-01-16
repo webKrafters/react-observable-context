@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import clonedeep from 'lodash.clonedeep';
+import { clonedeep } from '../../../utils';
 
 import AccessorCache from '../../../model/accessor-cache';
 

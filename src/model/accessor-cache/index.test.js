@@ -1,11 +1,9 @@
-import clonedeep from 'lodash.clonedeep';
+import { FULL_STATE_SELECTOR } from '../../constants';
+import { clonedeep } from '../../utils';
+import AccessorCache from '.';
 
 import createSourceData from '../../test-artifacts/data/create-state-obj';
 import { isReadonly } from '../../test-artifacts/utils';
-
-import { FULL_STATE_SELECTOR } from '../../constants';
-
-import AccessorCache from '.';
 
 describe( 'AccessorCache class', () => {
 	const source = createSourceData();

@@ -1,12 +1,12 @@
 import React from 'react';
 
-import clonedeep from 'lodash.clonedeep';
-
 import { cleanup as cleanupPerfTest, perf, wait } from 'react-performance-testing';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 
 import '@testing-library/jest-dom';
+
+import { clonedeep } from '../utils';
 
 import { connect, UsageError, useContext } from '.';
 

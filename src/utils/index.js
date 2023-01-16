@@ -1,6 +1,9 @@
+import clonedeepwith from 'lodash.clonedeepwith';
 import get from 'lodash.get';
 import has from 'lodash.has';
 import isPlainObject from 'lodash.isplainobject';
+
+import checkEligibility from './clonedeep-eligibility-check';
 
 /**
  * Curates the most inclusive propertyPaths from a list of property paths.
@@ -43,6 +46,35 @@ export function arrangePropertyPaths( propertyPaths ) {
 	}
 	return Object.keys( superPathTokensMap );
 };
+
+/**
+ * Built on top of lodash.clonedeepwith.\
+ * Instances of non-native classes not implementing either the `clone` or the `cloneNode
+ * methods may not be cloneable. Such instances are retured uncloned.
+ */
+export const clonedeep = (() => {
+	/**
+	 * @param {T} value
+	 * @param {Function} [customizer]
+	 * @returns {R}
+	 * @template T, R
+	 */
+	const clone = ( value, customizer = v => {
+		if( v === null ) { return }
+		if( typeof v === 'object' ) {
+			if( 'clone' in v && typeof v.clone === 'function' ) { return v.clone() }
+			if( 'cloneNode' in v && typeof v.cloneNode === 'function' ) { return v.cloneNode( true ) }
+		}
+		if( !checkEligibility( v ).isEligible ) { return v }
+	}) => clonedeepwith( value, customizer );
+	/**
+	 * @param {T} value
+	 * @returns {R}
+	 * @template T, R
+	 */
+	const clonedeep = value => clone( value );
+	return clonedeep;
+})();
 
 /**
  * Converts argument to readonly.

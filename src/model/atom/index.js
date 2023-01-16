@@ -1,6 +1,4 @@
-import clonedeep from 'lodash.clonedeep';
-
-import { makeReadonly } from '../../utils';
+import { clonedeep, makeReadonly } from '../../utils';
 
 /** An atom represents an entry for each individual property path of the state still in use by client components */
 /** @template T */

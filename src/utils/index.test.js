@@ -1,6 +1,7 @@
 import '../test-artifacts/suppress-render-compat';
 
 import * as utils from '.';
+import createSourceData from '../test-artifacts/data/create-state-obj';
 
 describe( 'utils module', () => {
 	describe( 'arrangePropertyPaths(...)', () => {
@@ -81,6 +82,66 @@ describe( 'utils module', () => {
 			} );
 		} );
 	} );
+	describe( 'clonedeep(...)', () => {
+		test( 'produces exact clone for commonly used types', () => {
+			const value = createSourceData();
+			const clone = utils.clonedeep( value );
+			expect( clone ).not.toBe( value );
+			expect( clone ).toStrictEqual( value );
+		} );
+		test( 'produces exact clone for recognized web api instances ', () => {
+			const value = {
+				birth: {
+					date: new Date( '1952-09-05' ),
+					place: { city: 'Prague' }
+				},
+				regexCount: /[1-9][0-9]*/g
+			};
+			const clone = utils.clonedeep( value );
+			expect( clone.birth.date ).not.toBe( value.birth.date );
+			expect( clone.birth.place ).not.toBe( value.birth.place );
+			expect( clone.regexCount ).not.toBe( value.regexCount );
+			expect( clone ).not.toBe( value );
+			expect( clone ).toStrictEqual( value );
+		} );
+		test( 'will not clone but will return unrecognized instances not implementing either `clone` or `cloneNode` methods', () => {
+			class Test {};
+			const value = { testing: { test: new Test() } };
+			const clone = utils.clonedeep( value );
+			expect( clone.testing.test ).toBe( value.testing.test ); // not cloned: returned as is
+			expect( clone ).not.toBe( value );
+			expect( clone ).toStrictEqual( value );
+		} );
+		describe( 'cloning unrecognizable instance', () => {
+			const runWith = ( value, cloneWatcher ) => {
+				const clone = utils.clonedeep( value );
+				expect( clone.testing.test ).not.toBe( value.testing.test );
+				expect( cloneWatcher ).toHaveBeenCalled();
+				expect( clone ).not.toBe( value );
+				expect( clone ).toStrictEqual( value );
+			};
+			test( 'using its `clone` method', () => {
+				const cloneWatcher = jest.fn();
+				class Test {
+					clone() {
+						cloneWatcher();
+						return new Test();
+					}
+				};
+				runWith({ testing: { test: new Test() } }, cloneWatcher );
+			} );
+			test( 'using its `cloneNode` method', () => {
+				const cloneWatcher = jest.fn();
+				class Test {
+					cloneNode() {
+						cloneWatcher();
+						return new Test();
+					}
+				};
+				runWith({ testing: { test: new Test() } }, cloneWatcher );
+			} );
+		} );
+	} );
 	describe( 'makeReadonly(...)', () => {
 		const TEST_DATA = { a: { b: { c: [ 1, 2, 3, { testFlag: true } ] } } };
 		beforeAll(() => utils.makeReadonly( TEST_DATA ));
@@ -108,7 +169,7 @@ describe( 'utils module', () => {
 	describe( 'mapPathsToObject(...)', () => {
 		let source, propertyPaths;
 		beforeAll(() => {
-			source = require( '../test-artifacts/data/create-state-obj' ).default();
+			source = createSourceData();
 			source.matrix = [
 				[ 0, 3, 9 ],
 				[ 4, 1, 1],
@@ -159,7 +220,7 @@ describe( 'utils module', () => {
 			});
 		});
 		test( 'handles multi-dimensional arrays', () => {
-			source = require( '../test-artifacts/data/create-state-obj' ).default();
+			source = createSourceData();
 			source.matrix = [
 				[ [ 0, 3, 1 ], [ 4, 0, 3 ] ],
 				[ [ 4, 1, 9 ], [ 7, 4, 9 ] ],

@@ -7,7 +7,7 @@
     "steveswork <stephen.isienyi@gmail.com> (https://github.com/steveswork)"
   ],
   "dependencies": {
-    "lodash.clonedeep": "^4.5.0",
+    "lodash.clonedeepwith": "^4.5.0",
     "lodash.get": "^4.4.2",
     "lodash.has": "^4.5.2",
     "lodash.isboolean": "^3.0.3",

@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import clonedeep from 'lodash.clonedeep';
 import isBoolean from 'lodash.isboolean';
 
 import { v4 } from 'uuid';
 
 import { FULL_STATE_SELECTOR } from '../../../constants';
 
-import { mapPathsToObject } from '../../../utils';
+import { clonedeep, mapPathsToObject } from '../../../utils';
 
 import Storage from '../../../model/storage';
 
