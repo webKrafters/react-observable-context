@@ -95,7 +95,9 @@ describe( 'utils module', () => {
 					date: new Date( '1952-09-05' ),
 					place: { city: 'Prague' }
 				},
-				regexCount: /[1-9][0-9]*/g
+				null: null,
+				regexCount: /[1-9][0-9]*/g,
+				undefined: undefined
 			};
 			const clone = utils.clonedeep( value );
 			expect( clone.birth.date ).not.toBe( value.birth.date );
@@ -140,6 +142,27 @@ describe( 'utils module', () => {
 				};
 				runWith({ testing: { test: new Test() } }, cloneWatcher );
 			} );
+		} );
+	} );
+	describe( 'isDataContainer(...)', () => {
+		test( 'is true for arrays', () => {
+			expect( utils.isDataContainer( [] ) ).toBe( true );
+			expect( utils.isDataContainer( new Array() ) ).toBe( true ); // eslint-disable-line no-array-constructor
+		} );
+		test( 'is true for plain objects', () => {
+			expect( utils.isDataContainer({}) ).toBe( true );
+			expect( utils.isDataContainer( new Object() ) ).toBe( true ); // eslint-disable-line no-new-object
+		} );
+		test( 'is false for non-arrays and non plain objects', () => {
+			class Test { method() {} }
+			expect( utils.isDataContainer( new Date() ) ).toBe( false );
+			expect( utils.isDataContainer( new Set() ) ).toBe( false );
+			expect( utils.isDataContainer( new String() ) ).toBe( false ); // eslint-disable-line no-new-wrappers
+			expect( utils.isDataContainer( new Test() ) ).toBe( false );
+			expect( utils.isDataContainer( true ) ).toBe( false );
+			expect( utils.isDataContainer( 1 ) ).toBe( false );
+			expect( utils.isDataContainer( 'test' ) ).toBe( false );
+			expect( utils.isDataContainer( 1.5 ) ).toBe( false );
 		} );
 	} );
 	describe( 'makeReadonly(...)', () => {
