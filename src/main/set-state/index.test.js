@@ -510,27 +510,95 @@ describe( 'setState(...)', () => {
 			} );
 		} );
 		describe( `'${ MOVE_TAG }' tag property key`, () => {
-			test( 'sets the entire state to its default value', () => {
-				let state = createSourceData();
-				setState( state, MOVE_TAG );
-				expect( state ).toEqual({});
-				state = createSourceData();
-				setState( state, { [ MOVE_TAG ]: expect.anything() } );
-				expect( state ).toEqual({});
+			let state;
+			beforeAll(() => { state = createSourceData() });
+			test( 'moves contiguous array items(s) from one index to another', () => {
+				const _state = createSourceData();
+				setState( _state, {
+					friends: { [ MOVE_TAG ]: [ 2, 1 ] },
+					tags: { [ MOVE_TAG ]: [ 3, 5, 3 ] }
+				} );
+				expect( _state ).toEqual({
+					...state,
+					friends: [ 0, 2, 1 ].map( i => state.friends[ i ] ),
+					tags: [ 0, 1, 2, 6, 3, 4, 5 ].map( i => state.tags[ i ] )
+				});
 			} );
-			test( `throws \`TypeError\` when \`${ MOVE_TAG }\` property value is not an array`, () => {
-				expect(() => setState( createSourceData(), {
-					company: { [ MOVE_TAG ]: state.company },
-					friends: { 1: { [ MOVE_TAG ]: state.friends } },
-					name: { [ MOVE_TAG ]: state.name },
-					phone: { [ MOVE_TAG ]: state.phone, ...state.phone },
-					tags: { [ MOVE_TAG ]: state.tags }
-				} ) ).toThrow( TypeError );
+			test( 'only updates state slices of the array type', () => {
+				const _state = createSourceData();
+				setState( _state, {
+					company: { [ MOVE_TAG ]: [ 0, 2 ] }, // non-array `company` state will be ignored
+					friends: { [ MOVE_TAG ]: [ 0, 2 ] }
+				} );
+				expect( _state ).toEqual({ ...state, friends: [ 1, 2, 0 ].map( i => state.friends[ i ] ) });
+			} );
+			describe( 'non-optional argument type validation', () => {
+				test( 'only accepts an array value consisting of at least two integers', () => expect(
+					() => setState( createSourceData(), { friends: { [ MOVE_TAG ]: [ 0, 1 ] } } )
+				).not.toThrow( TypeError ) );
+				test.each([
+					[ null ], [ undefined ], [ '' ], [ 'test' ], [ {} ], [ { test: expect.anything() } ],
+					[ true ], [ [] ], [ [ 3 ] ], [ [ true, true ] ], [ [ 4, true ] ], [ [ 1.2, 0.5 ] ],
+					[ { 0: 2, 1: 1 } ]
+				])( 'throws `TypeError` for arguments fitting this description: %p', args => expect(
+					() => setState( state, { friends: { [ MOVE_TAG ]: args } } )
+				).toThrow( TypeError ) );
+			} );
+			describe( 'optional third argumemt', () => {
+				test( 'accepts a positive integer value for number of contiguous elements to move', () => {
+					const _state = createSourceData();
+					setState( _state, { friends: { [ MOVE_TAG ]: [ 0, 2, 2 ] } } );
+					expect( _state ).toEqual({
+						...state,
+						friends: [ 2, 0, 1 ].map( i => state.friends[ i ] )
+					});
+				} );
+				test.each([
+					[ 'negative integers', -2 ], [ 'zero', 0 ], [ 'fractions', 0.5 ],
+					[ 'non-integer values', true ], [ 'non-numeric values', '2' ]
+				])( 'ignores %p', ( desc, numItems ) => {
+					const _state = createSourceData();
+					const onChangeMock = jest.fn();
+					setState( _state, { friends: { [ MOVE_TAG ]: [ 0, 2, numItems ] } }, onChangeMock );
+					expect( _state ).toEqual( state );
+					expect( onChangeMock ).not.toHaveBeenCalled();
+				} );
+				test( 'moves contiguous elements from fromIndex to end of array when argument value exceeds array length', () => {
+					const _state = createSourceData();
+					setState( _state, { friends: { [ MOVE_TAG ]: [ 1, 0, 3 ] } } );
+					expect( _state ).toEqual({
+						...state,
+						friends: [ 1, 2, 0 ].map( i => state.friends[ i ] )
+					});
+				} );
+			} );
+			describe( 'counting from end of state array', () => {
+				let calcExpected;
+				beforeAll(() => {
+					state = createSourceData();
+					calcExpected = indexes => ({ ...state, friends: indexes.map( i => state.friends[ i ] ) });
+				});
+				test.each([
+					[ -1, 0, [ 2, 0, 1 ] ],
+					[ 2, -2, [ 0, 2, 1 ] ],
+					[ -2, -1, [ 0, 2, 1 ] ]
+				])( 'accepts negative index in args %d and %d', ( from, to, expectedIndexes ) => {
+					const _state = createSourceData();
+					setState( _state, { friends: { [ MOVE_TAG ]: [ from, to ] } } );
+					expect( _state ).toEqual( calcExpected( expectedIndexes ) );
+				} );
 			} );
 			test( 'ignores non-existent properties', () => {
 				const _state = createSourceData();
 				const onChangeMock = jest.fn();
-				setState( _state, { testing: MOVE_TAG }, onChangeMock );
+				setState( _state, { testing: { [ MOVE_TAG ]: [ 1, 1 ] } }, onChangeMock );
+				expect( _state ).toEqual( state );
+				expect( onChangeMock ).not.toHaveBeenCalled();
+			} );
+			test( 'ignores move requests from same index to same index', () => {
+				const _state = createSourceData();
+				const onChangeMock = jest.fn();
+				setState( _state, { tags: { [ MOVE_TAG ]: [ 1, 1 ] } }, onChangeMock );
 				expect( _state ).toEqual( state );
 				expect( onChangeMock ).not.toHaveBeenCalled();
 			} );
@@ -593,31 +661,132 @@ describe( 'setState(...)', () => {
 				expect( _state ).toEqual( expected );
 			} );
 		} );
-	} );
-	describe( `'${ SPLICE_TAG }' tag property key`, () => {
-		test( 'sets the entire state to its default value', () => {
-			let state = createSourceData();
-			setState( state, SPLICE_TAG );
-			expect( state ).toEqual({});
-			state = createSourceData();
-			setState( state, { [ SPLICE_TAG ]: expect.anything() } );
-			expect( state ).toEqual({});
-		} );
-		test( `throws \`TypeError\` when \`${ SPLICE_TAG }\` property value is not an array`, () => {
-			expect(() => setState( createSourceData(), {
-				company: { [ SPLICE_TAG ]: state.company },
-				friends: { 1: { [ SPLICE_TAG ]: state.friends } },
-				name: { [ SPLICE_TAG ]: state.name },
-				phone: { [ SPLICE_TAG ]: state.phone, ...state.phone },
-				tags: { [ SPLICE_TAG ]: state.tags }
-			} ) ).toThrow( TypeError );
-		} );
-		test( 'ignores non-existent properties', () => {
-			const _state = createSourceData();
-			const onChangeMock = jest.fn();
-			setState( _state, { testing: SPLICE_TAG }, onChangeMock );
-			expect( _state ).toEqual( state );
-			expect( onChangeMock ).not.toHaveBeenCalled();
+		describe( `'${ SPLICE_TAG }' tag property key`, () => {
+			let state, newItems;
+			/**
+			 * "x" arrayIndex entry signifies when to insert new item values into expected array.
+			 *
+			 * @type {(field: string, indexPositions: Array<number|"x">, newItems: any) => Array}
+			 */
+			let computeExpectedArray;
+			beforeAll(() => {
+				newItems = [ expect.anything(), expect.anything() ];
+				state = createSourceData();
+				computeExpectedArray = ( field, indexPositions, newItems ) => indexPositions.reduce(( a, i ) => {
+					i === 'x'
+						? a.push( ...newItems )
+						: a.push( state[ field ][ i ] );
+					return a;
+				}, []);
+			});
+			test( 'removes a specified number of elements from a specified state array index and inserts new items at that index', () => {
+				const _state = createSourceData();
+				setState( _state, {
+					friends: { [ SPLICE_TAG ]: [ 2, 1, ...newItems ] },
+					tags: { [ SPLICE_TAG ]: [ 3, 2, ...newItems ] }
+				} );
+				expect( _state ).toEqual({
+					...state,
+					friends: computeExpectedArray( 'friends', [ 0, 1, 'x' ], newItems ),
+					tags: computeExpectedArray( 'tags', [ 0, 1, 2, 'x', 5, 6 ], newItems )
+				});
+			} );
+			test( 'only updates state slices of the array type', () => {
+				const _state = createSourceData();
+				setState( _state, {
+					company: { [ SPLICE_TAG ]: [ 0, 2 ] }, // non-array `company` state will be ignored
+					friends: { [ SPLICE_TAG ]: [ 0, 2 ] }
+				} );
+				expect( _state ).toEqual({ ...state, friends: [ state.friends[ 2 ] ] });
+			} );
+			describe( 'non-optional argument type validation', () => {
+				test( 'only accepts an array value consisting of at least two integers', () => expect(
+					() => setState( createSourceData(), { friends: { [ SPLICE_TAG ]: [ 0, 1 ] } } )
+				).not.toThrow( TypeError ) );
+				test.each([
+					[ null ], [ undefined ], [ '' ], [ 'test' ], [ {} ], [ { test: expect.anything() } ],
+					[ true ], [ [] ], [ [ 3 ] ], [ [ true, true ] ], [ [ 4, true ] ], [ [ 1.2, 0.5 ] ],
+					[ { 0: 2, 1: 1 } ]
+				])( 'throws `TypeError` for arguments fitting this description: %p', args => expect(
+					() => setState( state, { friends: { [ SPLICE_TAG ]: args } } )
+				).toThrow( TypeError ) );
+			} );
+			describe( 'additional optional ...newItems variadic argumemt(s)', () => {
+				test( 'accepts one or more values to insert contiguously starting from the fromIndex position of the state array', () => {
+					const _state = createSourceData();
+					setState( _state, {
+						friends: { [ SPLICE_TAG ]: [ 2, 1, ...newItems ] },
+						tags: { [ SPLICE_TAG ]: [ 3, 2, ...newItems ] }
+					} );
+					expect( _state ).toEqual({
+						...state,
+						friends: computeExpectedArray( 'friends', [ 0, 1, 'x' ], newItems ),
+						tags: computeExpectedArray( 'tags', [ 0, 1, 2, 'x', 5, 6 ], newItems )
+					});
+				} );
+			} );
+			test( 'trims off all leading elements identical to the state array at same index; adjusts fromIndex & deleteCount inserting new items', () => {
+				const _state = createSourceData();
+				setState( _state, {
+					friends: { [ SPLICE_TAG ]: [ 0, 3, state.friends[ 0 ], ...newItems ] },
+					tags: { [ SPLICE_TAG ]: [ 2, 4, state.tags[ 2 ], state.tags[ 3 ], ...newItems, state.tags[ 0 ] ] }
+				});
+				expect( _state ).toEqual({
+					...state,
+					friends: computeExpectedArray( 'friends', [ 0, 'x' ], newItems ),
+					tags: computeExpectedArray( 'tags', [ 0, 1, 2, 3, 'x', 0, 6 ], newItems )
+				});
+			} );
+			test( 'ignores a combination of argument #2 = 0 and no new items to insert', () => {
+				const _state = createSourceData();
+				const onChangeMock = jest.fn();
+				setState( _state, { tags: { [ SPLICE_TAG ]: [ 3, 0 ] } }, onChangeMock );
+				expect( _state ).toEqual( state );
+				expect( onChangeMock ).not.toHaveBeenCalled();
+			} );
+			test( 'auto-corrects negative argument #2 to 0', () => {
+				const _state = createSourceData();
+				const onChangeMock = jest.fn();
+				setState( _state, { tags: { [ SPLICE_TAG ]: [ 3, -2 ] } }, onChangeMock );
+				expect( _state ).toEqual( state );
+				expect( onChangeMock ).not.toHaveBeenCalled();
+			} );
+			describe( 'counting from end of state array', () => {
+				test.each([
+					[ -1, 0, '', [ 0, 1, 2 ] ],
+					[ -1, 0, ' along with the optional new element to insert', [ 0, 1, 'x', 2 ] ],
+					[ 2, -2, '', [ 0, 1, 2 ] ],
+					[ 2, -2, ' along with the optional new element to insert', [ 0, 1, 'x', 2 ] ],
+					[ -2, 1, '', [ 0, 2 ] ],
+					[ -2, 1, ' along with the optional new element to insert', [ 0, 'x', 2 ] ]
+				])( 'accepts negative index in args %d and %d%s', ( from, to, desc, expectedIndices ) => {
+					const _state = createSourceData();
+					const args = [ from, to ];
+					if( desc.length ) { args.push( ...newItems ) }
+					setState( _state, { friends: { [ SPLICE_TAG ]: args } } );
+					expect( _state ).toEqual({
+						...state,
+						friends: computeExpectedArray( 'friends', expectedIndices, desc.length ? newItems : undefined )
+					});
+				} );
+			} );
+			test( 'ignores attempts to remove and re-insert identical values', () => {
+				const _state = createSourceData();
+				const onChangeMock = jest.fn();
+				setState( _state, {
+					friends: { [ SPLICE_TAG ]: [ 0, 1, state.friends[ 0 ] ] },
+					tags: { [ SPLICE_TAG ]: [ 5, 1, state.tags[ 5 ] ] }
+				}, onChangeMock );
+				expect( _state ).toEqual( state );
+				expect( onChangeMock ).not.toHaveBeenCalled();
+			} );
+			test( 'ignores non-existent properties', () => {
+				const _state = createSourceData();
+				const onChangeMock = jest.fn();
+				setState( _state, { testing: { [ SPLICE_TAG ]: [ 1, 1 ] } }, onChangeMock );
+				expect( _state ).toEqual( state );
+				expect( onChangeMock ).not.toHaveBeenCalled();
+			} );
 		} );
 	} );
 	describe( 'running all capabilities in a single call', () => {
