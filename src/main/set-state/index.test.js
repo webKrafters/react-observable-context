@@ -470,9 +470,6 @@ describe( 'setState(...)', () => {
 							state: state.history.places[ 1 ].state
 						} ]
 					}
-					// name: {},
-					// phone: { local: state.phone.local },
-					// tags: [ undefined, undefined, undefined, undefined, state.tags[ 4 ], state.tags[ 5 ], undefined ]
 				});
 			} );
 			test( `throws \`TypeError\` when \`${ DELETE_TAG }\` property value is not an array`, () => {
@@ -488,7 +485,7 @@ describe( 'setState(...)', () => {
 				const onChangeMock = jest.fn();
 				const _state = createSourceData();
 				setState( _state, {
-					friends: { [ DELETE_TAG ]: [ -1, 55, 'test' ] },
+					friends: { [ DELETE_TAG ]: [ -9, 55, 'test' ] },
 					name: { [ DELETE_TAG ]: [ 'suffix' ] },
 					phone: { [ DELETE_TAG ]: [ 'extension', 'isp' ] },
 					tags: { [ DELETE_TAG ]: [ 101, 9, 30, 62 ] }

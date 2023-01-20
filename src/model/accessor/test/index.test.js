@@ -1,5 +1,4 @@
-import get from 'lodash.get';
-
+import { getProperty } from '../../../utils';
 import Atom from '../../atom';
 
 import Accessor from '..';
@@ -130,7 +129,7 @@ describe( 'Accessor class', () => {
 			};
 			accessedPropertyPaths = Object.keys( retValExpected );
 			createAccessorAtoms = ( state = source, paths = accessedPropertyPaths ) => paths.reduce(( a, p ) => {
-				a[ p ] = new Atom( get( state, p ) );
+				a[ p ] = new Atom( getProperty( state, p ).value );
 				return a;
 			}, {});
 			accessor = new Accessor( source, accessedPropertyPaths );

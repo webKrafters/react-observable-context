@@ -1,5 +1,3 @@
-import has from 'lodash.has';
-
 // @debug
 // import isEmpty from 'lodash.isempty';
 
@@ -14,7 +12,7 @@ import {
 	SPLICE_TAG
 } from '../../constants';
 
-import { clonedeep, isDataContainer } from '../../utils';
+import { clonedeep, getProperty, isDataContainer } from '../../utils';
 
 export default setState;
 
@@ -328,7 +326,7 @@ const tagResolver = Object.freeze({
 		}
 		let hasChanges = false;
 		for( const k of deleteKeys ) {
-			if( !has( state[ stateKey ], k ) ) { continue }
+			if( !getProperty( state[ stateKey ], k ).exists ) { continue }
 			delete state[ stateKey ][ k ];
 			hasChanges = true;
 		}

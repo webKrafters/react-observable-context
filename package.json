@@ -9,7 +9,6 @@
   "dependencies": {
     "lodash.clonedeepwith": "^4.5.0",
     "lodash.get": "^4.4.2",
-    "lodash.has": "^4.5.2",
     "lodash.isboolean": "^3.0.3",
     "lodash.isempty": "^4.4.0",
     "lodash.isequal": "^4.5.0",

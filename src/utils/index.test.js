@@ -144,41 +144,95 @@ describe( 'utils module', () => {
 			} );
 		} );
 	} );
-	describe( 'get(...)', () => {
+	describe( 'getProperty(...)', () => {
 		let DEFAULT, source;
 		beforeAll(() => {
 			DEFAULT = '___default___';
 			source = createSourceData();
 		});
+		test( 'obtains info about property located at path in a source data', () => {
+			expect( utils.getProperty( source, 'tags.-2' ) ).toStrictEqual({
+				_value: source.tags[ 5 ],
+				exists: true,
+				index: 5,
+				key: '-2',
+				source: source.tags,
+				value: source.tags[ 5 ]
+			});
+			expect( utils.getProperty( source, 'tags.5' ) ).toStrictEqual({
+				_value: source.tags[ 5 ],
+				exists: true,
+				index: 5,
+				key: '5',
+				source: source.tags,
+				value: source.tags[ 5 ]
+			});
+			expect( utils.getProperty( source, 'friends.-3.name.last' ) ).toStrictEqual({
+				_value: source.friends[ 0 ].name.last,
+				exists: true,
+				index: NaN,
+				key: 'last',
+				source: source.friends[ 0 ].name,
+				value: source.friends[ 0 ].name.last
+			});
+			const DEFAULT = '__default_value__';
+			expect( utils.getProperty( source, 'favoriteFruit.does.not.exist', DEFAULT ) ).toStrictEqual({
+				_value: DEFAULT,
+				exists: false,
+				index: NaN,
+				key: 'exist',
+				source: undefined,
+				value: DEFAULT
+			});
+			expect( utils.getProperty( source, 'history.places[1].does.not.exist', DEFAULT ) ).toStrictEqual({
+				_value: DEFAULT,
+				exists: false,
+				index: NaN,
+				key: 'exist',
+				source: undefined,
+				value: DEFAULT
+			});
+		} );
 		test( 'accesses top level', () => {
-			expect( utils.get( source, 'company' ) ).toBe( source.company );
-			expect( utils.get( source, [ 'company' ] ) ).toBe( source.company );
-			expect( utils.get([ 'one', 'two', 'three' ], 2 ) ).toBe( 'three' );
-			expect( utils.get([ 'one', 'two', 'three' ], 2 ) ).toBe( 'three' );
-			expect( utils.get({ 0: 'one', 1: 'two', 2: 'three' }, 2 ) ).toBe( 'three' );
-			expect( utils.get({ 0: [ 'one', 'two' ], 1: [ 'five', 'six' ] }, '1.-2' ) ).toBe( 'five' );
+			expect( utils.getProperty( source, 'company' ).value ).toBe( source.company );
+			expect( utils.getProperty( source, [ 'company' ] ).value ).toBe( source.company );
+			const bestieLastName = source.friends[ 0 ].name.last;
+			[ 	'friends.0.name.last', 'friends[0].name.last',
+				[ 'friends', '0', 'name', 'last' ],
+				[ 'friends', 0, 'name', 'last' ],
+				'friends.-3.name.last', 'friends[-3].name.last',
+				[ 'friends', '-3', 'name', 'last' ],
+				[ 'friends', -3, 'name', 'last' ]
+			].forEach( path => expect( utils.getProperty( source, path ).value ).toBe( bestieLastName ) );
+			expect( utils.getProperty([ 'one', 'two', 'three' ], 2 ).value ).toBe( 'three' );
+			expect( utils.getProperty([ 'one', 'two', 'three' ], -1 ).value ).toBe( 'three' );
+			expect( utils.getProperty({ 0: 'one', 1: 'two', 2: 'three' }, 2 ).value ).toBe( 'three' );
+			expect( utils.getProperty({ 0: [ 'one', 'two' ], 1: [ 'five', 'six' ] }, '1.-2' ).value ).toBe( 'five' );
 		} );
 		test( 'replaces inexistent value with predefined default value', () => {
-			expect( utils.get( source, 'inexistent', DEFAULT ) ).toBe( DEFAULT );
-			expect( utils.get( source, [ 'inexistent' ], DEFAULT ) ).toBe( DEFAULT );
+			expect( utils.getProperty( source, 'inexistent', DEFAULT ).value ).toBe( DEFAULT );
+			expect( utils.getProperty( source, [ 'inexistent' ], DEFAULT ).value ).toBe( DEFAULT );
 		} );
 		test( 'accesses array', () => {
 			const name = source.friends[ 1 ].name;
 			[ 'friends.1.name', 'friends[1].name', [ 'friends', 1, 'name' ], [ 'friends', '1', 'name' ] ].forEach( path => {
-				expect( utils.get( source, path ) ).toBe( name );
+				expect( utils.getProperty( source, path ).value ).toBe( name );
 			} );
+		} );
+		test( 'does not access array with a non-integer corresponding key in path', () => {
+			expect( utils.getProperty( source, 'friends.a' ).value ).toBeUndefined();
 		} );
 		test( 'accesses array in reverse', () => {
 			const name = source.friends[ 1 ].name;
 			[ 'friends.-2.name', 'friends[-2].name', [ 'friends', -2, 'name' ], [ 'friends', '-2', 'name' ] ].forEach( path => {
-				expect( utils.get( source, path ) ).toBe( name );
+				expect( utils.getProperty( source, path ).value ).toBe( name );
 			} );
 		} );
 		test( 'does not reverse-access indexed objects', () => {
-			expect( utils.get({ 0: 'one', 1: 'two', 2: 'three' }, -1 ) ).toBeUndefined();
+			expect( utils.getProperty({ 0: 'one', 1: 'two', 2: 'three' }, -1 ).value ).toBeUndefined();
 		} );
 		test( 'returns undefined immediately on reverse access error', () => {
-			expect( utils.get( { 0: { name: 'one' } }, '[-1].name' ) ).toBeUndefined();
+			expect( utils.getProperty( { 0: { name: 'one' } }, '[-1].name' ).value ).toBeUndefined();
 		} );
 		test( 'runs complex reverse array baseed access', () => {
 			const data = {
@@ -190,7 +244,7 @@ describe( 'utils module', () => {
 					]
 				}
 			};
-			expect( utils.get( data, 'uuyuw.654.-2[history][places[-3]].year' ) ).toBe(
+			expect( utils.getProperty( data, 'uuyuw.654.-2[history][places[-3]].year' ).value ).toBe(
 				data.uuyuw[ '654' ][ 1 ].history.places[ 0 ].year
 			);
 		} );

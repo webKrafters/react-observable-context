@@ -37,6 +37,17 @@ export default null;
  * @template {State} T
  */
 
+/**
+ * @typedef {Object} PropertyInfo
+ * @property {*} Property._value Actual value held in state
+ * @property {boolean} Property.exists
+ * @property {number}  Property.index
+ * @property {string|symbol|number} Property.key
+ * @property {T} Property.source
+ * @property {*} Property.value Value returned
+ * @template {State|Array} T
+ */
+
 /** @typedef {{[x:string]: *}} State */
 
 /**

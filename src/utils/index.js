@@ -1,6 +1,5 @@
 import clonedeepwith from 'lodash.clonedeepwith';
 import _get from 'lodash.get';
-import has from 'lodash.has';
 import isPlainObject from 'lodash.isplainobject';
 
 import checkEligibility from './clonedeep-eligibility-check';
@@ -76,41 +75,64 @@ export const clonedeep = (() => {
 	return clonedeep;
 })();
 
-export const get = (() => {
+export const getProperty = (() => {
 	const reDelimiter = /[\[\]|\.]+/g;
 	const reEndBracketLastChar = /\]$/;
-	const reType = /.*\s(\w+)\]$/
-	return ( source, path, defaultValue ) => {
+	const reType = /.*\s(\w+)\]$/;
+	/** @type {GetProperty<T, PropertyInfo<T>} */
+	const fromSource = ( source, key, defaultValue ) => {
+		let exists = false;
+		let index = +key;
+		try {
+			if( Array.isArray( source ) ) {
+				if( Number.isInteger( index ) ) {
+					if( index < 0 ) { index = source.length + index }
+					const _value = source[ index ];
+					return { _value, exists: index in source, index, key, source, value: _value ?? defaultValue };
+				}
+			}
+			const _value = source[ key ];
+			exists = key in source;
+			return { _value, exists, index, key, source, value: _value ?? defaultValue };
+		} catch( e ) {
+			return { _value: defaultValue, exists, index, key, source, value: defaultValue };
+		}
+	}
+	/** @type {(source: State|Array, parentPath: Array) => *} */
+	const getImmediateParent = ( source, parentPath ) => {
+		const pLen = parentPath.length;
+		if( !pLen ) { return source }
+		let segmentStart = 0;
+		for( let p = segmentStart; p < pLen; p++ ) {
+			const key = parentPath[ p ];
+			const kNum = +key;
+			if( Number.isInteger( kNum ) && kNum < 0 ) {
+				source = _get( source, parentPath.slice( segmentStart, p ) );
+				segmentStart = p + 1;
+				source = fromSource( source, key ).value;
+				if( segmentStart === pLen || typeof source === 'undefined' ) { break }
+			}
+		}
+		if( segmentStart === 0 ) { return _get( source, parentPath ) }
+		if( segmentStart === pLen || typeof source === 'undefined' ) { return source }
+		return _get( source, parentPath.slice( segmentStart, pLen ) );
+	};
+	/**
+	 * An extension of the lodash.get function.
+	 *
+	 * @type {GetProperty<T, PropertyInfo<T>}
+	 * @see lodash.get documentation
+	 */
+	const getInfo = ( source, path, defaultValue ) => {
 		switch( Object.prototype.toString.call( path ).replace( reType, '$1' ) ) {
 			case 'String': path = path.replace( reEndBracketLastChar, '' ).split( reDelimiter ); break;
 			case 'Array': break;
 			default: path = [ path ];
 		}
-		const pLen = path.length;
-		let segmentStart = 0;
-		for( let p = segmentStart; p < pLen; p++ ) {
-			const token = path[ p ];
-			const tNum = +token;
-			if( Number.isInteger( tNum ) && tNum < 0 ) {
-				source = _get( source, path.slice( segmentStart, p ) );
-				segmentStart = p + 1;
-				try {
-					source = source[
-						Array.isArray( source )
-							? source.length + tNum
-							: token
-					]
-				} catch( e ) { source = undefined }
-				if( segmentStart === pLen || typeof source === 'undefined' ) { break }
-			}
-		}
-		if( segmentStart === 0 ) { return _get( source, path, defaultValue ) }
-		return segmentStart === pLen
-			? source
-			: typeof source !== 'undefined'
-				? _get( source, path.slice( segmentStart, pLen ), defaultValue )
-				: defaultValue;
+		const key = path.pop();
+		return fromSource( getImmediateParent( source, path ), key, defaultValue );
 	}
+	return getInfo;
 })();
 
 /**
@@ -158,8 +180,8 @@ export function mapPathsToObject( source, propertyPaths ) {
 	const dest = {};
 	let object = dest;
 	for( const path of arrangePropertyPaths( paths ) ) {
-		if( !has( source, path ) ) { continue }
-		const value = get( source, path );
+		const { exists, value } = getProperty( source, path );
+		if( !exists ) { continue }
 		for( let tokens = path.split( '.' ), tLen = tokens.length, t = 0; t < tLen; t++ ) {
 			const token = tokens[ t ];
 			if( t + 1 === tLen ) {
@@ -175,3 +197,20 @@ export function mapPathsToObject( source, propertyPaths ) {
 	}
 	return dest;
 }
+
+/**
+ * @callback GetProperty
+ * @param {T} source
+ * @param {string|symbol|number|Array<string|symbol|number>} path
+ * @param {*} [defaultValue]
+ * @returns {R}
+ * @template {State|Array} [T=State|Array]
+ * @template [R=*]
+ */
+
+/**
+ * @typedef {import("../types").PropertyInfo<T>} PropertyInfo
+ * @template {State|Array} T
+ */
+
+/** @typedef {import("../types").State} State */
