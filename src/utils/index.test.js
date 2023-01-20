@@ -144,6 +144,57 @@ describe( 'utils module', () => {
 			} );
 		} );
 	} );
+	describe( 'get(...)', () => {
+		let DEFAULT, source;
+		beforeAll(() => {
+			DEFAULT = '___default___';
+			source = createSourceData();
+		});
+		test( 'accesses top level', () => {
+			expect( utils.get( source, 'company' ) ).toBe( source.company );
+			expect( utils.get( source, [ 'company' ] ) ).toBe( source.company );
+			expect( utils.get([ 'one', 'two', 'three' ], 2 ) ).toBe( 'three' );
+			expect( utils.get([ 'one', 'two', 'three' ], 2 ) ).toBe( 'three' );
+			expect( utils.get({ 0: 'one', 1: 'two', 2: 'three' }, 2 ) ).toBe( 'three' );
+			expect( utils.get({ 0: [ 'one', 'two' ], 1: [ 'five', 'six' ] }, '1.-2' ) ).toBe( 'five' );
+		} );
+		test( 'replaces inexistent value with predefined default value', () => {
+			expect( utils.get( source, 'inexistent', DEFAULT ) ).toBe( DEFAULT );
+			expect( utils.get( source, [ 'inexistent' ], DEFAULT ) ).toBe( DEFAULT );
+		} );
+		test( 'accesses array', () => {
+			const name = source.friends[ 1 ].name;
+			[ 'friends.1.name', 'friends[1].name', [ 'friends', 1, 'name' ], [ 'friends', '1', 'name' ] ].forEach( path => {
+				expect( utils.get( source, path ) ).toBe( name );
+			} );
+		} );
+		test( 'accesses array in reverse', () => {
+			const name = source.friends[ 1 ].name;
+			[ 'friends.-2.name', 'friends[-2].name', [ 'friends', -2, 'name' ], [ 'friends', '-2', 'name' ] ].forEach( path => {
+				expect( utils.get( source, path ) ).toBe( name );
+			} );
+		} );
+		test( 'does not reverse-access indexed objects', () => {
+			expect( utils.get({ 0: 'one', 1: 'two', 2: 'three' }, -1 ) ).toBeUndefined();
+		} );
+		test( 'returns undefined immediately on reverse access error', () => {
+			expect( utils.get( { 0: { name: 'one' } }, '[-1].name' ) ).toBeUndefined();
+		} );
+		test( 'runs complex reverse array baseed access', () => {
+			const data = {
+				uuyuw: {
+					654: [
+						null,
+						source,
+						null
+					]
+				}
+			};
+			expect( utils.get( data, 'uuyuw.654.-2[history][places[-3]].year' ) ).toBe(
+				data.uuyuw[ '654' ][ 1 ].history.places[ 0 ].year
+			);
+		} );
+	} );
 	describe( 'isDataContainer(...)', () => {
 		test( 'is true for arrays', () => {
 			expect( utils.isDataContainer( [] ) ).toBe( true );

@@ -1,5 +1,5 @@
 import clonedeepwith from 'lodash.clonedeepwith';
-import get from 'lodash.get';
+import _get from 'lodash.get';
 import has from 'lodash.has';
 import isPlainObject from 'lodash.isplainobject';
 
@@ -74,6 +74,43 @@ export const clonedeep = (() => {
 	 */
 	const clonedeep = value => clone( value );
 	return clonedeep;
+})();
+
+export const get = (() => {
+	const reDelimiter = /[\[\]|\.]+/g;
+	const reEndBracketLastChar = /\]$/;
+	const reType = /.*\s(\w+)\]$/
+	return ( source, path, defaultValue ) => {
+		switch( Object.prototype.toString.call( path ).replace( reType, '$1' ) ) {
+			case 'String': path = path.replace( reEndBracketLastChar, '' ).split( reDelimiter ); break;
+			case 'Array': break;
+			default: path = [ path ];
+		}
+		const pLen = path.length;
+		let segmentStart = 0;
+		for( let p = segmentStart; p < pLen; p++ ) {
+			const token = path[ p ];
+			const tNum = +token;
+			if( Number.isInteger( tNum ) && tNum < 0 ) {
+				source = _get( source, path.slice( segmentStart, p ) );
+				segmentStart = p + 1;
+				try {
+					source = source[
+						Array.isArray( source )
+							? source.length + tNum
+							: token
+					]
+				} catch( e ) { source = undefined }
+				if( segmentStart === pLen || typeof source === 'undefined' ) { break }
+			}
+		}
+		if( segmentStart === 0 ) { return _get( source, path, defaultValue ) }
+		return segmentStart === pLen
+			? source
+			: typeof source !== 'undefined'
+				? _get( source, path.slice( segmentStart, pLen ), defaultValue )
+				: defaultValue;
+	}
 })();
 
 /**
