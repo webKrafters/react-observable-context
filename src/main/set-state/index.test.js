@@ -2,6 +2,7 @@ import {
 	CLEAR_TAG,
 	DELETE_TAG,
 	MOVE_TAG,
+	PUSH_TAG,
 	REPLACE_TAG,
 	SPLICE_TAG
 } from '../../constants';
@@ -596,6 +597,58 @@ describe( 'setState(...)', () => {
 				const _state = createSourceData();
 				const onChangeMock = jest.fn();
 				setState( _state, { tags: { [ MOVE_TAG ]: [ 1, 1 ] } }, onChangeMock );
+				expect( _state ).toEqual( state );
+				expect( onChangeMock ).not.toHaveBeenCalled();
+			} );
+		} );
+		describe( `'${ PUSH_TAG }' tag property key`, () => {
+			let state, newItems;
+			beforeAll(() => {
+				newItems = [ expect.anything(), expect.anything() ];
+				state = createSourceData();
+			});
+			test( 'appends values at the end of state array property', () => {
+				const _state = createSourceData();
+				setState( _state, {
+					friends: { [ PUSH_TAG ]: newItems },
+					tags: { [ PUSH_TAG ]: newItems }
+				} );
+				expect( _state ).toEqual({
+					...state,
+					friends: [ ...state.friends, ...newItems ],
+					tags: [ ...state.tags, ...newItems ]
+				});
+			} );
+			test( 'only updates state slices of the array type', () => {
+				const _state = createSourceData();
+				setState( _state, {
+					company: { [ PUSH_TAG ]: newItems }, // non-array `company` state will be ignored
+					friends: { [ PUSH_TAG ]: newItems }
+				} );
+				expect( _state ).toEqual({ ...state, friends: [ ...state.friends, ...newItems ] });
+			} );
+			describe( 'non-optional argument type validation', () => {
+				test( 'only accepts an array value', () => expect(
+					() => setState( createSourceData(), { friends: { [ PUSH_TAG ]: [] } } )
+				).not.toThrow( TypeError ) );
+				test.each([
+					[ null ], [ undefined ], [ '' ], [ 'test' ], [ {} ],
+					[ { test: expect.anything() } ], [ true ], [ { 0: 2, 1: 1 } ]
+				])( 'throws `TypeError` for arguments fitting this description: %p', args => expect(
+					() => setState( state, { friends: { [ PUSH_TAG ]: args } } )
+				).toThrow( TypeError ) );
+			} );
+			test( 'ignores empty array argument', () => {
+				const _state = createSourceData();
+				const onChangeMock = jest.fn();
+				setState( _state, { tags: { [ PUSH_TAG ]: [] } }, onChangeMock );
+				expect( _state ).toEqual( state );
+				expect( onChangeMock ).not.toHaveBeenCalled();
+			} );
+			test( 'ignores non-existent properties', () => {
+				const _state = createSourceData();
+				const onChangeMock = jest.fn();
+				setState( _state, { testing: { [ PUSH_TAG ]: newItems } }, onChangeMock );
 				expect( _state ).toEqual( state );
 				expect( onChangeMock ).not.toHaveBeenCalled();
 			} );

@@ -1,6 +1,3 @@
-// @debug
-// import isEmpty from 'lodash.isempty';
-
 import isEqual from 'lodash.isequal';
 import isPlainObject from 'lodash.isplainobject';
 
@@ -8,6 +5,7 @@ import {
 	CLEAR_TAG,
 	DELETE_TAG,
 	MOVE_TAG,
+	PUSH_TAG,
 	REPLACE_TAG,
 	SPLICE_TAG
 } from '../../constants';
@@ -24,16 +22,7 @@ export default setState;
  */
 function setState( state, newState, onStateChange ) {
 	const stats = { hasChanges: false };
-	// const _newState = clonedeep( newState );
-
-	// @debug
-	// resolveTags( { state }, { state: _newState }, 'state', stats ) ||
-	// set( state, _newState, stats );
 	set( { state }, { state: newState }, stats );
-
-	// @debug 1
-	// console.info( '@ @ @ @ @ @ @ @ @ @ @ @ @ @ STATS > > > > > > > > > > > > >', stats );
-
 	stats.hasChanges && onStateChange?.( newState );
 }
 
@@ -60,18 +49,8 @@ function set( state, newState, stats ) {
  * @template {KeyTypes} K
  */
 function setAtomic( state, newState, stateKey, stats ) {
-
-	// @debug
-	// stateKey !== 'state' &&
-	// console.info( '- - - - - - - - SETTING ATOMIC WITH > > > > > > ', {
-	// 	stateKey, stats, isCommand: stateKey in tagResolver, state, newState
-	// } );
-
-	if(( stateKey in tagResolver && !isRecursiveTag( stateKey )) ||
-		isEqual( state[ stateKey ], newState[ stateKey ] )
-	) { return }
+	if( isEqual( state[ stateKey ], newState[ stateKey ] ) ) { return }
 	const tagsResolved = resolveTags( state, newState, stateKey, stats );
-
 	const isPlainObjectNewState = isPlainObject( newState[ stateKey ] );
 	const isArrayNewState = Array.isArray( newState[ stateKey ] );
 	if( Array.isArray( state[ stateKey ] ) ) {
@@ -85,24 +64,7 @@ function setAtomic( state, newState, stateKey, stats ) {
 	if( isPlainObjectNewState && isPlainObject( state[ stateKey ] ) ) {
 		return setPlainObject( state, newState, stateKey, stats )
 	}
-
-	// @debug
-	// ( newState[ stateKey ] in tagResolver || stateKey in tagResolver ) &&
-	// console.info( '>>>>>>>>>>> ', { stateKey, friends: state.friends, newState, isCommand: stateKey in tagResolver });
-	// @debug
-	// console.info( '>>>>>>>>>>> ', { stateKey, friends: state.friends, newFriends: newState.friends, isCommand: stateKey in tagResolver });
-
-	// @debug
-	// if( newState[ stateKey ] === CLEAR_TAG ) {
-	// 	return resolveTags( state, { [ stateKey ]: newState[ stateKey ] }, stateKey, stats );
-	// }
-	// if( stateKey in tagResolver ) { return } // already resolved
-
-	// @debug 1
-	// console.info( '>>>>>>>>>>> ', { stateKey, tagsResolved, stats, state, newState });
-
 	if( tagsResolved.length || !( stateKey in newState ) ) { return };
-
 	stats.hasChanges = true;
 	state[ stateKey ] = isArrayNewState || isPlainObjectNewState
 		? clonedeep( newState[ stateKey ] )
@@ -120,69 +82,21 @@ function setAtomic( state, newState, stateKey, stats ) {
  * @template {KeyTypes} K
  */
 function resolveTags( state, newState, stateKey, stats ) {
-
-	// @debug
-	// stateKey !== 'state' &&
-	// console.info( '+ + + + + + + + ENTERING RESOLVE TAGS WITH > > > > > > ', {
-	// 	stateKey, stats, isCommand: stateKey in tagResolver, state, newState
-	// } );
-
 	const resolvedTags = [];
-
 	if( isClosedTag( newState[ stateKey ] ) ) {
 		newState[ stateKey ] = { [ newState[ stateKey ] ]: null };
 	}
 	if( !isDataContainer( newState[ stateKey ] ) ) { return resolvedTags }
-	// if( !( stateKey in state ) && CLEAR_TAG in newState[ stateKey ] ) {
-
-	// 	// @debug
-	// 	// console.info( '@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ REMOVING UNNECESSARY CLEAR TAG @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @' );
-
-	// 	delete newState[ stateKey ];
-
-	// 	// @debug
-	// 	// stateKey !== 'state' &&
-	// 	// console.info( '- - - - - - - - EXITING RESOLVE TAGS WITH > > > > > > ', {
-	// 	// 	stateKey, stats, isCommand: stateKey in tagResolver, state, newState
-	// 	// } );
-
-	// 	return resolvedTags;
-	// }
 	for( const k in newState[ stateKey ] ) {
-
-		// @debug
-		// console.info( ' >>->->->->->> ', JSON.stringify({ stateKey, stats, tag: k, changes: newState[ stateKey ], state }, null, 2 ));
-
-		if( isClosedTag( newState[ stateKey ][ k ] ) ) {
+		if( isClosedTag( newState[ stateKey ]?.[ k ] ) ) {
 			newState[ stateKey ][ k ] = { [ newState[ stateKey ][ k ] ]: null };
 		}
 		if( k in tagResolver ) {
-
-			// @debug
-			// console.info( ' >>>>>> ', JSON.stringify({ stateKey, stats, tag: k, changes: newState[ stateKey ], state }, null, 2 ));
-
 			tagResolver[ k ]( state, stateKey, stats, newState );
 			resolvedTags.push( k );
-
-			// @debug
-			// console.info( ' <><><><> ', JSON.stringify({ stateKey, stats, tag: k, changes: newState[ stateKey ], state }, null, 2 ));
-
-			newState[ stateKey ] = state[ stateKey ];
-
-			// @debug
-			// console.info( ' <<<<<< ', JSON.stringify({ stateKey, stats, tag: k, changes: newState[ stateKey ], state }, null, 2 ));
-
 		}
 	}
-
-	// @debug
-	// stateKey !== 'state' &&
-	// console.info( '- - - - - - - - EXITING RESOLVE TAGS WITH > > > > > > ', {
-	// 	stateKey, stats, isCommand: stateKey in tagResolver, state, newState
-	// } );
-
 	return resolvedTags;
-
 }
 
 /**
@@ -272,37 +186,49 @@ const isClosedTag = (() => {
 	return tag => tag in NO_PARAM_TAGS;
 })();
 
-/** @type {(tag: TagKey|string|number) => boolean} */
-const isRecursiveTag = (() => {
-	const RECURSIVE_TAGS = { [ REPLACE_TAG ]: null };
-	return tag => tag in RECURSIVE_TAGS;
+const finishTagRequest = (() => {
+	const end = ( changes, key ) => {
+		if( isDataContainer( changes ) ) {
+			delete changes[ key ];
+		}
+	};
+	/**
+	 * @param {T} changes
+	 * @param {keyof T|number|string|symbol} key
+	 * @param {TagKey} tag
+	 * @template {State|Array} T
+	 */
+	const runCloser = ( changes, key, tag ) => {
+		if( isClosedTag( tag ) ) { return end( changes, key ) }
+		let keyCount = 0;
+		for( const k in changes[ key ] ) { // eslint-disable-line no-unused-vars
+			if( ++keyCount === 2 ) { return end( changes[ key ], tag ) }
+		}
+		keyCount = 0;
+		for( const k in changes ) { // eslint-disable-line no-unused-vars
+			if( ++keyCount === 2 ) { return end( changes[ key ], tag ) }
+		}
+		end( changes, key );
+	};
+	return runCloser;
 })();
 
-/**
- * @param {T} changes
- * @param {keyof T|number} key
- * @template {State|Array} T
- */
-function closeChangeRequest( changes, key ) {
-	if( isDataContainer( changes ) ) {
-		delete changes[ key ];
-	}
-}
-
 const tagResolver = Object.freeze({
-	/** @type {TagFunction<T>} */
 	[ CLEAR_TAG ]: (() => {
 		const defaultPredicate = () => true;
 		const hasItems = ( state, stateKey ) => state[ stateKey ].length;
 		const setDefault = ( state, stateKey, stats, newState, predicate = defaultPredicate, value = null ) => {
-			if( !predicate( state, stateKey, stats ) ) { return closeChangeRequest( newState, stateKey ) }
-			state[ stateKey ] = value;
-			stats.hasChanges = true;
+			if( predicate( state, stateKey, stats ) ) {
+				state[ stateKey ] = value;
+				stats.hasChanges = true;
+			}
+			finishTagRequest( newState, stateKey, CLEAR_TAG );
 		};
-		return ( state, stateKey, stats, newState ) => {
-			if( !( stateKey in state ) ) { return closeChangeRequest( newState, stateKey ) }
+		/** @type {TagFunction<T>} */
+		const clear = ( state, stateKey, stats, newState ) => {
+			if( !( stateKey in state ) ) { return finishTagRequest( newState, stateKey, CLEAR_TAG ) }
 			const value = state[ stateKey ];
-			if( typeof value === 'undefined' || value === null ) { return closeChangeRequest( newState, stateKey ) }
+			if( typeof value === 'undefined' || value === null ) { return finishTagRequest( newState, stateKey, CLEAR_TAG ) }
 			if( isPlainObject( value ) ) {
 				let hasChanges = false;
 				for( const k in value ) { // remove properties singularly b/c where state === the setState `state` argument, we may not change its reference
@@ -310,13 +236,14 @@ const tagResolver = Object.freeze({
 					hasChanges = true;
 				}
 				stats.hasChanges = stats.hasChanges || hasChanges;
-				return;
+				return finishTagRequest( newState, stateKey, CLEAR_TAG );
 			}
 			const type = value.constructor.name;
 			if( type === 'String' ) { return setDefault( state, stateKey, stats, newState, hasItems, '' ) }
 			if( type === 'Array' ) { return setDefault( state, stateKey, stats, newState, hasItems, [] ) }
 			setDefault( state, stateKey, stats, newState );
-		}
+		};
+		return clear;
 	})(),
 	/** @type {TagFunction<T>} */
 	[ DELETE_TAG ]: ( state, stateKey, stats, newState ) => {
@@ -331,6 +258,7 @@ const tagResolver = Object.freeze({
 			hasChanges = true;
 		}
 		stats.hasChanges = stats.hasChanges || hasChanges;
+		finishTagRequest( newState, stateKey, DELETE_TAG );
 	},
 	/** @type {TagFunction<T>} */
 	[ MOVE_TAG ]: ( state, stateKey, stats, newState ) => { // moves a state[stateKey] array item from index 'a' to index 'b'
@@ -338,39 +266,43 @@ const tagResolver = Object.freeze({
 		if( !Array.isArray( args ) || !args.length === 2 || !Number.isInteger( args[ 0 ] ) || !Number.isInteger( args[ 1 ] ) ) {
 			throw new TypeError( `Invalid entry found at ${ MOVE_TAG } change property: expecting an array of at least 2 integer values [fromIndex, toIndex, numItems]. numItems is optional. Use negative index to count from array end.` );
 		}
-		const close = () => {
-			let args = [ newState, stateKey ];
-			let keyCount = 0;
-			for( const k in newState ) { // eslint-disable-line no-unused-vars
-				if( ++keyCount === 2 ) {
-					args = [ newState[ stateKey ], MOVE_TAG ];
-					break;
-				}
-			}
-			closeChangeRequest( ...args );
-		}
+		const finish = () => finishTagRequest( newState, stateKey, MOVE_TAG );
 		const value = state[ stateKey ];
-		if( !Array.isArray( value ) ) { return close() }
+		if( !Array.isArray( value ) ) { return finish() }
 		const sLen = value.length;
-		if( !sLen ) { return }
+		if( !sLen ) { return finish() }
 		let [ from, to, numItems = 1 ] = args;
-		if( !Number.isInteger( numItems ) || numItems < 1 ) { return close() }
+		if( !Number.isInteger( numItems ) || numItems < 1 ) { return finish() }
 		if( from < 0 ) { from = sLen + from }
-		if( from < 0 || from >= sLen ) { return close() }
+		if( from < 0 || from >= sLen ) { return finish() }
 		if( to < 0 ) { to = sLen + to }
-		if( to < 0 || to >= sLen ) { return close() }
-		if( from === to ) { return close() }
+		if( to < 0 || to >= sLen ) { return finish() }
+		if( from === to ) { return finish() }
 		const maxTransferLen = sLen - from;
 		if( numItems > maxTransferLen ) { numItems = maxTransferLen }
 		state[ stateKey ].splice( to, 0, ...value.splice( from, numItems ) );
 		stats.hasChanges = true;
-		close();
+		finish();
+	},
+	/** @type {TagFunction<T>} */
+	[ PUSH_TAG ]: ( state, stateKey, stats, newState ) => { // preforms array.push on the state[stateKey] array
+		const args = newState[ stateKey ][ PUSH_TAG ];
+		if( !Array.isArray( args ) ) {
+			throw new TypeError( `Invalid entry found at ${ PUSH_TAG } change property: expecting an array of [].pudh(...) compliant argument values.` );
+		}
+		const finish = () => finishTagRequest( newState, stateKey, PUSH_TAG );
+		if( !args.length || !Array.isArray( state[ stateKey ] ) ) { return finish() }
+		state[ stateKey ].push( ...args );
+		stats.hasChanges = true;
+		finish();
 	},
 	/** @type {TagFunction<T>} */
 	[ REPLACE_TAG ]: ( state, stateKey, stats, newState ) => {
 		const currState = { [ stateKey ]: clonedeep( state[ stateKey ] ) };
 		setAtomic( currState, { [ stateKey ]: newState[ stateKey ][ REPLACE_TAG ] }, stateKey, { hasChanges: false } );
-		if( isEqual( state, currState ) ) { return closeChangeRequest( newState, stateKey ) }
+		if( isEqual( state, currState ) ) {
+			return finishTagRequest( newState, stateKey, REPLACE_TAG );
+		}
 		stats.hasChanges = true;
 		state[ stateKey ] = currState[ stateKey ];
 
@@ -392,9 +324,8 @@ const tagResolver = Object.freeze({
 		}
 		let [ start, deleteCount, ...items ] = args;
 		const value = state[ stateKey ];
-		if( !Array.isArray( value ) || ( deleteCount < 1 && !items.length ) ) {
-			return closeChangeRequest( newState, stateKey );
-		}
+		const finish = () => finishTagRequest( newState, stateKey, SPLICE_TAG );
+		if( !Array.isArray( value ) || ( deleteCount < 1 && !items.length ) ) { return finish() }
 		if( deleteCount > 0 ) {
 			const sLen = value.length;
 			start = start < 0
@@ -409,16 +340,14 @@ const tagResolver = Object.freeze({
 			}
 			start += d;
 			items.splice( 0, d );
-			if( start === sLen && !items.length ) {
-				return closeChangeRequest( newState, stateKey );
-			}
+			if( start === sLen && !items.length ) { return finish() }
 			deleteCount -= d;
 		}
 		if( deleteCount > 0 || items.length ) {
 			state[ stateKey ].splice( start, deleteCount, ...items );
 			stats.hasChanges = true;
 		}
-		closeChangeRequest( newState, stateKey );
+		finish();
 	}
 });
 
