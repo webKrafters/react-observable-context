@@ -19,5 +19,8 @@ export const PUSH_TAG = '@@PUSH';
 /** @type {"@@REPLACE"} */
 export const REPLACE_TAG = '@@REPLACE';
 
+/** @type {"@@SET"} */
+export const SET_TAG = '@@SET';
+
 /** @type {"@@SPLICE"} */
 export const SPLICE_TAG = '@@SPLICE';

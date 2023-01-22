@@ -4,6 +4,7 @@ import {
 	MOVE_TAG,
 	PUSH_TAG,
 	REPLACE_TAG,
+	SET_TAG,
 	SPLICE_TAG
 } from '../../constants';
 import { clonedeep } from '../../utils';
@@ -670,7 +671,7 @@ describe( 'setState(...)', () => {
 					zone: 33
 				};
 				setState( _state, { [ REPLACE_TAG ]: stateReplacement } );
-				expect( _state ).toEqual({ ...state, ...stateReplacement });
+				expect( _state ).toEqual( stateReplacement );
 			});
 			test( 'replaces properties with new value', () => {
 				const _state = createSourceData();
@@ -709,6 +710,154 @@ describe( 'setState(...)', () => {
 				const expected = { ...state, ...newValues };
 				expected.phone = { ...state.phone, extension: newValues.phone.extension };
 				expect( _state ).toEqual( expected );
+			} );
+			test( 'ignores attempts to replace with identical values', () => {
+				const _state = createSourceData();
+				const onChangeMock = jest.fn();
+				setState( _state, {
+					friends: { [ REPLACE_TAG ]: state.friends },
+					tags: { [ REPLACE_TAG ]: state.tags }
+				}, onChangeMock );
+				expect( _state ).toEqual( state );
+				expect( onChangeMock ).not.toHaveBeenCalled();
+			} );
+			test( 'adds new properties for attmepts to replace non-existent properties', () => {
+				const _state = createSourceData();
+				const onChangeMock = jest.fn();
+				setState( _state, {
+					testing: { [ REPLACE_TAG ]: expect.anything() }
+				}, onChangeMock );
+				expect( _state ).toEqual({ ...state, testing: expect.anything() });
+				expect( onChangeMock ).toHaveBeenCalled();
+			} );
+		} );
+		describe( `'${ SET_TAG }' tag property key`, () => {
+			let newPhone;
+			beforeAll(() => { newPhone = { area: '312', line: '1212', local: '644' } });
+			test( 'replaces state slice with new value', () => {
+				const _state = createSourceData();
+				setState( _state, {	phone: { [ SET_TAG ]: newPhone } } );
+				expect( _state ).toEqual({ ...state, phone: newPhone })
+			} );
+			describe( 'using compute function', () => {
+				let _state, arg;
+				beforeAll(() => {
+					_state = createSourceData();
+					setState( _state, {
+						phone: {
+							[ SET_TAG ]: s => {
+								arg = s;
+								return newPhone;
+							}
+						}
+					} );
+				});
+				test( 'replaces state slice with the return value', () => {
+					expect( _state ).toEqual({ ...state, phone: newPhone });
+				} );
+				test( 'supplies currently held state slice value as argument', () => {
+					expect( arg ).not.toBe( _state.phone );
+					expect( arg ).toStrictEqual( state.phone );
+				} );
+			} );
+			describe( 'setting referenced top level properties', () => {
+				let _state, stateReplacement;
+				beforeAll(() => {
+					stateReplacement = {
+						averageScore: 87, // new
+						// existing
+						isActive: expect.any( Boolean ),
+						name: expect.any( Object ),
+						registered: expect.any( Object ),
+						// new
+						test1: expect.anything(),
+						test2: expect.anything(),
+						test3: expect.anything(),
+						test4: expect.anything(),
+						zone: 33
+					};
+				});
+				test( 'accepts ready-to-set data', () => {
+					_state = createSourceData();
+					setState( _state, { [ SET_TAG ]: stateReplacement } );
+					expect( _state ).toEqual( stateReplacement );
+				});
+				describe( 'using compute function', () => {
+					let arg;
+					beforeAll(() => {
+						_state = createSourceData();
+						setState( _state, {
+							[ SET_TAG ]: s => {
+								arg = s;
+								return stateReplacement;
+							}
+						} );
+					});
+					test( 'accepts the function return value', () => {
+						expect( _state ).toEqual( stateReplacement );
+					} );
+					test( 'supplies currently held state value as argument', () => {
+						expect( arg ).not.toBe( _state );
+						expect( arg ).toStrictEqual( state );
+					} );
+				} );
+			});
+			test( 'replaces properties with new value', () => {
+				const _state = createSourceData();
+				const newValues = {
+					company: 'TEST_COMPANY',
+					friends: 'NEW TEST FRIENDS',
+					name: { first: 'Priscilla', middle: 'Samantha', last: 'Williams' },
+					phone: {},
+					tags: []
+				};
+				setState( _state, {
+					company: { [ SET_TAG ]: newValues.company },
+					friends: { [ SET_TAG ]: newValues.friends },
+					name: { [ SET_TAG ]: newValues.name },
+					phone: { [ SET_TAG ]: newValues.phone },
+					tags: { [ SET_TAG ]: newValues.tags }
+				});
+				expect( _state ).toEqual({ ...state, ...newValues });
+			} );
+			test( 'adds new values to property when specified', () => {
+				const _state = createSourceData();
+				const newValues = {
+					company: 'TEST_COMPANY',
+					friends: 'NEW TEST FRIENDS',
+					name: { first: 'Priscilla', middle: 'Samantha', last: 'Williams' },
+					phone: { extension: 'x456' }, // ADDING `extension` to state.phone
+					tags: t => t.length > 3 ? t.slice( -2 ) : t
+				};
+				setState( _state, {
+					company: { [ SET_TAG ]: newValues.company },
+					friends: { [ SET_TAG ]: newValues.friends },
+					name: { [ SET_TAG ]: newValues.name },
+					phone: { extension: { [ SET_TAG ]: newValues.phone.extension } },
+					tags: { [ SET_TAG ]: newValues.tags }
+				});
+				const expected = { ...state, ...newValues, tags: state.tags.slice( -2 ) };
+				expected.phone = { ...state.phone, extension: newValues.phone.extension };
+				expect( _state ).toEqual( expected );
+			} );
+			test( 'ignores attempts to replace with identical values', () => {
+				const _state = createSourceData();
+				const onChangeMock = jest.fn();
+				setState( _state, {
+					friends: { [ SET_TAG ]: state.friends },
+					tags: { [ SET_TAG ]: state.tags }
+				}, onChangeMock );
+				expect( _state ).toEqual( state );
+				expect( onChangeMock ).not.toHaveBeenCalled();
+			} );
+			test( 'adds new properties for attmepts to replace non-existent properties', () => {
+				const _state = createSourceData();
+				const onChangeMock = jest.fn();
+				setState( _state, {
+					testing: { [ SET_TAG ]: expect.anything() }
+				}, onChangeMock );
+				expect( _state ).toEqual({ ...state, testing: expect.anything() });
+				expect( onChangeMock ).toHaveBeenCalled();
 			} );
 		} );
 		describe( `'${ SPLICE_TAG }' tag property key`, () => {
@@ -864,5 +1013,24 @@ describe( 'setState(...)', () => {
 			// expect( JSON.stringify( newState, null, 2 ) ).toBeNull();
 			expect( newState ).toBeNull();
 		});
+		test( `allows '${ REPLACE_TAG } as an alias for '${ SET_TAG }' without the compute function`, () => {
+			const state1 = createSourceData();
+			const state2 = createSourceData();
+			setState( state1, { name: { [ REPLACE_TAG ]: { first: 'Jame', last: 'Doe' }, age: 24 } } );
+			setState( state2, { name: { [ SET_TAG ]: { first: 'Jame', last: 'Doe' }, age: 24 } } );
+			expect( state1 ).toStrictEqual( state2 );
+			expect( state ).not.toEqual( state1 );
+		} );
+		test( `does not allow '${ REPLACE_TAG } as an alias for '${ SET_TAG }' with the compute function`, () => {
+			const state = createSourceData();
+			const state1 = createSourceData();
+			const state2 = createSourceData();
+			const newBalance = 'TEST_BALANCE';
+			const computeNewBalance = s => newBalance;
+			setState( state1, { balance: { [ REPLACE_TAG ]: computeNewBalance } } );
+			setState( state2, { balance: { [ SET_TAG ]: computeNewBalance } } );
+			expect( state1 ).toEqual({ ...state, balance: computeNewBalance });
+			expect( state2 ).toEqual({ ...state, balance: newBalance });
+		} );
 	} );
 } );
