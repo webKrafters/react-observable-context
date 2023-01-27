@@ -8,505 +8,458 @@ import {
 	SPLICE_TAG
 } from '../../../constants';
 
+import { clonedeep } from '../../../utils';
+
 import * as tag from '.';
 
 import createSourceData from '../../../test-artifacts/data/create-state-obj';
 
 let state, statsStub;
+
 beforeAll(() => {
 	statsStub = { hasChanges: false };
 	state = createSourceData();
 });
 
-describe( '$delete(...)', () => {
-	test( 'removes all listed properties residing at the provided stateKey = \'state\'', () => {
-		const _state = { state: createSourceData() };
-		const removedKeys = [ '_id', 'address', 'friends', 'picture' ];
-		tag.$delete( _state, 'state', statsStub, { [ DELETE_TAG ]: removedKeys } )
-		expect( removedKeys.every( k => !( k in _state.state ) ) ).toBe( true );
+describe( '$clear(...)', () => {
+	let _state;
+	beforeEach(() => { _state = createSourceData() });
+	test.each([
+		[ 'string', '', 'email' ],
+		[ 'POJO', {}, 'name' ],
+		[ 'array', [], 'tags' ]
+	])( 'sets %s property value to %p', ( type, emptyValue, stateKey ) => {
+		tag.$clear( _state, stateKey, statsStub, { [ stateKey ]: { [ CLEAR_TAG ]: expect.anything() } } );
+		expect( _state ).toEqual({ ...state, [ stateKey ]: emptyValue });
 	} );
-	test( 'removes all listed array indexes residing at the provided array state property named \'tags\'', () => {
-		const _state = createSourceData();
-		tag.$delete( _state, 'tags', statsStub, { [ DELETE_TAG ]: [ 0, 1, 2, 3, 6 ] } )
-		expect( _state ).toEqual({ ...state, tags: [ state.tags[ 4 ], state.tags[ 5 ] ] });
-	} );
-} );
-describe( `'${ MOVE_TAG }' tag property key`, () => {
-	let state;
-	beforeAll(() => { state = createSourceData() });
-	test( 'moves contiguous array items(s) from one index to another', () => {
-		const _state = createSourceData();
-		setState( _state, {
-			friends: { [ MOVE_TAG ]: [ 2, 1 ] },
-			tags: { [ MOVE_TAG ]: [ 3, 5, 3 ] }
-		} );
-		expect( _state ).toEqual({
-			...state,
-			friends: [ 0, 2, 1 ].map( i => state.friends[ i ] ),
-			tags: [ 0, 1, 2, 6, 3, 4, 5 ].map( i => state.tags[ i ] )
-		});
-	} );
-	test( 'only updates state slices of the array type', () => {
-		const _state = createSourceData();
-		setState( _state, {
-			company: { [ MOVE_TAG ]: [ 0, 2 ] }, // non-array `company` state will be ignored
-			friends: { [ MOVE_TAG ]: [ 0, 2 ] }
-		} );
-		expect( _state ).toEqual({ ...state, friends: [ 1, 2, 0 ].map( i => state.friends[ i ] ) });
-	} );
-	describe( 'non-optional argument type validation', () => {
-		test( 'only accepts an array value consisting of at least two integers', () => expect(
-			() => setState( createSourceData(), { friends: { [ MOVE_TAG ]: [ 0, 1 ] } } )
-		).not.toThrow( TypeError ) );
-		test.each([
-			[ null ], [ undefined ], [ '' ], [ 'test' ], [ {} ], [ { test: expect.anything() } ],
-			[ true ], [ [] ], [ [ 3 ] ], [ [ true, true ] ], [ [ 4, true ] ], [ [ 1.2, 0.5 ] ],
-			[ { 0: 2, 1: 1 } ]
-		])( 'throws `TypeError` for arguments fitting this description: %p', args => expect(
-			() => setState( state, { friends: { [ MOVE_TAG ]: args } } )
-		).toThrow( TypeError ) );
-	} );
-	describe( 'optional third argumemt', () => {
-		test( 'accepts a positive integer value for number of contiguous elements to move', () => {
-			const _state = createSourceData();
-			setState( _state, { friends: { [ MOVE_TAG ]: [ 0, 2, 2 ] } } );
-			expect( _state ).toEqual({
+	describe( 'indexing', () => {
+		let expected;
+		beforeAll(() => {
+			expected = {
 				...state,
-				friends: [ 2, 0, 1 ].map( i => state.friends[ i ] )
-			});
-		} );
-		test.each([
-			[ 'negative integers', -2 ], [ 'zero', 0 ], [ 'fractions', 0.5 ],
-			[ 'non-integer values', true ], [ 'non-numeric values', '2' ]
-		])( 'ignores %p', ( desc, numItems ) => {
-			const _state = createSourceData();
-			const onChangeMock = jest.fn();
-			setState( _state, { friends: { [ MOVE_TAG ]: [ 0, 2, numItems ] } }, onChangeMock );
-			expect( _state ).toEqual( state );
-			expect( onChangeMock ).not.toHaveBeenCalled();
-		} );
-		test( 'moves contiguous elements from fromIndex to end of array when argument value exceeds array length', () => {
-			const _state = createSourceData();
-			setState( _state, { friends: { [ MOVE_TAG ]: [ 1, 0, 3 ] } } );
-			expect( _state ).toEqual({
-				...state,
-				friends: [ 1, 2, 0 ].map( i => state.friends[ i ] )
-			});
-		} );
-	} );
-	describe( 'counting from end of state array', () => {
-		let calcExpected;
-		beforeAll(() => {
-			state = createSourceData();
-			calcExpected = indexes => ({ ...state, friends: indexes.map( i => state.friends[ i ] ) });
-		});
-		test.each([
-			[ -1, 0, [ 2, 0, 1 ] ],
-			[ 2, -2, [ 0, 2, 1 ] ],
-			[ -2, -1, [ 0, 2, 1 ] ]
-		])( 'accepts negative index in args %d and %d', ( from, to, expectedIndexes ) => {
-			const _state = createSourceData();
-			setState( _state, { friends: { [ MOVE_TAG ]: [ from, to ] } } );
-			expect( _state ).toEqual( calcExpected( expectedIndexes ) );
-		} );
-	} );
-	test( 'ignores non-existent properties', () => {
-		const _state = createSourceData();
-		const onChangeMock = jest.fn();
-		setState( _state, { testing: { [ MOVE_TAG ]: [ 1, 1 ] } }, onChangeMock );
-		expect( _state ).toEqual( state );
-		expect( onChangeMock ).not.toHaveBeenCalled();
-	} );
-	test( 'ignores move requests from same index to same index', () => {
-		const _state = createSourceData();
-		const onChangeMock = jest.fn();
-		setState( _state, { tags: { [ MOVE_TAG ]: [ 1, 1 ] } }, onChangeMock );
-		expect( _state ).toEqual( state );
-		expect( onChangeMock ).not.toHaveBeenCalled();
-	} );
-} );
-describe( `'${ PUSH_TAG }' tag property key`, () => {
-	let state, newItems;
-	beforeAll(() => {
-		newItems = [ expect.anything(), expect.anything() ];
-		state = createSourceData();
-	});
-	test( 'appends values at the end of state array property', () => {
-		const _state = createSourceData();
-		setState( _state, {
-			friends: { [ PUSH_TAG ]: newItems },
-			tags: { [ PUSH_TAG ]: newItems }
-		} );
-		expect( _state ).toEqual({
-			...state,
-			friends: [ ...state.friends, ...newItems ],
-			tags: [ ...state.tags, ...newItems ]
-		});
-	} );
-	test( 'only updates state slices of the array type', () => {
-		const _state = createSourceData();
-		setState( _state, {
-			company: { [ PUSH_TAG ]: newItems }, // non-array `company` state will be ignored
-			friends: { [ PUSH_TAG ]: newItems }
-		} );
-		expect( _state ).toEqual({ ...state, friends: [ ...state.friends, ...newItems ] });
-	} );
-	describe( 'non-optional argument type validation', () => {
-		test( 'only accepts an array value', () => expect(
-			() => setState( createSourceData(), { friends: { [ PUSH_TAG ]: [] } } )
-		).not.toThrow( TypeError ) );
-		test.each([
-			[ null ], [ undefined ], [ '' ], [ 'test' ], [ {} ],
-			[ { test: expect.anything() } ], [ true ], [ { 0: 2, 1: 1 } ]
-		])( 'throws `TypeError` for arguments fitting this description: %p', args => expect(
-			() => setState( state, { friends: { [ PUSH_TAG ]: args } } )
-		).toThrow( TypeError ) );
-	} );
-	test( 'ignores empty array argument', () => {
-		const _state = createSourceData();
-		const onChangeMock = jest.fn();
-		setState( _state, { tags: { [ PUSH_TAG ]: [] } }, onChangeMock );
-		expect( _state ).toEqual( state );
-		expect( onChangeMock ).not.toHaveBeenCalled();
-	} );
-	test( 'ignores non-existent properties', () => {
-		const _state = createSourceData();
-		const onChangeMock = jest.fn();
-		setState( _state, { testing: { [ PUSH_TAG ]: newItems } }, onChangeMock );
-		expect( _state ).toEqual( state );
-		expect( onChangeMock ).not.toHaveBeenCalled();
-	} );
-} );
-describe( `'${ REPLACE_TAG }' tag property key`, () => {
-	test( 'adds new and replaces existing referenced top level properties', () => {
-		const _state = createSourceData();
-		const stateReplacement = {
-			averageScore: 87, // new
-			// existing
-			isActive: expect.any( Boolean ),
-			name: expect.any( Object ),
-			registered: expect.any( Object ),
-			// new
-			test1: expect.anything(),
-			test2: expect.anything(),
-			test3: expect.anything(),
-			test4: expect.anything(),
-			zone: 33
-		};
-		setState( _state, { [ REPLACE_TAG ]: stateReplacement } );
-		expect( _state ).toEqual( stateReplacement );
-	});
-	test( 'replaces properties with new value', () => {
-		const _state = createSourceData();
-		const newValues = {
-			company: 'TEST_COMPANY',
-			friends: 'NEW TEST FRIENDS',
-			name: { first: 'Priscilla', middle: 'Samantha', last: 'Williams' },
-			phone: {},
-			tags: []
-		};
-		setState( _state, {
-			company: { [ REPLACE_TAG ]: newValues.company },
-			friends: { [ REPLACE_TAG ]: newValues.friends },
-			name: { [ REPLACE_TAG ]: newValues.name },
-			phone: { [ REPLACE_TAG ]: newValues.phone },
-			tags: { [ REPLACE_TAG ]: newValues.tags }
-		});
-		expect( _state ).toEqual({ ...state, ...newValues });
-	} );
-	test( 'adds new values to property when specified', () => {
-		const _state = createSourceData();
-		const newValues = {
-			company: 'TEST_COMPANY',
-			friends: 'NEW TEST FRIENDS',
-			name: { first: 'Priscilla', middle: 'Samantha', last: 'Williams' },
-			phone: { extension: 'x456' }, // ADDING `extension` to state.phone
-			tags: []
-		};
-		setState( _state, {
-			company: { [ REPLACE_TAG ]: newValues.company },
-			friends: { [ REPLACE_TAG ]: newValues.friends },
-			name: { [ REPLACE_TAG ]: newValues.name },
-			phone: { extension: { [ REPLACE_TAG ]: newValues.phone.extension } },
-			tags: { [ REPLACE_TAG ]: newValues.tags }
-		});
-		const expected = { ...state, ...newValues };
-		expected.phone = { ...state.phone, extension: newValues.phone.extension };
-		expect( _state ).toEqual( expected );
-	} );
-	test( 'ignores attempts to replace with identical values', () => {
-		const _state = createSourceData();
-		const onChangeMock = jest.fn();
-		setState( _state, {
-			friends: { [ REPLACE_TAG ]: state.friends },
-			tags: { [ REPLACE_TAG ]: state.tags }
-		}, onChangeMock );
-		expect( _state ).toEqual( state );
-		expect( onChangeMock ).not.toHaveBeenCalled();
-	} );
-	test( 'adds new properties for attmepts to replace non-existent properties', () => {
-		const _state = createSourceData();
-		const onChangeMock = jest.fn();
-		setState( _state, {
-			testing: { [ REPLACE_TAG ]: expect.anything() }
-		}, onChangeMock );
-		expect( _state ).toEqual({ ...state, testing: expect.anything() });
-		expect( onChangeMock ).toHaveBeenCalled();
-	} );
-} );
-describe( `'${ SET_TAG }' tag property key`, () => {
-	let newPhone;
-	beforeAll(() => { newPhone = { area: '312', line: '1212', local: '644' } });
-	test( 'replaces state slice with new value', () => {
-		const _state = createSourceData();
-		setState( _state, {	phone: { [ SET_TAG ]: newPhone } } );
-		expect( _state ).toEqual({ ...state, phone: newPhone })
-	} );
-	describe( 'using compute function', () => {
-		let _state, arg;
-		beforeAll(() => {
-			_state = createSourceData();
-			setState( _state, {
-				phone: {
-					[ SET_TAG ]: s => {
-						arg = s;
-						return newPhone;
-					}
-				}
-			} );
-		});
-		test( 'replaces state slice with the return value', () => {
-			expect( _state ).toEqual({ ...state, phone: newPhone });
-		} );
-		test( 'supplies currently held state slice value as argument', () => {
-			expect( arg ).not.toBe( _state.phone );
-			expect( arg ).toStrictEqual( state.phone );
-		} );
-	} );
-	describe( 'setting referenced top level properties', () => {
-		let _state, stateReplacement;
-		beforeAll(() => {
-			stateReplacement = {
-				averageScore: 87, // new
-				// existing
-				isActive: expect.any( Boolean ),
-				name: expect.any( Object ),
-				registered: expect.any( Object ),
-				// new
-				test1: expect.anything(),
-				test2: expect.anything(),
-				test3: expect.anything(),
-				test4: expect.anything(),
-				zone: 33
+				tags: [ state.tags[ 0 ], '', ...state.tags.slice( 2 ) ]
 			};
 		});
-		test( 'accepts ready-to-set data', () => {
-			_state = createSourceData();
-			setState( _state, { [ SET_TAG ]: stateReplacement } );
-			expect( _state ).toEqual( stateReplacement );
-		});
-		describe( 'using compute function', () => {
-			let arg;
-			beforeAll(() => {
-				_state = createSourceData();
-				setState( _state, {
-					[ SET_TAG ]: s => {
-						arg = s;
-						return stateReplacement;
-					}
-				} );
-			});
-			test( 'accepts the function return value', () => {
-				expect( _state ).toEqual( stateReplacement );
-			} );
-			test( 'supplies currently held state value as argument', () => {
-				expect( arg ).not.toBe( _state );
-				expect( arg ).toStrictEqual( state );
-			} );
+		test( 'sets string value at an index of array property to ""', () => {
+			const tags = clonedeep( state.tags );
+			tags[ 1 ] = { [ CLEAR_TAG ]: expect.anything() };
+			tag.$clear( _state.tags, 1, statsStub, tags );
+			expect( _state ).toEqual( expected );
 		} );
-	});
-	test( 'replaces properties with new value', () => {
-		const _state = createSourceData();
-		const newValues = {
-			company: 'TEST_COMPANY',
-			friends: 'NEW TEST FRIENDS',
-			name: { first: 'Priscilla', middle: 'Samantha', last: 'Williams' },
-			phone: {},
-			tags: []
-		};
-		setState( _state, {
-			company: { [ SET_TAG ]: newValues.company },
-			friends: { [ SET_TAG ]: newValues.friends },
-			name: { [ SET_TAG ]: newValues.name },
-			phone: { [ SET_TAG ]: newValues.phone },
-			tags: { [ SET_TAG ]: newValues.tags }
-		});
-		expect( _state ).toEqual({ ...state, ...newValues });
+		test( 'sets string value at an index of array property to "" using the indexed object array update methtod', () => {
+			tag.$clear( _state.tags, 1, statsStub, { 1: { [ CLEAR_TAG ]: expect.anything() } } );
+			expect( _state ).toEqual( expected );
+		} );
 	} );
-	test( 'adds new values to property when specified', () => {
-		const _state = createSourceData();
-		const newValues = {
-			company: 'TEST_COMPANY',
-			friends: 'NEW TEST FRIENDS',
-			name: { first: 'Priscilla', middle: 'Samantha', last: 'Williams' },
-			phone: { extension: 'x456' }, // ADDING `extension` to state.phone
-			tags: t => t.length > 3 ? t.slice( -2 ) : t
-		};
-		setState( _state, {
-			company: { [ SET_TAG ]: newValues.company },
-			friends: { [ SET_TAG ]: newValues.friends },
-			name: { [ SET_TAG ]: newValues.name },
-			phone: { extension: { [ SET_TAG ]: newValues.phone.extension } },
-			tags: { [ SET_TAG ]: newValues.tags }
-		});
-		const expected = { ...state, ...newValues, tags: state.tags.slice( -2 ) };
-		expected.phone = { ...state.phone, extension: newValues.phone.extension };
-		expect( _state ).toEqual( expected );
+	test( 'sets function instance value to null', () => {
+		const fn = () => {};
+		_state.fn = fn;
+		tag.$clear( _state, 'fn', statsStub, { fn: { [ CLEAR_TAG ]: expect.anything() } } );
+		expect( _state ).toEqual({ ...state, fn: null });
 	} );
-	test( 'ignores attempts to replace with identical values', () => {
-		const _state = createSourceData();
-		const onChangeMock = jest.fn();
-		setState( _state, {
-			friends: { [ SET_TAG ]: state.friends },
-			tags: { [ SET_TAG ]: state.tags }
-		}, onChangeMock );
-		expect( _state ).toEqual( state );
-		expect( onChangeMock ).not.toHaveBeenCalled();
+	test( 'sets class instance value to null', () => {
+		_state.instance = new ( class Test {} )();
+		tag.$clear( _state, 'instance', statsStub, { instance: { [ CLEAR_TAG ]: expect.anything() } } );
+		expect( _state ).toEqual({ ...state, instance: null });
 	} );
-	test( 'adds new properties for attmepts to replace non-existent properties', () => {
-		const _state = createSourceData();
-		const onChangeMock = jest.fn();
-		setState( _state, {
-			testing: { [ SET_TAG ]: expect.anything() }
-		}, onChangeMock );
-		expect( _state ).toEqual({ ...state, testing: expect.anything() });
-		expect( onChangeMock ).toHaveBeenCalled();
+	describe( 'at deeper level', () => {
+		test.each([
+			[ 'string', '', '', 'phone', 'country' ],
+			[ 'POJO', {}, '', 'registered', 'time' ],
+			[ 'array', [], '', 'history', 'places' ],
+			[ 'array element POJO', {}, ' using the indexed object array update methtod', 'friends', 1 ]
+		])( 'sets %s property value to %p%s', ( type, emptyValue, indexingDescAddendum, sliceKey, stateKey ) => {
+			tag.$clear( _state[ sliceKey ], stateKey, statsStub, { [ stateKey ]: { [ CLEAR_TAG ]: expect.anything() } } );
+			expect( _state ).toEqual({
+				...state,
+				[ sliceKey ]: (
+					indexingDescAddendum.length
+						? state[ sliceKey ].map( ( v, i ) => i === stateKey ? emptyValue : v )
+						: { ...state[ sliceKey ], [ stateKey ]: emptyValue }
+				)
+			});
+		} );
 	} );
 } );
-describe( `'${ SPLICE_TAG }' tag property key`, () => {
-	let state, newItems;
-	/**
-	 * "x" arrayIndex entry signifies when to insert new item values into expected array.
-	 *
-	 * @type {(field: string, indexPositions: Array<number|"x">, newItems: any) => Array}
-	 */
-	let computeExpectedArray;
-	beforeAll(() => {
-		newItems = [ expect.anything(), expect.anything() ];
-		state = createSourceData();
-		computeExpectedArray = ( field, indexPositions, newItems ) => indexPositions.reduce(( a, i ) => {
-			i === 'x'
-				? a.push( ...newItems )
-				: a.push( state[ field ][ i ] );
-			return a;
-		}, []);
-	});
-	test( 'removes a specified number of elements from a specified state array index and inserts new items at that index', () => {
-		const _state = createSourceData();
-		setState( _state, {
-			friends: { [ SPLICE_TAG ]: [ 2, 1, ...newItems ] },
-			tags: { [ SPLICE_TAG ]: [ 3, 2, ...newItems ] }
+
+describe( '$delete(...)', () => {
+	let _state;
+	beforeEach(() => { _state = createSourceData() })
+	test( 'removes all listed properties residing at the provided stateKey = \'state\'', () => {
+		const newState = { state: _state };
+		const removedKeys = [ '_id', 'address', 'friends', 'picture' ];
+		tag.$delete( newState, 'state', statsStub, { state: { [ DELETE_TAG ]: removedKeys } } )
+		expect( removedKeys.every( k => !( k in newState.state ) ) ).toBe( true );
+	} );
+	test( 'ignores invocations on an empty state slice', () => {
+		const stats = { hasChanges: false };
+		_state.name = {};
+		tag.$delete( _state, 'name', statsStub, { name: { [ DELETE_TAG ]: [ 'suffix' ] } } );
+		expect( _state ).toEqual({ ...state, name: {} });
+		expect( stats.hasChanges ).toBe( false );
+	} );
+	test( 'ignores invocations on non-existent state slices', () => {
+		const stats = { hasChanges: false };
+		tag.$delete( _state, 'test', statsStub, { test: { [ DELETE_TAG ]: [ 'suffix' ] } } );
+		expect( _state ).toEqual( state );
+		expect( stats.hasChanges ).toBe( false );
+	} );
+	test( 'ignores listed properties not present in state slice', () => {
+		const stats = { hasChanges: false };
+		tag.$delete( _state, 'name', statsStub, { name: { [ DELETE_TAG ]: [ 'suffix' ] } } );
+		expect( _state ).toEqual( state );
+		expect( stats.hasChanges ).toBe( false );
+	} );
+	test( 'ignores empty argument array', () => {
+		const stats = { hasChanges: false };
+		tag.$delete( _state, 'name', statsStub, { name: { [ DELETE_TAG ]: [] } } );
+		expect( _state ).toEqual( state );
+		expect( stats.hasChanges ).toBe( false );
+	} );
+	test( 'throws `TypeError` with non-array argument', () => {
+		expect(() => tag.$delete( createSourceData(), 'company', statsStub, {
+			company: { [ DELETE_TAG ]: expect.anything() }
+		} ) ).toThrow( TypeError );
+	} );
+	describe( 'indexing', () => {
+		let expected;
+		beforeAll(() => { expected = { ...state, tags: [ 4, 5 ].map( i => state.tags[ i ] ) } })
+		test( 'removes all listed array indexes residing at the provided array state property named \'tags\'', () => {
+			tag.$delete( _state, 'tags', statsStub, { tags: { [ DELETE_TAG ]: [ 0, 1, 2, 3, 6 ] } } )
+			expect( _state ).toEqual( expected );
 		} );
-		expect( _state ).toEqual({
-			...state,
-			friends: computeExpectedArray( 'friends', [ 0, 1, 'x' ], newItems ),
-			tags: computeExpectedArray( 'tags', [ 0, 1, 2, 'x', 5, 6 ], newItems )
-		});
-	} );
-	test( 'only updates state slices of the array type', () => {
-		const _state = createSourceData();
-		setState( _state, {
-			company: { [ SPLICE_TAG ]: [ 0, 2 ] }, // non-array `company` state will be ignored
-			friends: { [ SPLICE_TAG ]: [ 0, 2 ] }
+		test( 'removes identified items counting backwards', () => {
+			tag.$delete( _state, 'tags', statsStub, { tags: { [ DELETE_TAG ]: [ -1, -4, -5, -6, -7 ] } } )
+			expect( _state ).toEqual( expected );
 		} );
-		expect( _state ).toEqual({ ...state, friends: [ state.friends[ 2 ] ] });
-	} );
-	describe( 'non-optional argument type validation', () => {
-		test( 'only accepts an array value consisting of at least two integers', () => expect(
-			() => setState( createSourceData(), { friends: { [ SPLICE_TAG ]: [ 0, 1 ] } } )
-		).not.toThrow( TypeError ) );
-		test.each([
-			[ null ], [ undefined ], [ '' ], [ 'test' ], [ {} ], [ { test: expect.anything() } ],
-			[ true ], [ [] ], [ [ 3 ] ], [ [ true, true ] ], [ [ 4, true ] ], [ [ 1.2, 0.5 ] ],
-			[ { 0: 2, 1: 1 } ]
-		])( 'throws `TypeError` for arguments fitting this description: %p', args => expect(
-			() => setState( state, { friends: { [ SPLICE_TAG ]: args } } )
-		).toThrow( TypeError ) );
-	} );
-	describe( 'additional optional ...newItems variadic argumemt(s)', () => {
-		test( 'accepts one or more values to insert contiguously starting from the fromIndex position of the state array', () => {
-			const _state = createSourceData();
-			setState( _state, {
-				friends: { [ SPLICE_TAG ]: [ 2, 1, ...newItems ] },
-				tags: { [ SPLICE_TAG ]: [ 3, 2, ...newItems ] }
+		test( 'ignores invocations on empty array state slice', () => {
+			const stats = { hasChanges: false };
+			_state.tags = [];
+			tag.$delete( _state, 'tags', statsStub, { tags: { [ DELETE_TAG ]: [ 0, 1, 2, 3, 6 ] } } );
+			expect( _state ).toEqual({ ...state, tags: [] });
+			expect( stats.hasChanges ).toBe( false );
+		} );
+		test( 'ignores indexes not present in state slice array', () => {
+			const stats = { hasChanges: false };
+			tag.$delete( _state, 'tags', statsStub, { tags: { [ DELETE_TAG ]: [ 101, 9, 30, 62 ] } } );
+			expect( _state ).toEqual( state );
+			expect( stats.hasChanges ).toBe( false );
+		} );
+		describe( 'contents at specific index', () => {
+			let expected;
+			beforeAll(() => {
+				expected = { ...state, friends: [ { id: state.friends[ 0 ].id }, ...state.friends.slice( 1 ) ] };
+			});
+			test( 'removes properties at \'friends[0]\'', () => {
+				tag.$delete( _state.friends, 0, statsStub, [{ [ DELETE_TAG ]: [ 'name' ] }] );
+				expect( _state ).toEqual( expected );
 			} );
-			expect( _state ).toEqual({
-				...state,
-				friends: computeExpectedArray( 'friends', [ 0, 1, 'x' ], newItems ),
-				tags: computeExpectedArray( 'tags', [ 0, 1, 2, 'x', 5, 6 ], newItems )
-			});
+			test( 'removes properties at \'friends[0]\' using indexed object update', () => {
+				tag.$delete( _state.friends, 0, statsStub, { 0: { [ DELETE_TAG ]: [ 'name' ] } } )
+				expect( _state ).toEqual( expected );
+			} );
 		} );
 	} );
-	test( 'trims off all leading elements identical to the state array at same index; adjusts fromIndex & deleteCount inserting new items', () => {
-		const _state = createSourceData();
-		setState( _state, {
-			friends: { [ SPLICE_TAG ]: [ 0, 3, state.friends[ 0 ], ...newItems ] },
-			tags: { [ SPLICE_TAG ]: [ 2, 4, state.tags[ 2 ], state.tags[ 3 ], ...newItems, state.tags[ 0 ] ] }
+} );
+
+describe( '$move(...)', () => {
+	let _state, statsStub;
+	beforeAll(() => { statsStub = { hasChanges: false } });
+	beforeEach(() => {
+		_state = createSourceData();
+		statsStub.hasChanges = false;
+	});
+	test( 'moves x=3 items from index 2 to index 4 of the array state slice residing at stateKey = \'tags\'', () => {
+		tag.$move( _state, 'tags', statsStub, { tags: { [ MOVE_TAG ]: [ 2, 4, 3 ] } } )
+		expect( _state ).toEqual({ ...state, tags: [ 0, 1, 5, 6, 2, 3, 4 ].map( i => state.tags[ i ] ) });
+		expect( statsStub.hasChanges ).toBe( true );
+	} );
+	test( 'moves only one item by default', () => {
+		tag.$move( _state, 'tags', statsStub, { tags: { [ MOVE_TAG ]: [ 2, 4 ] } } )
+		expect( _state ).toEqual({ ...state, tags: [ 0, 1, 3, 4, 2, 5, 6 ].map( i => state.tags[ i ] ) });
+		expect( statsStub.hasChanges ).toBe( true );
+	} );
+	test( 'moves by counting when backward negative indexes supplied', () => {
+		tag.$move( _state, 'tags', statsStub, { tags: { [ MOVE_TAG ]: [ -5, -3 ] } } )
+		expect( _state ).toEqual({ ...state, tags: [ 0, 1, 3, 4, 2, 5, 6 ].map( i => state.tags[ i ] ) });
+		expect( statsStub.hasChanges ).toBe( true );
+	} );
+	test( 'ignores the request where the updated state slice array is empty', () => {
+		const testTags = [];
+		_state.tags = testTags;
+		tag.$move( _state, 'tags', statsStub, { tags: { [ MOVE_TAG ]: [ -5, -3 ] } } )
+		expect( _state.tags ).toHaveLength( 0 );
+		expect( _state.tags ).toBe( testTags );
+		expect( statsStub.hasChanges ).toBe( false );
+	} );
+	test( 'ignores the request where the updated state slice is not an array', () => {
+		const testTags = 'TEST_TAGS';
+		_state.tags = testTags;
+		tag.$move( _state, 'tags', statsStub, { tags: { [ MOVE_TAG ]: [ -5, -3 ] } } )
+		expect( _state.tags ).toBe( testTags );
+		expect( statsStub.hasChanges ).toBe( false );
+	} );
+	test( 'ignores the request where number of items to move < 1', () => {
+		tag.$move( _state, 'tags', statsStub, { tags: { [ MOVE_TAG ]: [ -5, -3, 0 ] } } );
+		expect( _state ).toStrictEqual( state );
+		expect( statsStub.hasChanges ).toBe( false );
+		tag.$move( _state, 'tags', statsStub, { tags: { [ MOVE_TAG ]: [ -5, -3, -3 ] } } );
+		expect( _state ).toStrictEqual( state );
+		expect( statsStub.hasChanges ).toBe( false );
+	} );
+	test( 'ignores the request where number of items to move is non-integer', () => {
+		tag.$move( _state, 'tags', statsStub, { tags: { [ MOVE_TAG ]: [ -5, -3, 1.434 ] } } );
+		expect( _state ).toStrictEqual( state );
+		expect( statsStub.hasChanges ).toBe( false );
+		tag.$move( _state, 'tags', statsStub, {
+			tags: {
+				[ MOVE_TAG ]: [ -5, -3, expect.any( String ) ]
+			}
+		} );
+		expect( _state ).toStrictEqual( state );
+		expect( statsStub.hasChanges ).toBe( false );
+	} );
+	test( 'ignores the request where any of the indexes supplied is out of the bounds', () => {
+		[[ 15, 10 ], [ 15, 2 ], [ 2, 10 ], [ -15, -10 ], [ -15, 2 ], [ 2, -10 ], [ -15, -2 ], [ -2, -10 ]]
+			.forEach( moveArgs => {
+				tag.$move( _state, 'tags', statsStub, { tags: { [ MOVE_TAG ]: moveArgs } } );
+				expect( _state ).toStrictEqual( state );
+				expect( statsStub.hasChanges ).toBe( false );
+			} );
+	} );
+	test( 'ignores the request where both move index value point at the same element', () => {
+		tag.$move( _state, 'tags', statsStub, { tags: { [ MOVE_TAG ]: [ -3, 4 ] } } );
+		expect( _state ).toStrictEqual( state );
+		expect( statsStub.hasChanges ).toBe( false );
+	} );
+	test( 'ignores the request where the state slice is not an array', () => {
+		const testTags = 'TEST_TAGS';
+		_state.tags = testTags;
+		tag.$move( _state, 'tags', statsStub, { tags: { [ MOVE_TAG ]: [ -5, -3 ] } } );
+		expect( _state.tags ).toBe( testTags );
+		expect( statsStub.hasChanges ).toBe( false );
+	} );
+	describe( 'mandatory argument validation', () => {
+		test.each([
+			[ 'non-array argument', expect.anything() ],
+			[ 'argument array length < 2', [ 1 ] ],
+			[ 'non-integer first value in argument array argument', [ true, 3 ] ],
+			[ 'non-integer second value in argument array argument', [ 1, '3' ] ]
+		])( 'throws TypeError on encountering %s', ( description, testValue ) => {
+			expect(() => tag.$move( _state.friends, 0, statsStub, {
+				0: { [ MOVE_TAG ]: testValue }
+			} )).toThrow( TypeError );
+			expect( statsStub.hasChanges ).toBe( false );
+		} );
+	} );
+} );
+
+describe( '$push(...)', () => {
+	let _state, statsStub;
+	beforeAll(() => { statsStub = { hasChanges: false } });
+	beforeEach(() => {
+		_state = createSourceData();
+		statsStub.hasChanges = false;
+	});
+	test( 'appends new items to the array state slice residing at stateKey = \'tags\'', () => {
+		tag.$push( _state, 'tags', statsStub, { tags: { [ PUSH_TAG ]: [ 2, 4, 3 ] } } );
+		expect( _state ).toEqual({ ...state, tags: [ ...state.tags, 2, 4, 3 ] });
+		expect( statsStub.hasChanges ).toBe( true );
+	} );
+	test( 'throws TypeError at non-array argument', () => {
+		expect(() => tag.$push( _state, 'tags', statsStub, {
+			tags: { [ PUSH_TAG ]: expect.anything() }
+		} )).toThrow( TypeError );
+		expect( statsStub.hasChanges ).toBe( false );
+	} );
+	test( 'ignores the request where array argument is empty', () => {
+		tag.$push( _state, 'tags', statsStub, { tags: { [ PUSH_TAG ]: [] } } );
+		expect( _state ).toStrictEqual( state );
+		expect( statsStub.hasChanges ).toBe( false );
+	} );
+	test( 'ignores the request where the state slice is not an array', () => {
+		const testTags = 'TEST_TAGS';
+		_state.tags = testTags;
+		tag.$push( _state, 'tags', statsStub, { tags: { [ PUSH_TAG ]: [ 2, 4, 3 ] } } );
+		expect( _state.tags ).toBe( testTags );
+		expect( statsStub.hasChanges ).toBe( false );
+	} );
+} );
+
+describe( '$replace(...)', () => {
+	let newValue, _state1, _state2;
+	beforeAll(() => { newValue = 'TEST_VALUE' });
+	beforeEach(() => {
+		_state1 = createSourceData();
+		_state2 = createSourceData();
+	});
+	describe( 'is an alias to the $set(with non-compute-function value) ', () => {
+		test( 'replaces state property with new value', () => {
+			tag.$replace( _state1, 'history', statsStub, { history: { [ REPLACE_TAG ]: newValue } } );
+			tag.$set( _state2, 'history', statsStub, { history: { [ SET_TAG ]: newValue } } );
+			expect( _state1 ).toEqual( _state2 );
+		} );
+		test( 'replaces array element via indexed object update', () => {
+			tag.$replace( _state1.history, 'places', statsStub, { places: { 1: { [ REPLACE_TAG ]: newValue } } } );
+			tag.$set( _state2.history, 'places', statsStub, { places: { 1: { [ SET_TAG ]: newValue } } } );
+			expect( _state1 ).toEqual( _state2 );
+		} );
+	} );
+} );
+
+describe( '$set(...)', () => {
+	let newValue, _state;
+	beforeAll(() => { newValue = 'TEST_VALUE' });
+	beforeEach(() => { _state = createSourceData() });
+	test( 'sets state property with new value', () => {
+		tag.$set( _state, 'history', statsStub, { history: { [ SET_TAG ]: newValue } } );
+		expect( _state ).toEqual({ ...state, history: newValue })
+	} );
+	describe( 'at an index', () => {
+		let expected;
+		beforeAll(() => {
+			expected = {
+				...state,
+				history: {
+					...state.history,
+					places: [
+						state.history.places[ 0 ],
+						newValue,
+						state.history.places[ 2 ]
+					]
+				}
+			};
 		});
+		test( 'sets array element', () => {
+			tag.$set( _state.history.places, 1, statsStub, [ state.history.places[ 0 ], { [ SET_TAG ]: newValue } ] );
+			expect( _state ).toEqual( expected );
+		} );
+		test( 'sets array element via indexed object update', () => {
+			tag.$set( _state.history.places, 1, statsStub, { 1: { [ SET_TAG ]: newValue } } );
+			expect( _state ).toEqual( expected );
+		} );
+		test( 'ignores state slice updates with identical values', () => {
+			tag.$set( _state, 'company', statsStub, { company: { [ SET_TAG ]: state.company } } );
+			expect( _state ).toEqual( state );
+			tag.$set( _state, 'friends', statsStub, { friends: { [ SET_TAG ]: state.friends } } );
+			expect( _state ).toEqual( state );
+		} );
+	} );
+	describe( 'with computed values', () => {
+		let computeFn, newState, prevHistory;
+		beforeAll(() => {
+			newState = _state;
+			prevHistory = newState.history;
+			computeFn = jest.fn().mockReturnValue( newValue );
+			tag.$set( newState, 'history', statsStub, { history: { [ SET_TAG ]: computeFn } } );
+		});
+		test( 'calls compute function with a copy of the current state slice value', () => {
+			const prevHistoryArg = computeFn.mock.calls[ 0 ][ 0 ];
+			expect( prevHistoryArg ).not.toBe( prevHistory );
+			expect( prevHistoryArg ).toStrictEqual( prevHistory );
+			expect( prevHistoryArg ).toEqual( prevHistory );
+		} );
+		test( 'sets top level state properties with compute function return value', () => {
+			expect( newState ).toEqual({ ...state, history: newValue })
+		} );
+	} );
+} );
+
+describe( '$splice(...)', () => {
+	let _state, statsStub;
+	beforeAll(() => { statsStub = { hasChanges: false } });
+	beforeEach(() => {
+		_state = createSourceData();
+		statsStub.hasChanges = false;
+	});
+	test( 'replaces 3 items starting from index 3 with new items \'y\' and  \'z\'', () => {
+		tag.$splice( _state, 'tags', statsStub, { tags: { [ SPLICE_TAG ]: [ 3, 3, 'y', 'z' ] } } )
 		expect( _state ).toEqual({
 			...state,
-			friends: computeExpectedArray( 'friends', [ 0, 'x' ], newItems ),
-			tags: computeExpectedArray( 'tags', [ 0, 1, 2, 3, 'x', 0, 6 ], newItems )
+			tags: [ 0, 1, 2, 'y', 'z', 6 ].map(
+				i => !Number.isInteger( i ) ? i : state.tags[ i ]
+			)
 		});
+		expect( statsStub.hasChanges ).toBe( true );
 	} );
-	test( 'ignores a combination of argument #2 = 0 and no new items to insert', () => {
-		const _state = createSourceData();
-		const onChangeMock = jest.fn();
-		setState( _state, { tags: { [ SPLICE_TAG ]: [ 3, 0 ] } }, onChangeMock );
-		expect( _state ).toEqual( state );
-		expect( onChangeMock ).not.toHaveBeenCalled();
+	test( 'removes 3 items starting from index -5 counting backwards', () => {
+		tag.$splice( _state, 'tags', statsStub, { tags: { [ SPLICE_TAG ]: [ -5, 3 ] } } )
+		expect( _state ).toEqual({ ...state, tags: [ 0, 1, 5, 6 ].map( i => state.tags[ i ] ) });
+		expect( statsStub.hasChanges ).toBe( true );
 	} );
-	test( 'auto-corrects negative argument #2 to 0', () => {
-		const _state = createSourceData();
-		const onChangeMock = jest.fn();
-		setState( _state, { tags: { [ SPLICE_TAG ]: [ 3, -2 ] } }, onChangeMock );
-		expect( _state ).toEqual( state );
-		expect( onChangeMock ).not.toHaveBeenCalled();
+	test( 'ignores the request where the updated state slice is not an array', () => {
+		const testTags = 'TEST_TAGS';
+		_state.tags = testTags;
+		tag.$splice( _state, 'tags', statsStub, { tags: { [ SPLICE_TAG ]: [ -5, 3 ] } } );
+		expect( _state.tags ).toBe( testTags );
+		expect( statsStub.hasChanges ).toBe( false );
 	} );
-	describe( 'counting from end of state array', () => {
-		test.each([
-			[ -1, 0, '', [ 0, 1, 2 ] ],
-			[ -1, 0, ' along with the optional new element to insert', [ 0, 1, 'x', 2 ] ],
-			[ 2, -2, '', [ 0, 1, 2 ] ],
-			[ 2, -2, ' along with the optional new element to insert', [ 0, 1, 'x', 2 ] ],
-			[ -2, 1, '', [ 0, 2 ] ],
-			[ -2, 1, ' along with the optional new element to insert', [ 0, 'x', 2 ] ]
-		])( 'accepts negative index in args %d and %d%s', ( from, to, desc, expectedIndices ) => {
-			const _state = createSourceData();
-			const args = [ from, to ];
-			if( desc.length ) { args.push( ...newItems ) }
-			setState( _state, { friends: { [ SPLICE_TAG ]: args } } );
-			expect( _state ).toEqual({
-				...state,
-				friends: computeExpectedArray( 'friends', expectedIndices, desc.length ? newItems : undefined )
-			});
+	test( 'ignores the request where deleteCount < 1 with no new items to insert', () => {
+		const testTags = [];
+		_state.tags = testTags;
+		tag.$splice( _state, 'tags', statsStub, { tags: { [ SPLICE_TAG ]: [ -5, 0 ] } } );
+		expect( _state.tags ).toHaveLength( 0 );
+		expect( _state.tags ).toBe( testTags );
+		expect( statsStub.hasChanges ).toBe( false );
+	} );
+	test( 'ignores requests where new items match delete candidates', () => {
+		tag.$splice( _state, 'tags', statsStub, {
+			tags: {
+				[ SPLICE_TAG ]: [ 1, 3, ..._state.tags.slice( 1, 4 ) ]
+			}
+		} );
+		expect( _state ).toStrictEqual( state );
+		expect( statsStub.hasChanges ).toBe( false );
+	} );
+	test( 'skips first N contiguous delete candidates matching first N new items', () => {
+		const newItems = [ 'new item #1', 'new item #2' ];
+		tag.$splice( _state, 'tags', statsStub, {
+			tags: {
+				[ SPLICE_TAG ]: [ 1, 3, ...[ 1, 2 ].map( i => _state.tags[ i ] ), ...newItems ]
+			}
+		} );
+		expect( _state ).toEqual({
+			...state,
+			tags: [
+				...[ 0, 1, 2 ].map( i => state.tags[ i ] ),
+				...newItems,
+				...state.tags.slice( 4 )
+			]
+		});
+		expect( statsStub.hasChanges ).toBe( true );
+	} );
+	describe( 'start value', () => {
+		let newItem;
+		beforeAll(() => { newItem = 'new item' });
+		test( 'becomes array length when start index argument > array length', () => {
+			tag.$splice( _state, 'tags', statsStub, { tags: { [ SPLICE_TAG ]: [ 100, 1, newItem ] } } );
+			expect( _state.tags ).toStrictEqual([ ...state.tags, newItem ]);
+		} );
+		test( 'becomes 0 when negative start index argument resolves to be out of bounds', () => {
+			tag.$splice( _state, 'tags', statsStub, { tags: { [ SPLICE_TAG ]: [ -100, 1, newItem ] } } );
+			expect( _state.tags ).toStrictEqual([ newItem, ...state.tags.slice( 1 ) ]);
 		} );
 	} );
-	test( 'ignores attempts to remove and re-insert identical values', () => {
-		const _state = createSourceData();
-		const onChangeMock = jest.fn();
-		setState( _state, {
-			friends: { [ SPLICE_TAG ]: [ 0, 1, state.friends[ 0 ] ] },
-			tags: { [ SPLICE_TAG ]: [ 5, 1, state.tags[ 5 ] ] }
-		}, onChangeMock );
-		expect( _state ).toEqual( state );
-		expect( onChangeMock ).not.toHaveBeenCalled();
+	describe( 'mandatory argument validation', () => {
+		test.each([
+			[ 'non-array argument', expect.anything() ],
+			[ 'argument array length < 2', [ 1 ] ],
+			[ 'non-integer first value in argument array argument', [ true, 3 ] ],
+			[ 'non-integer second value in argument array argument', [ 1, '3' ] ]
+		])( 'throws TypeError on encountering %s', ( description, testValue ) => {
+			expect(() => tag.$splice( _state.friends, 0, statsStub, {
+				0: { [ SPLICE_TAG ]: testValue }
+			} )).toThrow( TypeError );
+			expect( statsStub.hasChanges ).toBe( false );
+		} );
 	} );
-	test( 'ignores non-existent properties', () => {
-		const _state = createSourceData();
-		const onChangeMock = jest.fn();
-		setState( _state, { testing: { [ SPLICE_TAG ]: [ 1, 1 ] } }, onChangeMock );
-		expect( _state ).toEqual( state );
-		expect( onChangeMock ).not.toHaveBeenCalled();
+} );
+
+describe( 'isClosedTag(...)', () => {
+	test( 'returns true if argument found in NO_PARAM_TAG map', () => {
+		expect( tag.isClosedTag( CLEAR_TAG ) ).toBe( true );
+	} );
+	test( 'returns false if argument not found in NO_PARAM_TAG map', () => {
+		expect( tag.isClosedTag( expect.anything() ) ).toBe( false );
 	} );
 } );

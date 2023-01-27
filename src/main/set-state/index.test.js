@@ -31,11 +31,11 @@ describe( 'setState(...)', () => {
 		} );
 	} );
 	describe( 'attempt resulting in state change', () => {
-		let onChangeMock, registered, newState;
+		let onChangeMock, registered, changes;
 		beforeAll(() => {
 			onChangeMock = jest.fn();
 			registered = clonedeep( state.registered );
-			newState = {
+			changes = {
 				registered: {
 					day: 30, // new value
 					month: 2,
@@ -46,20 +46,20 @@ describe( 'setState(...)', () => {
 					year: 2020 // new value
 				}
 			};
-			setState( state, newState, onChangeMock );
+			setState( state, changes, onChangeMock );
 		});
 		afterAll(() => { state.registered = registered });
 		test( 'updates only new incoming changes', () => {
 			expect( state.registered.time ).toStrictEqual( registered.time );
 			[ 'day', 'year' ].forEach( k => {
 				expect( state.registered[ k ] ).not.toEqual( registered[ k ] );
-				expect( state.registered[ k ] ).toBe( newState.registered[ k ] );
+				expect( state.registered[ k ] ).toBe( changes.registered[ k ] );
 			} );
 			const state2 = createSourceData();
 			const registered2 = clonedeep( state2.registered );
-			const newState2 = clonedeep( newState );
-			newState2.registered.time.hours = 17; // also add new `hours` value update to `time` object
-			setState( state2, newState2 );
+			const changes2 = clonedeep( changes );
+			changes2.registered.time.hours = 17; // also add new `hours` value update to `time` object
+			setState( state2, changes2 );
 			expect( state2.registered.time ).not.toEqual( registered2.time );
 			expect( state2.registered.time.hours ).not.toBe( registered2.time.hours );
 			expect( state2.registered.time.minutes ).toBe( registered2.time.minutes );
@@ -69,7 +69,7 @@ describe( 'setState(...)', () => {
 			expect( onChangeMock ).toHaveBeenCalledTimes( 1 );
 		} );
 		test( 'communicates proposed changes as part of state change notification', () => {
-			expect( onChangeMock ).toHaveBeenCalledWith( newState );
+			expect( onChangeMock ).toHaveBeenCalledWith( changes );
 		} );
 	} );
 	describe( 'attempt resulting in no state change', () => {
@@ -104,11 +104,11 @@ describe( 'setState(...)', () => {
 			expect( state.friends ).toBe( friends );
 		} );
 		describe( 'using indexed object to update array at specific indexes', () => {
-			let newState, onChangeMock;
+			let changes, onChangeMock;
 			let origFriendsSlice;
 			beforeAll(() => {
 				origFriendsSlice = clonedeep( state.friends );
-				newState = {
+				changes = {
 					friends: {
 						1: { name: { first: 'Virginia' } },
 						2: {
@@ -118,7 +118,7 @@ describe( 'setState(...)', () => {
 					}
 				};
 				onChangeMock = jest.fn();
-				setState( state, newState, onChangeMock );
+				setState( state, changes, onChangeMock );
 			});
 			afterAll(() => { state.friends = origFriendsSlice });
 			test( 'maintains structural integrity of the subtree', () => {
@@ -126,20 +126,20 @@ describe( 'setState(...)', () => {
 			} );
 			test( 'updates state with new changes', () => {
 				expect( state.friends[ 0 ] ).toEqual( origFriendsSlice[ 0 ] ); // remains untouched
-				expect( state.friends[ 1 ].name.first ).toBe( newState.friends[ 1 ].name.first );
-				expect( state.friends[ 2 ] ).toEqual( newState.friends[ 2 ] );
+				expect( state.friends[ 1 ].name.first ).toBe( changes.friends[ 1 ].name.first );
+				expect( state.friends[ 2 ] ).toEqual( changes.friends[ 2 ] );
 			} );
 			test( 'notifies listeners of state changes', () => {
 				expect( onChangeMock ).toHaveBeenCalledTimes( 1 );
-				expect( onChangeMock ).toHaveBeenCalledWith( newState );
+				expect( onChangeMock ).toHaveBeenCalledWith( changes );
 			} );
 		} );
 		describe( 'using indexed object to create new array entry', () => {
-			let newEntryIndex, newState, onChangeMock, origFriendsSlice;
+			let newEntryIndex, changes, onChangeMock, origFriendsSlice;
 			beforeAll(() => {
 				origFriendsSlice = clonedeep( state.friends );
 				newEntryIndex = origFriendsSlice.length + 2;
-				newState = {
+				changes = {
 					friends: {
 						[ newEntryIndex ]: {
 							id: newEntryIndex,
@@ -148,7 +148,7 @@ describe( 'setState(...)', () => {
 					}
 				};
 				onChangeMock = jest.fn();
-				setState( state, newState, onChangeMock );
+				setState( state, changes, onChangeMock );
 			});
 			afterAll(() => { state.friends = origFriendsSlice });
 			test( 'maintains structural integrity of the subtree', () => {
@@ -165,18 +165,18 @@ describe( 'setState(...)', () => {
 				}
 			} );
 			test( 'places new entry at the referenced index', () => {
-				expect( state.friends[ newEntryIndex ] ).toEqual( newState.friends[ newEntryIndex ] );
+				expect( state.friends[ newEntryIndex ] ).toEqual( changes.friends[ newEntryIndex ] );
 			} );
 			test( 'notifies listeners of state changes', () => {
 				expect( onChangeMock ).toHaveBeenCalledTimes( 1 );
-				expect( onChangeMock ).toHaveBeenCalledWith( newState );
+				expect( onChangeMock ).toHaveBeenCalledWith( changes );
 			} );
 		} );
-		describe( 'using indexed object resulting in no new state change', () => {
-			let newState, onChangeMock, origPlacesSlice;
+		describe( 'using indexed object resulting in no new change', () => {
+			let changes, onChangeMock, origPlacesSlice;
 			beforeAll(() => {
 				origPlacesSlice = clonedeep( state.history.places );
-				newState = {
+				changes = {
 					history: {
 						places: {
 							0: {
@@ -187,7 +187,7 @@ describe( 'setState(...)', () => {
 					}
 				};
 				onChangeMock = jest.fn();
-				setState( state, newState, onChangeMock );
+				setState( state, changes, onChangeMock );
 			});
 			afterAll(() => { state.history.places = origPlacesSlice });
 			test( 'maintains structural integrity of the subtree', () => {
@@ -232,81 +232,81 @@ describe( 'setState(...)', () => {
 			} );
 		} );
 		describe( 'incoming array < existing array', () => {
-			let newState, onChangeMock;
+			let changes, onChangeMock;
 			let origFriendsSlice;
 			beforeAll(() => {
 				origFriendsSlice = clonedeep( state.friends );
-				newState = { friends: [ origFriendsSlice[ 2 ] ] };
+				changes = { friends: [ origFriendsSlice[ 2 ] ] };
 				onChangeMock = jest.fn();
-				setState( state, newState, onChangeMock );
+				setState( state, changes, onChangeMock );
 			});
 			afterAll(() => { state.friends = origFriendsSlice });
 			test( 'truncates existing array to new array size', () => {
-				expect( state.friends ).toHaveLength( newState.friends.length );
+				expect( state.friends ).toHaveLength( changes.friends.length );
 				expect( state.friends.length ).toBeLessThan( origFriendsSlice.length );
 			} );
 			test( 'updates state with new changes', () => {
-				expect( state.friends ).toEqual( newState.friends );
+				expect( state.friends ).toEqual( changes.friends );
 			} );
 			test( 'notifies listeners of state changes', () => {
 				expect( onChangeMock ).toHaveBeenCalledTimes( 1 );
-				expect( onChangeMock ).toHaveBeenCalledWith( newState );
+				expect( onChangeMock ).toHaveBeenCalledWith( changes );
 			} );
 		} );
 		describe( 'incoming array is a subset of existing array', () => {
-			let newState, onChangeMock;
+			let changes, onChangeMock;
 			let origFriendsSlice;
 			beforeAll(() => {
 				origFriendsSlice = clonedeep( state.friends );
-				newState = { friends: origFriendsSlice.slice( 0, 2 ) }; // takes 1st 2 entries and omits the last
+				changes = { friends: origFriendsSlice.slice( 0, 2 ) }; // takes 1st 2 entries and omits the last
 				onChangeMock = jest.fn();
-				setState( state, newState, onChangeMock );
+				setState( state, changes, onChangeMock );
 			});
 			afterAll(() => { state.friends = origFriendsSlice });
 			test( 'truncates existing array to new array size', () => {
-				expect( state.friends ).toHaveLength( newState.friends.length );
+				expect( state.friends ).toHaveLength( changes.friends.length );
 				expect( state.friends.length ).toBeLessThan( origFriendsSlice.length );
 			} );
 			test( 'updates state with new changes', () => {
-				expect( state.friends ).toEqual( newState.friends );
+				expect( state.friends ).toEqual( changes.friends );
 			} );
 			test( 'notifies listeners of the removed last entry', () => {
 				expect( onChangeMock ).toHaveBeenCalledTimes( 1 );
-				expect( onChangeMock ).toHaveBeenCalledWith( newState );
+				expect( onChangeMock ).toHaveBeenCalledWith( changes );
 			} );
 		} );
 		describe( 'incoming array > existing array', () => {
 			describe( 'where incoming array is completely different from existing array', () => {
-				let newState, onChangeMock;
+				let changes, onChangeMock;
 				let origFriendsSlice;
 				beforeAll(() => {
 					origFriendsSlice = clonedeep( state.friends );
-					newState = { friends: [] };
+					changes = { friends: [] };
 					for( let i = 7; --i; ) {
-						newState.friends.push({
+						changes.friends.push({
 							id: expect.any( Number ), name: { first: expect.any( String ), last: expect.any( String ) }
 						});
 					}
 					onChangeMock = jest.fn();
-					setState( state, newState, onChangeMock );
+					setState( state, changes, onChangeMock );
 				});
 				afterAll(() => { state.friends = origFriendsSlice });
 				test( 'increases existing array size to fit new array items', () => {
-					expect( state.friends ).toHaveLength( newState.friends.length );
+					expect( state.friends ).toHaveLength( changes.friends.length );
 					expect( state.friends.length ).toBeGreaterThan( origFriendsSlice.length );
 				} );
 				test( 'updates state with new changes', () => {
-					expect( state.friends ).toEqual( newState.friends );
+					expect( state.friends ).toEqual( changes.friends );
 				} );
 				test( 'notifies listeners of total state slice replacement', () => {
 					const replacedFriendsSlice = {};
-					newState.friends.forEach(( f, i ) => { replacedFriendsSlice[ i ] = f });
+					changes.friends.forEach(( f, i ) => { replacedFriendsSlice[ i ] = f });
 					expect( onChangeMock ).toHaveBeenCalledTimes( 1 );
-					expect( onChangeMock ).toHaveBeenCalledWith( newState );
+					expect( onChangeMock ).toHaveBeenCalledWith( changes );
 				} );
 			} );
 			describe( 'where incoming array contains existing array entries at the matching indexes', () => {
-				let newState, onChangeMock, lastNewStateEntry, origFriendsSlice, originalNewStateEntry0, originalNewStateEntry1;
+				let changes, onChangeMock, lastNewStateEntry, origFriendsSlice, originalNewStateEntry0, originalNewStateEntry1;
 				beforeAll(() => {
 					origFriendsSlice = clonedeep( state.friends );
 					originalNewStateEntry0 = { id: 15, name: { first: 'Sue', last: 'Jones' } };
@@ -314,20 +314,20 @@ describe( 'setState(...)', () => {
 						id: expect.any( Number ), name: { first: expect.any( String ), last: expect.any( String ) }
 					};
 					lastNewStateEntry = origFriendsSlice[ 0 ];
-					newState = { friends: clonedeep( origFriendsSlice ) };
-					newState.friends[ 0 ] = originalNewStateEntry0;
-					newState.friends.push( originalNewStateEntry1 );
-					newState.friends.push( lastNewStateEntry );
+					changes = { friends: clonedeep( origFriendsSlice ) };
+					changes.friends[ 0 ] = originalNewStateEntry0;
+					changes.friends.push( originalNewStateEntry1 );
+					changes.friends.push( lastNewStateEntry );
 					onChangeMock = jest.fn();
-					setState( state, newState, onChangeMock );
+					setState( state, changes, onChangeMock );
 				});
 				afterAll(() => { state.friends = origFriendsSlice });
 				test( 'increases existing array size to fit new array items', () => {
-					expect( state.friends ).toHaveLength( newState.friends.length );
+					expect( state.friends ).toHaveLength( changes.friends.length );
 					expect( state.friends.length ).toBeGreaterThan( origFriendsSlice.length );
 				} );
 				test( 'updates state with new changes', () => {
-					expect( state.friends ).toEqual( newState.friends );
+					expect( state.friends ).toEqual( changes.friends );
 				} );
 				test( 'maintains 2nd and 3rd elements from previous array', () => {
 					expect( state.friends[ 0 ] ).not.toEqual( origFriendsSlice[ 0 ] );
@@ -336,7 +336,7 @@ describe( 'setState(...)', () => {
 				} );
 				test( 'notifies listeners of updated array entries', () => {
 					expect( onChangeMock ).toHaveBeenCalledTimes( 1 );
-					expect( onChangeMock ).toHaveBeenCalledWith( newState );
+					expect( onChangeMock ).toHaveBeenCalledWith( changes );
 				} );
 			} );
 		} );
@@ -451,10 +451,10 @@ describe( 'setState(...)', () => {
 				} );
 				expect( _state ).toEqual({
 					...state,
-					friends: [ undefined, state.friends[ 1 ], undefined ],
+					friends: [ state.friends[ 1 ] ],
 					name: {},
 					phone: { local: state.phone.local },
-					tags: [ undefined, undefined, undefined, undefined, state.tags[ 4 ], state.tags[ 5 ], undefined ]
+					tags: [ state.tags[ 4 ], state.tags[ 5 ] ]
 				});
 			} );
 			test( 'removes all listed properties from an element and replaces the array with the element', () => {
@@ -732,32 +732,63 @@ describe( 'setState(...)', () => {
 			} );
 		} );
 		describe( `'${ SET_TAG }' tag property key`, () => {
-			let newPhone;
-			beforeAll(() => { newPhone = { area: '312', line: '1212', local: '644' } });
+			let newPhone, newTag0;
+			beforeAll(() => {
+				newPhone = { area: '312', line: '1212', local: '644' };
+				newTag0 = 'first item';
+			});
 			test( 'replaces state slice with new value', () => {
 				const _state = createSourceData();
-				setState( _state, {	phone: { [ SET_TAG ]: newPhone } } );
-				expect( _state ).toEqual({ ...state, phone: newPhone })
+				setState( _state, {
+					phone: { [ SET_TAG ]: newPhone },
+					tags: [ { [ SET_TAG ]: newTag0 }, ..._state.tags ]
+				} );
+				expect( _state ).toEqual({
+					...state,
+					phone: newPhone,
+					tags: [ newTag0, ...state.tags ]
+				});
+			} );
+			describe( 'concerning values data type', () => {
+				test( 'allows replacing atomic state slice with composite values', () => {
+					const _state = createSourceData();
+					const newInfo = { value: false, reason: expect.anything() };
+					setState( _state, {	isActive: { [ SET_TAG ]: newInfo } } );
+					expect( _state ).toEqual({ ...state, isActive: newInfo })
+				} );
+				test( 'allows replacing composite state slice with atomic values', () => {
+					const _state = createSourceData();
+					const phoneNumber = 'TEST PHONE NUMBER';
+					setState( _state, {	phone: { [ SET_TAG ]: phoneNumber } } );
+					expect( _state ).toEqual({ ...state, phone: phoneNumber })
+				} );
 			} );
 			describe( 'using compute function', () => {
-				let _state, arg;
+				let _state, phoneArg, newPropArg;
 				beforeAll(() => {
 					_state = createSourceData();
 					setState( _state, {
 						phone: {
 							[ SET_TAG ]: s => {
-								arg = s;
+								phoneArg = s;
 								return newPhone;
+							}
+						},
+						newProp: {
+							[ SET_TAG ]: s => {
+								newPropArg = s;
+								return s;
 							}
 						}
 					} );
 				});
 				test( 'replaces state slice with the return value', () => {
-					expect( _state ).toEqual({ ...state, phone: newPhone });
+					expect( _state ).toEqual({ ...state, newProp: newPropArg, phone: newPhone });
 				} );
 				test( 'supplies currently held state slice value as argument', () => {
-					expect( arg ).not.toBe( _state.phone );
-					expect( arg ).toStrictEqual( state.phone );
+					expect( newPropArg ).toBeUndefined();
+					expect( phoneArg ).not.toBe( _state.phone );
+					expect( phoneArg ).toStrictEqual( state.phone );
 				} );
 			} );
 			describe( 'setting referenced top level properties', () => {
@@ -988,31 +1019,62 @@ describe( 'setState(...)', () => {
 			} );
 		} );
 	} );
-	describe( 'running all capabilities in a single call', () => {
-		let state, newState;
-		beforeAll(() => {
-			state = createSourceData();
+	describe( 'utilizing all set tags in a single call', () => {
+		test( 'testing', () => {
+			const onChangeMock = jest.fn();
+			const state = createSourceData();
+			state.faveColors = [ 'white', 'grey', 'green', 'blue', 'navy', 'midnight blue', 'indigo', 'sky blue' ];
 			state.pets = [ 'Coco', 'Mimi', 'Kiki', 'Titi', 'Fifi', 'Lili' ];
-			newState = clonedeep( state );
-			setState( newState, {
+			const _state = clonedeep( state );
+			const changes = {
 				age: 97,
+				faveColors: {
+					[ MOVE_TAG ]: [ -5, 2, 4 ], // => ['white', 'grey', 'blue', 'navy', 'midnight blue', 'indigo', 'green', 'sky blue']
+					[ SPLICE_TAG ]: [ 0, 2, 'red', 'orange', 'yellow' ], // ['red', 'orange', 'yellow', 'blue', 'navy', 'midnight blue', 'indigo', 'green', 'sky blue']
+					[ PUSH_TAG ]: [ 'silver', 'gold', 'bronze' ] // [...,'silver', 'gold', 'bronze']
+				},
 				friends: {
-					[ DELETE_TAG ]: [ 0, 1 ],
+					[ DELETE_TAG ]: [ 0, -2 ],
 					1: { name: { first: 'Mary' } },
 					2: CLEAR_TAG
 				},
 				history: {
 					places: {
-						[ DELETE_TAG ]: [ 0, 2 ]
+						[ DELETE_TAG ]: [ 0, 2 ],
+						testing: expect.anything() // this will be ignored: `testing` is neither a tag command key nor a valid array index
 					}
 				},
-				pets: [ 'Titi', 'Deedee', 'Coco', 'Lulu', 'Lala', 'Momo', 'Chuchu' ]
-			} );
-		});
-		test( 'testing', () => {
-			// expect( JSON.stringify( newState, null, 2 ) ).toBeNull();
-			expect( newState ).toBeNull();
-		});
+				pets: [
+					{ [ REPLACE_TAG ]: 'Titi' },
+					'Deedee',
+					{ [ CLEAR_TAG ]: expect.anything() },
+					'Momo',
+					{ [ SET_TAG ]: s => s },
+					'Lala',
+					'Lulu',
+					'Chuchu'
+				],
+				tags: {
+					'-1': { [ SET_TAG ]: 'new last item' },
+					1: { [ REPLACE_TAG ]: 'new 2nd item' },
+					4: { [ SET_TAG ]: s => `${ s }_${ s.length }` }
+				}
+			};
+			setState( _state, changes, onChangeMock );
+			expect( _state ).toEqual({
+				...state,
+				age: 97,
+				faveColors: ['red', 'orange', 'yellow', 'blue', 'navy', 'midnight blue', 'indigo', 'green', 'sky blue', 'silver', 'gold', 'bronze' ],
+				friends: [ state.friends[ 2 ], { name: { first: 'Mary' } }, undefined ],
+				history: { places: [ state.history.places[ 1 ] ] },
+				pets: [ 'Titi', 'Deedee', '', 'Momo', state.pets[ 4 ], 'Lala', 'Lulu', 'Chuchu' ],
+				tags: [ 'minim', 'new 2nd item', 'dolor', 'in', 'ullamco_7', 'laborum', 'new last item' ]
+			});
+			const arg = onChangeMock.mock.calls[ 0 ][ 0 ];
+			expect( arg ).toBe( changes );
+			expect( arg ).toEqual( changes );
+			expect( arg ).toStrictEqual( changes );
+		} );
 		test( `allows '${ REPLACE_TAG } as an alias for '${ SET_TAG }' without the compute function`, () => {
 			const state1 = createSourceData();
 			const state2 = createSourceData();

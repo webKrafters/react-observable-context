@@ -92,7 +92,7 @@ const useStore = ( prehooks, value, storage ) => {
 	/** @type {StoreInternal<T>["setState"]} */
 	const setState = useCallback( changes => {
 		changes = clonedeep( changes );
-		runPrehook( prehooksRef.current, 'setState', [ changes ]) &&
+		runPrehook( prehooksRef.current, 'setState', [ changes ] ) &&
 		deps.setState( state, changes, onChange );
 	}, [] );
 

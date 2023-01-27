@@ -207,6 +207,198 @@ store.setState({ ...state, a: { ...state.a, b: [ { ...first, y: 30 }, 22, ...res
 // Refrain from doing this, please!
 ```
 
+<h3 id="setstate-tags"><b><i><u>Rewriting state using tag commands</u></i></b></h3>
+By default setState merges new changes into the current state slices. To overwrite current state slices with new state values, <b>7</b> tag commands have been provided for:
+<ol>
+	<li><span style="margin-left: 10px"><b><code>@@CLEAR:</code></b> setting state slice to its corresponding empty value</span></li>
+	<li><span style="margin-left: 10px"><b><code>@@DELETE:</code></b> deleting properties</span></li>
+	<li><span style="margin-left: 10px"><b><code>@@MOVE:</code></b> moving array elements</span></li>
+	<li><span style="margin-left: 10px"><b><code>@@PUSH:</code></b> pushing new items into an array</span></li>
+	<li><span style="margin-left: 10px"><b><code>@@REPLACE:</code></b> replacing property values</span></li>
+	<li><span style="margin-left: 10px"><b><code>@@SET:</code></b> setting property values</span></li>
+	<li><span style="margin-left: 10px"><b><code>@@SPLICE:</code></b> splicing array items</span></li>
+</ol>
+<strong>Examples:</strong>
+
+<b><code>@@CLEAR:</code></b> <i>takes no arguments.</i>
+
+```jsx
+const state = {
+	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+	j: 10
+};
+
+store.setState( '@@CLEAR' ) // or store.setState({ @@CLEAR: <anything> })
+
+/* empties the value at state.a.b; sets state.a.b = [] */
+store.setState({ a: { b: '@@CLEAR' } }) // or store.setState({ a: { b: { @@CLEAR: <anything> } } })
+
+/* empties the value at state.a.j; sets state.a.j = null */
+store.setState({ a: { j: '@@CLEAR' } }) // or store.setState({ a: { j: { @@CLEAR: <anything> } } })
+
+/* empties the value at state.a.b[ 0 ]; sets state.a.b = [{}] */
+store.setState({ a: { b: [ '@@CLEAR' ] } }) // or store.setState({ a: { b: [ { @@CLEAR: <anything> } ] } })
+
+/* empties the value at state.a.b[0]; sets state.a.b = [{}, state.a.b[1]] */
+store.setState({ a: { b: [ '@@CLEAR', state.a.b[1] ] } }) // or store.setState({ a: { b: [ { @@CLEAR: <anything> }, state.a.b[1] ] } })
+
+/* empties the value at state.a.b[0]; sets state.a.b = [{}, a.b[1]] using indexing (RECOMMENDED) */
+store.setState({ a: { b: { 0: '@@CLEAR' } } }) // or store.setState({ a: { b: { 0: { @@CLEAR: <anything> } } } })
+```
+
+<b><code>@@DELETE:</code></b> <i>takes an array argument listing property keys to delete.</i>
+
+```jsx
+const state = {
+	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+	j: 10
+};
+
+store.setState({ '@@DELETE': [ 'a' ] }) // removes state.a; sets state = {j: 10}
+
+store.setState({ a: { '@@DELETE': [ 'b' ] } }) // removes state.a.b; sets state.a = {}
+
+/* removes state.a.b[0]; leaving state.a.b = [{ x: 17, y: 18, z: 19 }] */
+store.setState({ a: { b: { '@@DELETE': [ 0 ] } } }) // or store.setState({ a: { b: { '@@DELETE': [ -2 ] } } })
+
+/* removes `x` and `z` properties from state.a.b[1]; sets state.a.b = [{ x: 7, y: 8, z: 9 }, {y: 18}] */
+store.setState({ a: { b: [ state.a.b[ 0 ], { '@@DELETE': [ 'x', 'z' ] } ] } })
+
+/* removes `x` and `z` properties from state.a.b[1]; sets state.a.b = [{ x: 7, y: 8, z: 9 }, {y: 18}] using indexing (RECOMMENDED) */
+store.setState({ a: { b: { 1: { '@@DELETE': [ 'x', 'z' ] } } } })
+```
+
+<b><code>@@MOVE:</code></b> <i>takes an array argument listing: -/+fromIndex, -/+toIndex and optional +numItems?. numItems = 1 by default. </i>
+
+```jsx
+const state = {
+	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+	j: 10,
+	q: [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
+};
+
+store.setState({ a: { '@@MOVE': [ 0, 1 ] } }) // assigning a @@MOVE command to a non-array property has no effect.
+
+/* moves state.a.b[0] into index 1; leaving state.a.b = [{ x: 17, y: 18, z: 19 }, { x: 7, y: 8, z: 9 }] */
+store.setState({ a: { b: { '@@MOVE': [ 0, 1 ] } } }) // or store.setState({ a: { b: { '@@MOVE': [ -2, -1 ] } } })
+
+/* moves state.q[4] - [7] into indexes 1 - 4; leaving state.q = [ 1, 5, 6, 7, 8, 2, 3, 4, 9 ] */
+store.setState({ a: { q: { '@@MOVE': [ 4, 1, 4 ] } } }) // or store.setState({ a: { q: { '@@MOVE': [ -5, -8, 4 ] } } })
+```
+
+<b><code>@@PUSH:</code></b> <i>takes an array argument listing new values to append. </i>
+
+```jsx
+const state = {
+	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+	j: 10
+};
+
+store.setState({ a: { '@@PUSH': [{ n: 5 }] } }) // assigning a @@PUSH command to a non-array property has no effect.
+
+/* appends 2 new items into state.a.b; leaving state.a.b = [...state.a.b, { x: 27, y: 28, z: 29 }, { x: 37, y: 38, z: 39 }] */
+store.setState({ a: { b: { '@@PUSH': [{ x: 27, y: 28, z: 29 }, { x: 37, y: 38, z: 39 }] } } })
+```
+
+<b><code>@@REPLACE:</code></b> <i>takes an argument holding the replacment value. </i>
+
+```jsx
+const state = {
+	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+	j: 10
+};
+
+store.setState({ '@@REPLACE': { a: 'Demo', j: 17 } }) // rewrites state to { a: 'Demo', j: 17 };
+
+store.setState({ a: { '@@REPLACE': { message: 'Testing...' } } }) // rewrites state.a.b to { message: 'Testing...' }
+
+/* rewrites state.a.b[1] to { x: 97, y: 98, z: 99 }; leaving state.a.b = [{ x: 7, y: 8, z: 9 }, { x: 97, y: 98, z: 99 }] */
+store.setState({ a: { b: [ state.a.b[ 0 ], { '@@REPLACE': { x: 97, y: 98, z: 99 } } ] } })
+
+/* rewrites state.a.b[1] to { x: 97, y: 98, z: 99 }; leaving state.a.b = [{ x: 7, y: 8, z: 9 }, { x: 97, y: 98, z: 99 }] using indexing (RECOMMENDED) */
+store.setState({ a: { b: { 1: { '@@REPLACE': { x: 97, y: 98, z: 99 } } } } })
+```
+
+<b><code>@@SET:</code></b> <i>takes an argument holding either the replacment value or a compute function returning the replacement value. </i>
+
+```jsx
+/*
+	@@SET and @@REPLACE tags are functionally equivalent when using replacement value argument.
+	However, @@SET also accepts a compute function argument for calculating a replacement value based on current value.
+	This tag is for handling edge cases only. Please use sparingly. In most cases, store.setState with or without any of the other tags is sufficient and most efficient.
+*/
+
+const state = {
+	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+	j: 10
+};
+
+store.setState({ '@@SET': currentValue => ({ ...currentValue, a: 'Demo', j: 17 }) }) // rewrites state to { ...state, a: 'Demo', j: 17 };
+
+store.setState({ a: { '@@SET': currentValue => ({ ...currentValue, message: 'Testing...' }) } }) // rewrites state.a.b to { ...state, message: 'Testing...' }
+
+/* rewrites state.a.b[1] to { x: 97, y: 98, z: 99 }; leaving state.a.b = [{ x: 7, y: 8, z: 9 }, { x: 97, y: 98, z: 99 }] */
+store.setState({ a: { b: [ state.a.b[ 0 ], { '@@SET': currentValue => ({ ...currentValue, x: 97, y: 98, z: 99 }) } ] } })
+
+/* rewrites state.a.b[1] to { x: 97, y: 98, z: 99 }; leaving state.a.b = [{ x: 7, y: 8, z: 9 }, { x: 97, y: 98, z: 99 }] using indexing (RECOMMENDED) */
+store.setState({ a: { b: { 1: { '@@SET': currentValue => ({ ...currentValue, x: 97, y: 98, z: 99 }) } } } })
+
+/** be aware: currentValue may be `undefined` when adding new state slice properties. */
+```
+
+<b><code>@@SPLICE:</code></b> <i>takes an array argument listing: -/+fromIndex, +deleteCount and optional ...newItems? newItems = ...[] by default. </i>
+
+```jsx
+const state = {
+	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+	j: 10,
+	q: [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
+};
+
+store.setState({ a: { '@@SPLICE': [ 0, 1 ] } }) // assigning a @@SPLICE command to a non-array property has no effect.
+
+/* removes state.a.b[0]; leaving state.a.b = [{ x: 17, y: 18, z: 19 }] */
+store.setState({ a: { b: { '@@SPLICE': [ 0, 1 ] } } }) // or store.setState({ a: { b: { SPLICE': [ -2, -1 ] } } })
+
+/* replaces state.q[4] - [7] with 2 items; leaving state.q = [ 1, 2, 3, 4, 33, 88, 9 ] */
+store.setState({ a: { q: { '@@SPLICE': [ 4, 4, 33, 88 ] } } }) // or store.setState({ a: { q: { '@@SPLICE': [ -5, 4, 33, 88 ] } } })
+```
+
+<b><code>Combination Usage:</code></b>
+
+These tags may be used in combination with the default usage where all nth-level tag command results are sequentially merged into state followed by the merging of the rest of the nth-level changes.
+
+<strong>Example:</strong>
+
+```jsx
+const state = {
+	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+	j: 10,
+	q: [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
+};
+
+store.setState({
+	a: {
+		b: {
+			/* evaluated 1st */ '@@DELETE': [ 0 ], // upon deleting state.a.b[0] -> state.a.b[1] becomes the new state.a.b[0]
+			/* evaluated 3rd */ 0: '@@CLEAR', // clear the new state.a.b[0]
+			/* evaluated 4th */ 2: { x: 47, y: 48, z: 49 }, // add new item at state.a.b[2],
+			/* evaluated 2md */ '@@PUSH': [{ x: 107, y: 108, z: 109 }] // appends state.a.b[1]
+		},
+		j: { '@@SET': currentValue => currentValue < 10 ? currentValue : 0 },
+		q: {
+			/* evaluated 1st */ '@@MOVE': [ 5, 3, 2 ],
+			/* evaluated 2md */ 12: 11
+		}
+	}
+})
+// => {
+// 		a: { b: [{}, { x: 107, y: 108, z: 109 }, { x: 47, y: 48, z: 49 }] },
+// 		j: 0,
+// 		q: [ 1, 2, 3, 6, 7, 4, 5, 8, 9, <empty>, <empty>, <empty>, 11 ]
+// }
+```
+
 # API
 
 The React-Observable-Context module contains **4** exports namely:
@@ -389,6 +581,15 @@ ReactDOM.render( <Provider />, document.getElementById( 'root' ) );
 ```
 
 <h1 id="changes">What's Changed?</h1>
+<b>v4.1.0</b>
+<table>
+	<tbody>
+		<tr><td><b>1.</b></td><td>Added new setState command <a href="#setstate-tags">tags</a>: <b><code>@@CLEAR<b><code>, <b><code>@@DELETE</code></b>, <b><code>@@MOVE</code></b>, <b><code>@@PUSH</code></b>, <b><code>@@REPLACE</code></b>, <b><code>@@SET</code></b> and <b><code>@@SPLICE</code></b>.</td></tr>
+	</tbody>
+</table>
+<hr />
+
+<b>v4.0.0</b>
 <table>
 	<tbody>
 		<tr><td><b>1.</b></td><td>Added the <a href="#connect"><code>connect</code></a> function to facilitate the encapsulated context-usage method.</td></tr>

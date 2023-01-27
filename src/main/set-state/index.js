@@ -21,25 +21,25 @@ function isIndexBasedObj( obj ) {
  * Mutates its arguments
  *
  * @param {HasArrayRoot<K>|HasObjectRoot<K>} state
- * @param {HasArrayRoot<K>|HasObjectRoot<K>} newState
+ * @param {HasArrayRoot<K>|HasObjectRoot<K>} changes
  * @param {K} stateKey
  * @param {Stats} stats
  * @returns {Array<TagKey>}
  * @template {KeyTypes} K
  */
-function resolveTags( state, newState, stateKey, stats ) {
+function resolveTags( state, changes, stateKey, stats ) {
 	const resolvedTags = [];
-	if( isClosedTag( newState[ stateKey ] ) ) {
-		newState[ stateKey ] = { [ newState[ stateKey ] ]: null };
+	if( isClosedTag( changes[ stateKey ] ) ) {
+		changes[ stateKey ] = { [ changes[ stateKey ] ]: null };
 	}
-	if( !isDataContainer( newState[ stateKey ] ) ) { return resolvedTags }
-	for( const k in newState[ stateKey ] ) {
-		if( !( stateKey in newState ) ) { break }
-		if( isClosedTag( newState[ stateKey ][ k ] ) ) {
-			newState[ stateKey ][ k ] = { [ newState[ stateKey ][ k ] ]: null };
+	if( !isDataContainer( changes[ stateKey ] ) ) { return resolvedTags }
+	for( const k in changes[ stateKey ] ) {
+		if( !( stateKey in changes ) ) { break }
+		if( isClosedTag( changes[ stateKey ][ k ] ) ) {
+			changes[ stateKey ][ k ] = { [ changes[ stateKey ][ k ] ]: null };
 		}
 		if( k in tagFunctions ) {
-			tagFunctions[ k ]( state, stateKey, stats, newState );
+			tagFunctions[ k ]( state, stateKey, stats, changes );
 			resolvedTags.push( k );
 		}
 	}
@@ -50,12 +50,12 @@ function resolveTags( state, newState, stateKey, stats ) {
  * Mutates its arguments
  *
  * @param {HasObjectRoot} state
- * @param {HasObjectRoot} newState
+ * @param {HasObjectRoot} changes
  * @param {Stats} stats
  */
-function set( state, newState, stats ) {
-	for( const k in newState ) {
-		setAtomic( state, newState, k, stats );
+function set( state, changes, stats ) {
+	for( const k in changes ) {
+		setAtomic( state, changes, k, stats );
 	}
 }
 
@@ -63,19 +63,19 @@ function set( state, newState, stats ) {
  * Mutates its arguments
  *
  * @param {HasArrayRoot<K>} state
- * @param {HasArrayRoot<K>} newState
+ * @param {HasArrayRoot<K>} changes
  * @param {K} rootKey
  * @param {Stats} stats
  * @template {KeyTypes} K
  */
-function setArray( state, newState, rootKey, stats ) {
-	const nsLength = newState[ rootKey ].length;
+function setArray( state, changes, rootKey, stats ) {
+	const nsLength = changes[ rootKey ].length;
 	if( state[ rootKey ].length !== nsLength ) {
 		state[ rootKey ].length = nsLength;
 		stats.hasChanges = true;
 	}
 	for( let i = 0; i < nsLength; i++ ) {
-		setAtomic( state[ rootKey ], newState[ rootKey ], i, stats );
+		setAtomic( state[ rootKey ], changes[ rootKey ], i, stats );
 	}
 }
 
@@ -83,16 +83,21 @@ function setArray( state, newState, rootKey, stats ) {
  * Mutates its arguments
  *
  * @param {HasArrayRoot<K>} state
- * @param {HasObjectRoot<K>} newState
+ * @param {HasObjectRoot<K>} changes
  * @param {K} rootKey
  * @param {Stats} stats
  * @template {KeyTypes} K
  */
-function setArrayIndex( state, newState, rootKey, stats ) {
+function setArrayIndex( state, changes, rootKey, stats ) {
 	const incomingIndexes = [];
-	for( const k in newState[ rootKey ] ) {
+	for( const k in changes[ rootKey ] ) {
 		let index = +k;
-		if( index < 0 ) { index = state[ rootKey ].length + index }
+		if( index < 0 ) {
+			index = state[ rootKey ].length + index;
+			changes[ rootKey ][ index ] = changes[ rootKey ][ k ];
+			delete changes[ rootKey ][ k ];
+
+		}
 		index >= 0 && incomingIndexes.push( index );
 	}
 	const maxIncomingIndex = Math.max( ...incomingIndexes );
@@ -101,7 +106,7 @@ function setArrayIndex( state, newState, rootKey, stats ) {
 		stats.hasChanges = true;
 	}
 	for( const i of incomingIndexes ) {
-		setAtomic( state[ rootKey ], newState[ rootKey ], i, stats );
+		setAtomic( state[ rootKey ], changes[ rootKey ], i, stats );
 	}
 }
 
@@ -109,57 +114,58 @@ function setArrayIndex( state, newState, rootKey, stats ) {
  * Mutates its arguments
  *
  * @param {HasArrayRoot<K>|HasObjectRoot<K>} state
- * @param {HasArrayRoot<K>|HasObjectRoot<K>} newState
+ * @param {HasArrayRoot<K>|HasObjectRoot<K>} changes
  * @param {K} stateKey
  * @param {Stats} stats
  * @template {KeyTypes} K
  */
-function setAtomic( state, newState, stateKey, stats ) {
-	if( isEqual( state[ stateKey ], newState[ stateKey ] ) ) { return }
-	const tagsResolved = resolveTags( state, newState, stateKey, stats );
-	const isPlainObjectNewState = isPlainObject( newState[ stateKey ] );
-	const isArrayNewState = Array.isArray( newState[ stateKey ] );
+function setAtomic( state, changes, stateKey, stats ) {
+	if( isEqual( state[ stateKey ], changes[ stateKey ] ) ) { return }
+	const tagsResolved = resolveTags( state, changes, stateKey, stats );
+	const isPlainObjectNewState = isPlainObject( changes[ stateKey ] );
+	const isArrayNewState = Array.isArray( changes[ stateKey ] );
 	if( Array.isArray( state[ stateKey ] ) ) {
 		if( isArrayNewState ) {
-			return setArray( state, newState, stateKey, stats );
+			return setArray( state, changes, stateKey, stats );
 		}
-		if( isPlainObjectNewState && isIndexBasedObj( newState[ stateKey ] ) ) {
-			return setArrayIndex( state, newState, stateKey, stats );
+		if( isPlainObjectNewState && isIndexBasedObj( changes[ stateKey ] ) ) {
+			return setArrayIndex( state, changes, stateKey, stats );
 		}
 	}
 	if( isPlainObjectNewState && isPlainObject( state[ stateKey ] ) ) {
-		return setPlainObject( state, newState, stateKey, stats )
+		return setPlainObject( state, changes, stateKey, stats )
 	}
-	if( tagsResolved.length || !( stateKey in newState ) ) { return };
+	if( tagsResolved.length || !( stateKey in changes ) ) { return };
 	stats.hasChanges = true;
 	state[ stateKey ] = isArrayNewState || isPlainObjectNewState
-		? clonedeep( newState[ stateKey ] )
-		: newState[ stateKey ];
+		? clonedeep( changes[ stateKey ] )
+		: changes[ stateKey ];
 }
 
 /**
  * Mutates its arguments
  *
  * @param {HasObjectRoot<K>} state
- * @param {HasObjectRoot<K>} newState
+ * @param {HasObjectRoot<K>} changes
  * @param {K} rootKey
  * @param {Stats} stats
  * @template {KeyTypes} K
  */
-function setPlainObject( state, newState, rootKey, stats ) {
-	set( state[ rootKey ], newState[ rootKey ], stats );
+function setPlainObject( state, changes, rootKey, stats ) {
+	set( state[ rootKey ], changes[ rootKey ], stats );
 }
 
 /**
  * @param {T} state
- * @param {UpdatePayload<PartialState<T>>} newState
+ * @param {UpdatePayload<PartialState<T>>} changes
  * @param {Listener<T>} [onStateChange]
  * @template {State} T
  */
-function setState( state, newState, onStateChange ) {
+function setState( state, changes, onStateChange ) {
 	const stats = { hasChanges: false };
-	set( { state }, { state: newState }, stats );
-	stats.hasChanges && onStateChange?.( newState );
+	const changeRequest = { state: clonedeep( changes ) };
+	set( { state }, changeRequest, stats );
+	stats.hasChanges && onStateChange?.( changes );
 }
 
 /** @typedef {import("./tag-functions").TagKey} TagKey */
@@ -204,4 +210,4 @@ function setState( state, newState, onStateChange ) {
 
 /** @typedef {import("../../types").State} State */
 
-/** @typedef {{hasChanges: boolean}} Stats */
+/** @typedef {import("../../types").UpdateStats} Stats */
