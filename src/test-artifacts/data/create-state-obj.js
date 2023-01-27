@@ -1,4 +1,4 @@
-import clonedeep from 'lodash.clonedeep';
+import { clonedeep } from '../../utils';
 
 const sourceData = {
 	_id: '639737cc5ac1df69cda79413',

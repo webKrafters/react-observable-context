@@ -1,6 +1,7 @@
 import '../test-artifacts/suppress-render-compat';
 
 import * as utils from '.';
+import createSourceData from '../test-artifacts/data/create-state-obj';
 
 describe( 'utils module', () => {
 	describe( 'arrangePropertyPaths(...)', () => {
@@ -81,6 +82,194 @@ describe( 'utils module', () => {
 			} );
 		} );
 	} );
+	describe( 'clonedeep(...)', () => {
+		test( 'produces exact clone for commonly used types', () => {
+			const value = createSourceData();
+			const clone = utils.clonedeep( value );
+			expect( clone ).not.toBe( value );
+			expect( clone ).toStrictEqual( value );
+		} );
+		test( 'produces exact clone for recognized web api instances ', () => {
+			const value = {
+				birth: {
+					date: new Date( '1952-09-05' ),
+					place: { city: 'Prague' }
+				},
+				null: null,
+				regexCount: /[1-9][0-9]*/g,
+				undefined: undefined
+			};
+			const clone = utils.clonedeep( value );
+			expect( clone.birth.date ).not.toBe( value.birth.date );
+			expect( clone.birth.place ).not.toBe( value.birth.place );
+			expect( clone.regexCount ).not.toBe( value.regexCount );
+			expect( clone ).not.toBe( value );
+			expect( clone ).toStrictEqual( value );
+		} );
+		test( 'will not clone but will return unrecognized instances not implementing either `clone` or `cloneNode` methods', () => {
+			class Test {};
+			const value = { testing: { test: new Test() } };
+			const clone = utils.clonedeep( value );
+			expect( clone.testing.test ).toBe( value.testing.test ); // not cloned: returned as is
+			expect( clone ).not.toBe( value );
+			expect( clone ).toStrictEqual( value );
+		} );
+		describe( 'cloning unrecognizable instance', () => {
+			const runWith = ( value, cloneWatcher ) => {
+				const clone = utils.clonedeep( value );
+				expect( clone.testing.test ).not.toBe( value.testing.test );
+				expect( cloneWatcher ).toHaveBeenCalled();
+				expect( clone ).not.toBe( value );
+				expect( clone ).toStrictEqual( value );
+			};
+			test( 'using its `clone` method', () => {
+				const cloneWatcher = jest.fn();
+				class Test {
+					clone() {
+						cloneWatcher();
+						return new Test();
+					}
+				};
+				runWith({ testing: { test: new Test() } }, cloneWatcher );
+			} );
+			test( 'using its `cloneNode` method', () => {
+				const cloneWatcher = jest.fn();
+				class Test {
+					cloneNode() {
+						cloneWatcher();
+						return new Test();
+					}
+				};
+				runWith({ testing: { test: new Test() } }, cloneWatcher );
+			} );
+		} );
+	} );
+	describe( 'getProperty(...)', () => {
+		let DEFAULT, source;
+		beforeAll(() => {
+			DEFAULT = '___default___';
+			source = createSourceData();
+		});
+		test( 'obtains info about property located at path in a source data', () => {
+			expect( utils.getProperty( source, 'tags.-2' ) ).toStrictEqual({
+				_value: source.tags[ 5 ],
+				exists: true,
+				index: 5,
+				key: '-2',
+				source: source.tags,
+				value: source.tags[ 5 ]
+			});
+			expect( utils.getProperty( source, 'tags.5' ) ).toStrictEqual({
+				_value: source.tags[ 5 ],
+				exists: true,
+				index: 5,
+				key: '5',
+				source: source.tags,
+				value: source.tags[ 5 ]
+			});
+			expect( utils.getProperty( source, 'friends.-3.name.last' ) ).toStrictEqual({
+				_value: source.friends[ 0 ].name.last,
+				exists: true,
+				index: NaN,
+				key: 'last',
+				source: source.friends[ 0 ].name,
+				value: source.friends[ 0 ].name.last
+			});
+			const DEFAULT = '__default_value__';
+			expect( utils.getProperty( source, 'favoriteFruit.does.not.exist', DEFAULT ) ).toStrictEqual({
+				_value: DEFAULT,
+				exists: false,
+				index: NaN,
+				key: 'exist',
+				source: undefined,
+				value: DEFAULT
+			});
+			expect( utils.getProperty( source, 'history.places[1].does.not.exist', DEFAULT ) ).toStrictEqual({
+				_value: DEFAULT,
+				exists: false,
+				index: NaN,
+				key: 'exist',
+				source: undefined,
+				value: DEFAULT
+			});
+		} );
+		test( 'accesses top level', () => {
+			expect( utils.getProperty( source, 'company' ).value ).toBe( source.company );
+			expect( utils.getProperty( source, [ 'company' ] ).value ).toBe( source.company );
+			const bestieLastName = source.friends[ 0 ].name.last;
+			[ 	'friends.0.name.last', 'friends[0].name.last',
+				[ 'friends', '0', 'name', 'last' ],
+				[ 'friends', 0, 'name', 'last' ],
+				'friends.-3.name.last', 'friends[-3].name.last',
+				[ 'friends', '-3', 'name', 'last' ],
+				[ 'friends', -3, 'name', 'last' ]
+			].forEach( path => expect( utils.getProperty( source, path ).value ).toBe( bestieLastName ) );
+			expect( utils.getProperty([ 'one', 'two', 'three' ], 2 ).value ).toBe( 'three' );
+			expect( utils.getProperty([ 'one', 'two', 'three' ], -1 ).value ).toBe( 'three' );
+			expect( utils.getProperty({ 0: 'one', 1: 'two', 2: 'three' }, 2 ).value ).toBe( 'three' );
+			expect( utils.getProperty({ 0: [ 'one', 'two' ], 1: [ 'five', 'six' ] }, '1.-2' ).value ).toBe( 'five' );
+		} );
+		test( 'replaces inexistent value with predefined default value', () => {
+			expect( utils.getProperty( source, 'inexistent', DEFAULT ).value ).toBe( DEFAULT );
+			expect( utils.getProperty( source, [ 'inexistent' ], DEFAULT ).value ).toBe( DEFAULT );
+		} );
+		test( 'accesses array', () => {
+			const name = source.friends[ 1 ].name;
+			[ 'friends.1.name', 'friends[1].name', [ 'friends', 1, 'name' ], [ 'friends', '1', 'name' ] ].forEach( path => {
+				expect( utils.getProperty( source, path ).value ).toBe( name );
+			} );
+		} );
+		test( 'does not access array with a non-integer corresponding key in path', () => {
+			expect( utils.getProperty( source, 'friends.a' ).value ).toBeUndefined();
+		} );
+		test( 'accesses array in reverse', () => {
+			const name = source.friends[ 1 ].name;
+			[ 'friends.-2.name', 'friends[-2].name', [ 'friends', -2, 'name' ], [ 'friends', '-2', 'name' ] ].forEach( path => {
+				expect( utils.getProperty( source, path ).value ).toBe( name );
+			} );
+		} );
+		test( 'does not reverse-access indexed objects', () => {
+			expect( utils.getProperty({ 0: 'one', 1: 'two', 2: 'three' }, -1 ).value ).toBeUndefined();
+		} );
+		test( 'returns undefined immediately on reverse access error', () => {
+			expect( utils.getProperty( { 0: { name: 'one' } }, '[-1].name' ).value ).toBeUndefined();
+		} );
+		test( 'runs complex reverse array baseed access', () => {
+			const data = {
+				uuyuw: {
+					654: [
+						null,
+						source,
+						null
+					]
+				}
+			};
+			expect( utils.getProperty( data, 'uuyuw.654.-2[history][places[-3]].year' ).value ).toBe(
+				data.uuyuw[ '654' ][ 1 ].history.places[ 0 ].year
+			);
+		} );
+	} );
+	describe( 'isDataContainer(...)', () => {
+		test( 'is true for arrays', () => {
+			expect( utils.isDataContainer( [] ) ).toBe( true );
+			expect( utils.isDataContainer( new Array() ) ).toBe( true ); // eslint-disable-line no-array-constructor
+		} );
+		test( 'is true for plain objects', () => {
+			expect( utils.isDataContainer({}) ).toBe( true );
+			expect( utils.isDataContainer( new Object() ) ).toBe( true ); // eslint-disable-line no-new-object
+		} );
+		test( 'is false for non-arrays and non plain objects', () => {
+			class Test { method() {} }
+			expect( utils.isDataContainer( new Date() ) ).toBe( false );
+			expect( utils.isDataContainer( new Set() ) ).toBe( false );
+			expect( utils.isDataContainer( new String() ) ).toBe( false ); // eslint-disable-line no-new-wrappers
+			expect( utils.isDataContainer( new Test() ) ).toBe( false );
+			expect( utils.isDataContainer( true ) ).toBe( false );
+			expect( utils.isDataContainer( 1 ) ).toBe( false );
+			expect( utils.isDataContainer( 'test' ) ).toBe( false );
+			expect( utils.isDataContainer( 1.5 ) ).toBe( false );
+		} );
+	} );
 	describe( 'makeReadonly(...)', () => {
 		const TEST_DATA = { a: { b: { c: [ 1, 2, 3, { testFlag: true } ] } } };
 		beforeAll(() => utils.makeReadonly( TEST_DATA ));
@@ -108,7 +297,7 @@ describe( 'utils module', () => {
 	describe( 'mapPathsToObject(...)', () => {
 		let source, propertyPaths;
 		beforeAll(() => {
-			source = require( '../test-artifacts/data/create-state-obj' ).default();
+			source = createSourceData();
 			source.matrix = [
 				[ 0, 3, 9 ],
 				[ 4, 1, 1],
@@ -159,7 +348,7 @@ describe( 'utils module', () => {
 			});
 		});
 		test( 'handles multi-dimensional arrays', () => {
-			source = require( '../test-artifacts/data/create-state-obj' ).default();
+			source = createSourceData();
 			source.matrix = [
 				[ [ 0, 3, 1 ], [ 4, 0, 3 ] ],
 				[ [ 4, 1, 9 ], [ 7, 4, 9 ] ],

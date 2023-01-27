@@ -1,10 +1,10 @@
-import clonedeep from 'lodash.clonedeep';
+import { clonedeep } from '../../../utils';
+
+import useRenderKeyProvider from '.';
 
 import { renderHook } from '@testing-library/react-hooks';
 
 import '../../../test-artifacts/suppress-render-compat';
-
-import useRenderKeyProvider from '.';
 
 describe( 'useRenderKeyProvider', () => {
 	let selectorMap;

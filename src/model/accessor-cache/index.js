@@ -1,9 +1,9 @@
-import get from 'lodash.get';
-import has from 'lodash.has';
 import isEmpty from 'lodash.isempty';
 import isEqual from 'lodash.isequal';
 
 import { FULL_STATE_SELECTOR } from '../../constants';
+
+import { getProperty } from '../../utils';
 
 import Atom from '../atom';
 import Accessor from '../accessor';
@@ -49,7 +49,7 @@ class AccessorCache {
 	 */
 	#getOriginAt( propertyPath ) {
 		return propertyPath !== FULL_STATE_SELECTOR
-			? get( this.#origin, propertyPath )
+			? getProperty( this.#origin, propertyPath ).value
 			: this.#origin
 	}
 
@@ -101,7 +101,7 @@ class AccessorCache {
 		const atoms = this.#atoms;
 		const updatedPaths = [];
 		for( const path in atoms ) {
-			if( path !== FULL_STATE_SELECTOR && !has( originChanges, path ) ) { continue }
+			if( path !== FULL_STATE_SELECTOR && !getProperty( originChanges, path ).exists ) { continue }
 			const newAtomVal = this.#getOriginAt( path )
 			if( isEqual( newAtomVal, atoms[ path ].value ) ) { continue }
 			atoms[ path ].setValue( newAtomVal );

@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import clonedeep from 'lodash.clonedeep';
 import isBoolean from 'lodash.isboolean';
 
 import { v4 } from 'uuid';
 
 import { FULL_STATE_SELECTOR } from '../../../constants';
 
-import { mapPathsToObject } from '../../../utils';
+import { clonedeep, mapPathsToObject } from '../../../utils';
 
 import Storage from '../../../model/storage';
 
@@ -26,7 +25,7 @@ export const deps = {
  *
  * @param {Prehooks<T>} prehooks
  * @param {N} name
- * @param {N extends "setState" ? [PartialState<T>] : N extends "resetState" ? [PartialState<T>, {current:T, original:T}] : never } args
+ * @param {N extends "setState" ? [UpdatePayload<T>] : N extends "resetState" ? [PartialState<T>, {current:T, original:T}] : never } args
  * @returns {boolean}
  * @template {State} T
  * @template {keyof Prehooks<T>} N
@@ -93,7 +92,7 @@ const useStore = ( prehooks, value, storage ) => {
 	/** @type {StoreInternal<T>["setState"]} */
 	const setState = useCallback( changes => {
 		changes = clonedeep( changes );
-		runPrehook( prehooksRef.current, 'setState', [ changes ]) &&
+		runPrehook( prehooksRef.current, 'setState', [ changes ] ) &&
 		deps.setState( state, changes, onChange );
 	}, [] );
 
@@ -138,6 +137,11 @@ export default useStore;
 
 /**
  * @typedef {import("../../../types").IStorage<T>} IStorage
+ * @template {State} T
+ */
+
+/**
+ * @typedef {import("../../../types").UpdatePayload<PartialState<T>>} UpdatePayload
  * @template {State} T
  */
 
