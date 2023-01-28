@@ -80,14 +80,7 @@ A property path is a dot-notation string leading to a specific property within a
 <strong id="property-path-example">Ex. Given the following object:</strong>
 
 ```jsx
-{
-	a: {
-		c: {
-			e: 5,
-			f: [ 0, 2, 4 ]
-		}
-	}
-}
+{ a: { c: { e: 5, f: [ 0, 2, 4 ] } } }
 ```
 The property path `a.c.e` accesses the `e=5` property.<br />
 Either of the property paths `a.c.f.1` and `a.c.f[1]`  accesses the `[1]=2` property.<br />
@@ -112,29 +105,28 @@ A selector map is an object holding key:value pairs.<br />
 ```jsx
 // Given the following state object:
 const state = {
-	a: 1,
-	b: 2,
-	c: 3,
-	d: {
-		e: 5,
-		f: [ 6, {
-				x: 7,
-				y: 8,
-				z: 9
-		} ]
-	}
+  a: 1, b: 2, c: 3, d: {
+    e: 5,
+    f: [ 6, {
+      x: 7,
+      y: 8,
+      z: 9
+   } ]
+  }
 };
+
 // a client observing the following selector map
 const selectorMap = {
-	all: '@@STATE',
-	myData: 'd',
-	secondFElement: 'd.f[1]'
+  all: '@@STATE',
+  myData: 'd',
+  secondFElement: 'd.f[1]'
 };
+
 // will receive the following store data
 store.data = {
-	all: state,
-	myData: state.d,
-	secondFElement: state.d.f[1]
+  all: state,
+  myData: state.d,
+  secondFElement: state.d.f[1]
 }
 ```
 
@@ -208,50 +200,51 @@ store.setState({ ...state, a: { ...state.a, b: [ { ...first, y: 30 }, 22, ...res
 ```
 
 <h3 id="setstate-tags"><b><i><u>Rewriting state using tag commands</u></i></b></h3>
-By default setState merges new changes into the current state slices. To overwrite current state slices with new state values, <b>7</b> tag commands have been provided for:
+By default <code>store.setState</code> merges new changes into current state. To overwrite current state slices with new state values, <b>7</b> tag commands have been provided for:
 <ol>
-	<li><span style="margin-left: 10px"><b><code>@@CLEAR:</code></b> setting state slice to its corresponding empty value</span></li>
-	<li><span style="margin-left: 10px"><b><code>@@DELETE:</code></b> deleting properties</span></li>
-	<li><span style="margin-left: 10px"><b><code>@@MOVE:</code></b> moving array elements</span></li>
-	<li><span style="margin-left: 10px"><b><code>@@PUSH:</code></b> pushing new items into an array</span></li>
-	<li><span style="margin-left: 10px"><b><code>@@REPLACE:</code></b> replacing property values</span></li>
-	<li><span style="margin-left: 10px"><b><code>@@SET:</code></b> setting property values</span></li>
-	<li><span style="margin-left: 10px"><b><code>@@SPLICE:</code></b> splicing array items</span></li>
+	<li><span style="margin-left: 10px"><code>@@CLEAR:</code> setting state slice to its corresponding empty value</span></li>
+	<li><span style="margin-left: 10px"><code>@@DELETE:</code> deleting properties</span></li>
+	<li><span style="margin-left: 10px"><code>@@MOVE:</code> moving array elements</span></li>
+	<li><span style="margin-left: 10px"><code>@@PUSH:</code> pushing new items into an array</span></li>
+	<li><span style="margin-left: 10px"><code>@@REPLACE:</code> replacing property values</span></li>
+	<li><span style="margin-left: 10px"><code>@@SET:</code> setting property values</span></li>
+	<li><span style="margin-left: 10px"><code>@@SPLICE:</code> splicing array items</span></li>
 </ol>
-<strong>Examples:</strong>
+<b>Examples:</b><br /><br />
 
-<b><code>@@CLEAR:</code></b> <i>takes no arguments.</i>
+<i><b>@@CLEAR:</b> (takes no arguments)</i>
 
 ```jsx
 const state = {
-	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
-	j: 10
+  a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+  j: 10
 };
 
-store.setState( '@@CLEAR' ) // or store.setState({ @@CLEAR: <anything> })
+/* empties the state; sets state = {} */
+store.setState( '@@CLEAR' ) // or store.setState({ '@@CLEAR': <anything> })
 
 /* empties the value at state.a.b; sets state.a.b = [] */
-store.setState({ a: { b: '@@CLEAR' } }) // or store.setState({ a: { b: { @@CLEAR: <anything> } } })
+store.setState({ a: { b: '@@CLEAR' } }) // or store.setState({ a: { b: { '@@CLEAR': <anything> } } })
 
 /* empties the value at state.a.j; sets state.a.j = null */
-store.setState({ a: { j: '@@CLEAR' } }) // or store.setState({ a: { j: { @@CLEAR: <anything> } } })
+store.setState({ a: { j: '@@CLEAR' } }) // or store.setState({ a: { j: { '@@CLEAR': <anything> } } })
 
 /* empties the value at state.a.b[ 0 ]; sets state.a.b = [{}] */
-store.setState({ a: { b: [ '@@CLEAR' ] } }) // or store.setState({ a: { b: [ { @@CLEAR: <anything> } ] } })
+store.setState({ a: { b: [ '@@CLEAR' ] } }) // or store.setState({ a: { b: [ { '@@CLEAR': <anything> } ] } })
 
 /* empties the value at state.a.b[0]; sets state.a.b = [{}, state.a.b[1]] */
-store.setState({ a: { b: [ '@@CLEAR', state.a.b[1] ] } }) // or store.setState({ a: { b: [ { @@CLEAR: <anything> }, state.a.b[1] ] } })
+store.setState({ a: { b: [ '@@CLEAR', state.a.b[1] ] } }) // or store.setState({ a: { b: [ { '@@CLEAR': <anything> }, state.a.b[1] ] } })
 
 /* empties the value at state.a.b[0]; sets state.a.b = [{}, a.b[1]] using indexing (RECOMMENDED) */
-store.setState({ a: { b: { 0: '@@CLEAR' } } }) // or store.setState({ a: { b: { 0: { @@CLEAR: <anything> } } } })
+store.setState({ a: { b: { 0: '@@CLEAR' } } }) // or store.setState({ a: { b: { 0: { '@@CLEAR': <anything> } } } })
 ```
 
-<b><code>@@DELETE:</code></b> <i>takes an array argument listing property keys to delete.</i>
+<i><b>@@DELETE:</b> (takes an array argument listing property keys to delete)</i>
 
 ```jsx
 const state = {
-	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
-	j: 10
+  a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+  j: 10
 };
 
 store.setState({ '@@DELETE': [ 'a' ] }) // removes state.a; sets state = {j: 10}
@@ -268,16 +261,16 @@ store.setState({ a: { b: [ state.a.b[ 0 ], { '@@DELETE': [ 'x', 'z' ] } ] } })
 store.setState({ a: { b: { 1: { '@@DELETE': [ 'x', 'z' ] } } } })
 ```
 
-<b><code>@@MOVE:</code></b> <i>takes an array argument listing: -/+fromIndex, -/+toIndex and optional +numItems?. numItems = 1 by default. </i>
+<i><b>@@MOVE:</b> (takes an array argument listing: -/+fromIndex, -/+toIndex and optional +numItems?. numItems = 1 by default)</i>
 
 ```jsx
 const state = {
-	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
-	j: 10,
-	q: [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
+  a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+  j: 10,
+  q: [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
 };
 
-store.setState({ a: { '@@MOVE': [ 0, 1 ] } }) // assigning a @@MOVE command to a non-array property has no effect.
+store.setState({ a: { '@@MOVE': [ 0, 1 ] } }) // assigning a '@@MOVE' command to a non-array property has no effect.
 
 /* moves state.a.b[0] into index 1; leaving state.a.b = [{ x: 17, y: 18, z: 19 }, { x: 7, y: 8, z: 9 }] */
 store.setState({ a: { b: { '@@MOVE': [ 0, 1 ] } } }) // or store.setState({ a: { b: { '@@MOVE': [ -2, -1 ] } } })
@@ -286,26 +279,26 @@ store.setState({ a: { b: { '@@MOVE': [ 0, 1 ] } } }) // or store.setState({ a: {
 store.setState({ a: { q: { '@@MOVE': [ 4, 1, 4 ] } } }) // or store.setState({ a: { q: { '@@MOVE': [ -5, -8, 4 ] } } })
 ```
 
-<b><code>@@PUSH:</code></b> <i>takes an array argument listing new values to append. </i>
+<i><b>@@PUSH:</b> (takes an array argument listing new values to append)</i>
 
 ```jsx
 const state = {
-	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
-	j: 10
+  a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+  j: 10
 };
 
-store.setState({ a: { '@@PUSH': [{ n: 5 }] } }) // assigning a @@PUSH command to a non-array property has no effect.
+store.setState({ a: { '@@PUSH': [{ n: 5 }] } }) // assigning a '@@PUSH' command to a non-array property has no effect.
 
 /* appends 2 new items into state.a.b; leaving state.a.b = [...state.a.b, { x: 27, y: 28, z: 29 }, { x: 37, y: 38, z: 39 }] */
 store.setState({ a: { b: { '@@PUSH': [{ x: 27, y: 28, z: 29 }, { x: 37, y: 38, z: 39 }] } } })
 ```
 
-<b><code>@@REPLACE:</code></b> <i>takes an argument holding the replacment value. </i>
+<i><b>@@REPLACE:</b> (takes an argument holding the replacment value)</i>
 
 ```jsx
 const state = {
-	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
-	j: 10
+  a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+  j: 10
 };
 
 store.setState({ '@@REPLACE': { a: 'Demo', j: 17 } }) // rewrites state to { a: 'Demo', j: 17 };
@@ -319,18 +312,20 @@ store.setState({ a: { b: [ state.a.b[ 0 ], { '@@REPLACE': { x: 97, y: 98, z: 99 
 store.setState({ a: { b: { 1: { '@@REPLACE': { x: 97, y: 98, z: 99 } } } } })
 ```
 
-<b><code>@@SET:</code></b> <i>takes an argument holding either the replacment value or a compute function returning the replacement value. </i>
+<i><b>@@SET:</b> (takes an argument holding either the replacment value or a compute function returning the replacement value)</i>
 
 ```jsx
 /*
-	@@SET and @@REPLACE tags are functionally equivalent when using replacement value argument.
-	However, @@SET also accepts a compute function argument for calculating a replacement value based on current value.
-	This tag is for handling edge cases only. Please use sparingly. In most cases, store.setState with or without any of the other tags is sufficient and most efficient.
+This tag is for handling edge cases only. Please use sparingly. In most cases, store.setState with or without any of the other tags is sufficient and most efficient.
+
+This and the '@@REPLACE' tags are functionally equivalent when used with a replacement value argument.
+
+Be aware that the compute function argument may be `undefined` for properties which do not yet exist in the state.
 */
 
 const state = {
-	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
-	j: 10
+  a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+  j: 10
 };
 
 store.setState({ '@@SET': currentValue => ({ ...currentValue, a: 'Demo', j: 17 }) }) // rewrites state to { ...state, a: 'Demo', j: 17 };
@@ -342,60 +337,58 @@ store.setState({ a: { b: [ state.a.b[ 0 ], { '@@SET': currentValue => ({ ...curr
 
 /* rewrites state.a.b[1] to { x: 97, y: 98, z: 99 }; leaving state.a.b = [{ x: 7, y: 8, z: 9 }, { x: 97, y: 98, z: 99 }] using indexing (RECOMMENDED) */
 store.setState({ a: { b: { 1: { '@@SET': currentValue => ({ ...currentValue, x: 97, y: 98, z: 99 }) } } } })
-
-/** be aware: currentValue may be `undefined` when adding new state slice properties. */
 ```
 
-<b><code>@@SPLICE:</code></b> <i>takes an array argument listing: -/+fromIndex, +deleteCount and optional ...newItems? newItems = ...[] by default. </i>
+<i><b>@@SPLICE:</b> (takes an array argument listing: -/+fromIndex, +deleteCount and optional ...newItems? newItems = ...[] by default)</i>
 
 ```jsx
 const state = {
-	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
-	j: 10,
-	q: [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
+  a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+  j: 10,
+  q: [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
 };
 
-store.setState({ a: { '@@SPLICE': [ 0, 1 ] } }) // assigning a @@SPLICE command to a non-array property has no effect.
+store.setState({ a: { '@@SPLICE': [ 0, 1 ] } }) // assigning a '@@SPLICE' command to a non-array property has no effect.
 
 /* removes state.a.b[0]; leaving state.a.b = [{ x: 17, y: 18, z: 19 }] */
-store.setState({ a: { b: { '@@SPLICE': [ 0, 1 ] } } }) // or store.setState({ a: { b: { SPLICE': [ -2, -1 ] } } })
+store.setState({ a: { b: { '@@SPLICE': [ 0, 1 ] } } }) // or store.setState({ a: { b: { '@@SPLICE': [ -2, -1 ] } } })
 
 /* replaces state.q[4] - [7] with 2 items; leaving state.q = [ 1, 2, 3, 4, 33, 88, 9 ] */
 store.setState({ a: { q: { '@@SPLICE': [ 4, 4, 33, 88 ] } } }) // or store.setState({ a: { q: { '@@SPLICE': [ -5, 4, 33, 88 ] } } })
 ```
 
-<b><code>Combination Usage:</code></b>
+<h3><b><i>Combination Usage:</i></b></h3>
 
-These tags may be used in combination with the default usage where all nth-level tag command results are sequentially merged into state followed by the merging of the rest of the nth-level changes.
+These tags may be used in combination with the default usage where all top-level tag command results in property are sequentially merged into state followed by the merging of the rest of the property changes.
 
 <strong>Example:</strong>
 
 ```jsx
 const state = {
-	a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
-	j: 10,
-	q: [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
+  a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
+  j: 10,
+  q: [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
 };
 
 store.setState({
-	a: {
-		b: {
-			/* evaluated 1st */ '@@DELETE': [ 0 ], // upon deleting state.a.b[0] -> state.a.b[1] becomes the new state.a.b[0]
-			/* evaluated 3rd */ 0: '@@CLEAR', // clear the new state.a.b[0]
-			/* evaluated 4th */ 2: { x: 47, y: 48, z: 49 }, // add new item at state.a.b[2],
-			/* evaluated 2md */ '@@PUSH': [{ x: 107, y: 108, z: 109 }] // appends state.a.b[1]
-		},
-		j: { '@@SET': currentValue => currentValue < 10 ? currentValue : 0 },
-		q: {
-			/* evaluated 1st */ '@@MOVE': [ 5, 3, 2 ],
-			/* evaluated 2md */ 12: 11
-		}
-	}
+  a: {
+    b: {
+      /* evaluated 1st */ '@@DELETE': [ 0 ], // upon deleting state.a.b[0] -> state.a.b[1] becomes the new state.a.b[0]
+      /* evaluated 3rd */ 0: '@@CLEAR', // clear the new state.a.b[0]
+      /* evaluated 4th */ 2: { x: 47, y: 48, z: 49 }, // add new item at state.a.b[2],
+      /* evaluated 2md */ '@@PUSH': [{ x: 107, y: 108, z: 109 }] // appends state.a.b[1]
+    }
+  },
+  j: { '@@SET': currentValue => currentValue < 10 ? currentValue : 0 },
+  q: {
+    /* evaluated 1st */ '@@MOVE': [ 5, 3, 2 ],
+    /* evaluated 2md */ 12: 11
+  }
 })
 // => {
-// 		a: { b: [{}, { x: 107, y: 108, z: 109 }, { x: 47, y: 48, z: 49 }] },
-// 		j: 0,
-// 		q: [ 1, 2, 3, 6, 7, 4, 5, 8, 9, <empty>, <empty>, <empty>, 11 ]
+//  a: { b: [{}, { x: 107, y: 108, z: 109 }, { x: 47, y: 48, z: 49 }] },
+//  j: 0,
+//  q: [ 1, 2, 3, 6, 7, 4, 5, 8, 9, <empty>, <empty>, <empty>, 11 ]
 // }
 ```
 
@@ -444,13 +437,15 @@ The React-Observable-Context module contains **4** exports namely:
 
 # Usage
 
-<i><b><u>context.js</u></b></i>
+<i><u><b>context.js</b></u></i>
+
 ```jsx
 import { createContext } from '@webkrafters/react-observable-context';
 export default createContext();
 ```
 
-<i><b><u>ui.js</u></b> (connect method)</i>
+<i><u><b>ui.js</b></u> (connect method)</i>
+
 ```jsx
 import React, { useCallback, useEffect } from 'react';
 import { connect } from '@webkrafters/react-observable-context';
@@ -458,13 +453,13 @@ import ObservableContext from './context';
 
 export const YearText = ({ data }) => ( <div>Year: { data.year }</div> );
 export const YearInput = ({ data, setState, resetState }) => {
-	const onChange = useCallback( e => setState({
-		a: { b: { x: { y: { z: { 0: e.target.value } } } } }
-	}), [ setState ]);
-	useEffect(() => {
-		data.year > 2049 && resetState([ 'a.b.c' ]);
-	}, [ data.year ]);
-	return ( <div>Year: <input type="number" onChange={ onChange } /> );
+  const onChange = useCallback( e => setState({
+    a: { b: { x: { y: { z: { 0: e.target.value } } } } }
+  }), [ setState ]);
+  useEffect(() => {
+    data.year > 2049 && resetState([ 'a.b.c' ]);
+  }, [ data.year ]);
+  return ( <div>Year: <input type="number" onChange={ onChange } /> );
 };
 
 const withConnector = connect( ObservablContext, { year: 'a.b.x.y.z[0]' } );
@@ -472,16 +467,17 @@ const Client1 = withConnector( YearText );
 const Client2 = withConnector( YearInput );
 
 const Ui = () => (
-	<div>
-		<Client1 />
-		<Client2 />
-	</div>
+  <div>
+    <Client1 />
+    <Client2 />
+  </div>
 );
 
 export default Ui;
 ```
 
-<i><b><u>ui.js</u></b> (useContext with memo method)</i>
+<i><u><b>ui.js</b></u> (useContext with memo method)</i>
+
 ```jsx
 import React, { memo, useCallback, useEffect } from 'react';
 import { useContext } from '@webkrafters/react-observable-context';
@@ -490,32 +486,33 @@ import ObservableContext from './context';
 const selectorMap = { year: 'a.b.x.y.z[0]' };
 
 const Client1 = memo(() => { // memoize to prevent 'no-change' renders from the parent.
-	const { data } = useContext( ObservableContext, selectorMap );
-	return ( <div>Year: { data.year }</div> );
+  const { data } = useContext( ObservableContext, selectorMap );
+  return ( <div>Year: { data.year }</div> );
 });
 
 const Client2 = memo(() => { // memoize to prevent 'no-change' renders from the parent.
-	const { data, setState, resetState } = useContext( ObservableContext, selectorMap );
-	const onChange = useCallback( e => setState({
-		a: { b: { x: { y: { z: { 0: e.target.value } } } } }
-	}), [ setState ]);
-	useEffect(() => {
-		data.year > 2049 && resetState([ 'a.b.c' ]);
-	}, [ data.year ]);
-	return ( <div>Year: <input type="number" onChange={ onChange } /> );
+  const { data, setState, resetState } = useContext( ObservableContext, selectorMap );
+  const onChange = useCallback( e => setState({
+    a: { b: { x: { y: { z: { 0: e.target.value } } } } }
+  }), [ setState ]);
+  useEffect(() => {
+    data.year > 2049 && resetState([ 'a.b.c' ]);
+  }, [ data.year ]);
+  return ( <div>Year: <input type="number" onChange={ onChange } /> );
 });
 
 const Ui = () => (
-	<div>
-		<Client1 />
-		<Client2 />
-	</div>
+  <div>
+    <Client1 />
+    <Client2 />
+  </div>
 );
 
 export default Ui;
 ```
 
 <i id="provider-usage"><b><u>provider.js</u></b></i>
+
 ```jsx
 import React, { useEffect, useState } from 'react';
 import ObservableContext from './context';
@@ -524,47 +521,47 @@ import Ui from './ui';
 const DEFAULT_C = 36;
 
 const updateHooks = {
-	resetState: ( ...args ) => {
-		console.log( 'resetting state with >>>> ', JSON.stringify( args ) );
-		return true;
-	},
-	setState: ( ...args ) => {
-		console.log( 'merging following into state >>>> ', JSON.stringify( args ) );
-		return true;
-	}
+  resetState: ( ...args ) => {
+    console.log( 'resetting state with >>>> ', JSON.stringify( args ) );
+    return true;
+  },
+  setState: ( ...args ) => {
+    console.log( 'merging following into state >>>> ', JSON.stringify( args ) );
+    return true;
+  }
 };
 
 const storageStub = {
-	clone( data ) { return <your clone function>( data ) }, 
-	data: null,
-	getItem( key ) { return this.data },
-	removeItem( key ) { this.data = null },
-	setItem( key, data ) { this.data = data } 
+  clone( data ) { return your_clone_function( data ) }, 
+  data: null,
+  getItem( key ) { return this.data },
+  removeItem( key ) { this.data = null },
+  setItem( key, data ) { this.data = data } 
 };
 
 const Provider = ({ c = DEFAULT_C }) => {
 	
-	const [ state, setState ] = useState(() => ({
-		a: { b: { c, x: { y: { z: [ 2022 ] } } } });
-	}));
-	
-	useEffect(() => {
-		// similar to `store.setState`, use the following to update
-		// only the changed slice of the context internal state.
-		setState({ a: { b: { c } } });
-		// Do not do the following: it will override the context internal state.
-		// setState({ ...state, a: { ...state.a, b: { ...state.a.b, c } } });
-	}, [ c ]);
-	
-	return (
-		<ObservableContext.Provider
-			prehooks={ updateHooks }
-			storage={ storageStub }
-			value={ state }
-		>
-			<Ui />
-		</ObservableContext.Provider>
-	);
+  const [ state, setState ] = useState(() => ({
+    a: { b: { c, x: { y: { z: [ 2022 ] } } } }
+  }));
+
+  useEffect(() => {
+    // similar to `store.setState`, use the following to update
+    // only the changed slice of the context internal state.
+    setState({ a: { b: { c } } });
+    // Do not do the following: it will override the context internal state.
+    // setState({ ...state, a: { ...state.a, b: { ...state.a.b, c } } });
+  }, [ c ]);
+
+  return (
+    <ObservableContext.Provider
+      prehooks={ updateHooks }
+      storage={ storageStub }
+      value={ state }
+    >
+      <Ui />
+    </ObservableContext.Provider>
+  );
 };
 Provider.displayName = 'Provider';
 
@@ -572,6 +569,7 @@ export default Provider;
 ```
 
 <i><b><u>index.js</u></b></i>
+
 ```jsx
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -584,7 +582,7 @@ ReactDOM.render( <Provider />, document.getElementById( 'root' ) );
 <b>v4.1.0</b>
 <table>
 	<tbody>
-		<tr><td><b>1.</b></td><td>Added new setState command <a href="#setstate-tags">tags</a>: <b><code>@@CLEAR<b><code>, <b><code>@@DELETE</code></b>, <b><code>@@MOVE</code></b>, <b><code>@@PUSH</code></b>, <b><code>@@REPLACE</code></b>, <b><code>@@SET</code></b> and <b><code>@@SPLICE</code></b>.</td></tr>
+		<tr><td><b>1.</b></td><td>Added new setState <a href="#setstate-tags">tags</a> to facilitate state update operations.</td></tr>
 	</tbody>
 </table>
 <hr />
