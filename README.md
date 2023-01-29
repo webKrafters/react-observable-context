@@ -200,15 +200,16 @@ store.setState({ ...state, a: { ...state.a, b: [ { ...first, y: 30 }, 22, ...res
 ```
 
 <h3 id="setstate-tags"><b><i><u>Rewriting state using tag commands</u></i></b></h3>
-By default <code>store.setState</code> merges new changes into current state. To overwrite current state slices with new state values, <b>7</b> tag commands have been provided for:
+By default, <code>store.setState</code> recursively merges new changes into current state.<br />
+To overwrite current state slices with new values, <b>7</b> tag commands have been provided:
 <ol>
-	<li><span style="margin-left: 10px"><code>@@CLEAR:</code> setting state slice to its corresponding empty value</span></li>
-	<li><span style="margin-left: 10px"><code>@@DELETE:</code> deleting properties</span></li>
-	<li><span style="margin-left: 10px"><code>@@MOVE:</code> moving array elements</span></li>
-	<li><span style="margin-left: 10px"><code>@@PUSH:</code> pushing new items into an array</span></li>
-	<li><span style="margin-left: 10px"><code>@@REPLACE:</code> replacing property values</span></li>
-	<li><span style="margin-left: 10px"><code>@@SET:</code> setting property values</span></li>
-	<li><span style="margin-left: 10px"><code>@@SPLICE:</code> splicing array items</span></li>
+	<li><span style="margin-left: 10px"><b style="margin-right: 6px"><i>@@CLEAR:</i></b> sets state slice to its corresponding empty value</span></li>
+	<li><span style="margin-left: 10px"><b style="margin-right: 6px"><i>@@DELETE:</i></b> removes plain object properties and array items</span></li>
+	<li><span style="margin-left: 10px"><b style="margin-right: 6px"><i>@@MOVE:</i></b> moves array elements</span></li>
+	<li><span style="margin-left: 10px"><b style="margin-right: 6px"><i>@@PUSH:</i></b> pushes new items into an array</span></li>
+	<li><span style="margin-left: 10px"><b style="margin-right: 6px"><i>@@REPLACE:</i></b> replaces property values</span></li>
+	<li><span style="margin-left: 10px"><b style="margin-right: 6px"><i>@@SET:</i></b> sets property values</span></li>
+	<li><span style="margin-left: 10px"><b style="margin-right: 6px"><i>@@SPLICE:</i></b> splices array items</span></li>
 </ol>
 <b>Examples:</b><br /><br />
 
