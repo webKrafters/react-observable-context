@@ -1,5 +1,7 @@
 export default null;
 
+/** @typedef {Array|{[x:string]:*}|Scalar} BaseType */
+
 /** @typedef {{[selectorKey: string]: Readonly<*>}} Data */
 
 /**
@@ -48,11 +50,30 @@ export default null;
  * @template {State|Array} T
  */
 
-/** @typedef {{[x:string]: *}} State */
+/**
+ * @typedef {keyof T|KeyType|PropertyPathTokens} PropertyPath
+ * @template {State} T
+ */
+
+/** @typedef {Array<KeyType>} PropertyPathTokens */
+
+/** @typedef {boolean|KeyType} Scalar */
+
+/** @typedef {number|string|symbol} KeyType */
+
+/**
+ * @typedef {{[dataPropKey: KeyType]: PropertyPath<T>} & {[dataPropKey: KeyType]: FULL_STATE_SELECTOR|[FULL_STATE_SELECTOR]}} SelectorMap
+ * @template {State} T
+ */
+
+/** @typedef {{[x: KeyType]: *}} State */
 
 /**
  * @typedef {{[K in "resetState"|"setState"]: Store<T>[K]} & {
- * 		getState: (clientId: string, ...propertyPaths?: string[]) => {[propertyPaths: string]: Readonly<*>},
+ * 		getState: (
+ * 			clientId: string,
+ * 			...propertyPaths?: PropertyPathTokens
+ * 		) => {[propertyPaths: string]: Readonly<*>},
  *		subscribe: (listener: Listener<T>) => Unsubscribe
  * 		unlinkCache: (clientId: string) => void
  * }} StoreInternal
@@ -62,7 +83,7 @@ export default null;
 /**
  * @typedef {{
  *		data: Data,
- *		resetState: (propertyPaths?: string[]) => void,
+ *		resetState: (propertyPaths?: PropertyPath[]) => void,
  *		setState: (changes: UpdatePayload<PartialState<T>>) => void,
  * }} Store
  * @template {State} T
@@ -101,5 +122,3 @@ export default null;
 /** @typedef {typeof import("./constants").SPLICE_TAG} SPLICE_TAG */
 
 /** @typedef {VoidFunction} Unsubscribe */
-
-/** @typedef {Array|{[x:string]:*}|boolean|number|string|symbol} BaseType */

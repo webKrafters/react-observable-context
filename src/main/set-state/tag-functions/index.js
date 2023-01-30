@@ -328,7 +328,7 @@ export default tagMap;
  */
 export const isClosedTag = (() => {
 	const NO_PARAM_TAGS = { [ CLEAR_TAG ]: null };
-	return tag => tag in NO_PARAM_TAGS;
+	return tag => tag in NO_PARAM_TAGS && !Array.isArray( tag );
 })();
 
 /**

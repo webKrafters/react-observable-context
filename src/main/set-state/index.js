@@ -25,7 +25,7 @@ function isIndexBasedObj( obj ) {
  * @param {K} stateKey
  * @param {Stats} stats
  * @returns {Array<TagKey>}
- * @template {KeyTypes} K
+ * @template {KeyType} K
  */
 function resolveTags( state, changes, stateKey, stats ) {
 	const resolvedTags = [];
@@ -66,7 +66,7 @@ function set( state, changes, stats ) {
  * @param {HasArrayRoot<K>} changes
  * @param {K} rootKey
  * @param {Stats} stats
- * @template {KeyTypes} K
+ * @template {KeyType} K
  */
 function setArray( state, changes, rootKey, stats ) {
 	const nsLength = changes[ rootKey ].length;
@@ -86,7 +86,7 @@ function setArray( state, changes, rootKey, stats ) {
  * @param {HasObjectRoot<K>} changes
  * @param {K} rootKey
  * @param {Stats} stats
- * @template {KeyTypes} K
+ * @template {KeyType} K
  */
 function setArrayIndex( state, changes, rootKey, stats ) {
 	const incomingIndexes = [];
@@ -117,7 +117,7 @@ function setArrayIndex( state, changes, rootKey, stats ) {
  * @param {HasArrayRoot<K>|HasObjectRoot<K>} changes
  * @param {K} stateKey
  * @param {Stats} stats
- * @template {KeyTypes} K
+ * @template {KeyType} K
  */
 function setAtomic( state, changes, stateKey, stats ) {
 	if( isEqual( state[ stateKey ], changes[ stateKey ] ) ) { return }
@@ -149,7 +149,7 @@ function setAtomic( state, changes, stateKey, stats ) {
  * @param {HasObjectRoot<K>} changes
  * @param {K} rootKey
  * @param {Stats} stats
- * @template {KeyTypes} K
+ * @template {KeyType} K
  */
 function setPlainObject( state, changes, rootKey, stats ) {
 	set( state[ rootKey ], changes[ rootKey ], stats );
@@ -172,12 +172,12 @@ function setState( state, changes, onStateChange ) {
 
 /**
  * @typedef {HasRoot<K, Array<*>>} HasArrayRoot
- * @template {KeyTypes} [K=string]
+ * @template {KeyType} [K=string]
  */
 
 /**
  * @typedef {HasRoot<K, {[x: string]: *}>} HasObjectRoot
- * @template {KeyTypes} [K=string]
+ * @template {KeyType} [K=string]
  */
 
 /**
@@ -187,11 +187,11 @@ function setState( state, changes, onStateChange ) {
  * 		? {[rootKey: string]: T}
  * 		: {[rootKey: symbol]: T}
  * } HasRoot
- * @template {KeyTypes} [K=string]
+ * @template {KeyType} [K=string]
  * @template T
  */
 
-/** @typedef {number|string|symbol} KeyTypes */
+/** @typedef {import("../../types").KeyType} KeyType */
 
 /**
  * @typedef {import("../../types").Listener<T>} Listener

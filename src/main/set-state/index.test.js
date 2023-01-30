@@ -356,7 +356,8 @@ describe( 'setState(...)', () => {
 			test( 'sets state slices to default values', () => {
 				const _state = {
 					...createSourceData(),
-					nullableDefaultTester: new Map()
+					nullableDefaultTester: new Map(),
+					strs: [ 'zero', 'one', 'two', 'three' ]
 				};
 				setState( _state, {
 					company: CLEAR_TAG,
@@ -365,6 +366,7 @@ describe( 'setState(...)', () => {
 					name: CLEAR_TAG,
 					nullableDefaultTester: CLEAR_TAG,
 					phone: CLEAR_TAG,
+					strs: [ CLEAR_TAG ],
 					tags: CLEAR_TAG
 				} );
 				expect( _state ).toEqual({
@@ -375,6 +377,7 @@ describe( 'setState(...)', () => {
 					name: {},
 					nullableDefaultTester: null,
 					phone: {},
+					strs: [ '' ],
 					tags: []
 				});
 			} );
