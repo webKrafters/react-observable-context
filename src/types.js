@@ -1,6 +1,6 @@
 export default null;
 
-/** @typedef {Array|{[x:string]:*}|Scalar} BaseType */
+/** @typedef {Array|{[x:string]:*}|boolean|KeyType} BaseType */
 
 /** @typedef {{[selectorKey: string]: Readonly<*>}} Data */
 
@@ -15,6 +15,8 @@ export default null;
  */
 
 /** @typedef {{[K in "getState"|"resetState"|"setState"|"subscribe"]: NonReactUsageReport}} IStore */
+
+/** @typedef {number|string|symbol} KeyType */
 
 /**
  * @typedef {(changes: UpdatePayload<PartialState<T>>) => void} Listener
@@ -50,40 +52,21 @@ export default null;
  * @template {State|Array} T
  */
 
-/**
- * @typedef {keyof T|KeyType|PropertyPathTokens} PropertyPath
- * @template {State} T
- */
-
-/** @typedef {Array<KeyType>} PropertyPathTokens */
-
-/** @typedef {boolean|KeyType} Scalar */
-
-/** @typedef {number|string|symbol} KeyType */
-
-/**
- * @typedef {{[dataPropKey: KeyType]: PropertyPath<T>} & {[dataPropKey: KeyType]: FULL_STATE_SELECTOR|[FULL_STATE_SELECTOR]}} SelectorMap
- * @template {State} T
- */
-
 /** @typedef {{[x: KeyType]: *}} State */
 
 /**
  * @typedef {{[K in "resetState"|"setState"]: Store<T>[K]} & {
- * 		getState: (
- * 			clientId: string,
- * 			...propertyPaths?: PropertyPathTokens
- * 		) => {[propertyPaths: string]: Readonly<*>},
- *		subscribe: (listener: Listener<T>) => Unsubscribe
- * 		unlinkCache: (clientId: string) => void
- * }} StoreInternal
- * @template {State} T
- */
+* 		getState: (clientId: string, ...propertyPaths?: string[]) => {[propertyPaths: string]: Readonly<*>},
+*		subscribe: (listener: Listener<T>) => Unsubscribe
+* 		unlinkCache: (clientId: string) => void
+* }} StoreInternal
+* @template {State} T
+*/
 
 /**
  * @typedef {{
  *		data: Data,
- *		resetState: (propertyPaths?: PropertyPath[]) => void,
+ *		resetState: (propertyPaths?: string[]) => void,
  *		setState: (changes: UpdatePayload<PartialState<T>>) => void,
  * }} Store
  * @template {State} T
