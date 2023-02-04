@@ -15,6 +15,7 @@ import createSourceData from '../test-artifacts/data/create-state-obj';
 import AppNormal, { ObservableContext, Product, TallyDisplay } from './test-apps/normal';
 import AppWithConnectedChildren from './test-apps/with-connected-children';
 import AppWithPureChildren from './test-apps/with-pure-children';
+import { DELETE_TAG, MOVE_TAG } from '../constants';
 
 beforeAll(() => {
 	jest.spyOn( console, 'log' ).mockImplementation(() => {});
@@ -970,10 +971,12 @@ describe( 'ReactObservableContext', () => {
 							<Client onChange={ onChange } selectorMap={{
 								city3: 'history.places[2].city',
 								country3: 'history.places[2].country',
+								friends: 'friends',
 								year3: 'history.places[2].year',
 								isActive: 'isActive',
 								tag6: 'tags[5]',
-								tag7: 'tags[6]'
+								tag7: 'tags[6]',
+								tags: 'tags'
 							}} />
 						</Wrapper>
 					);
@@ -981,13 +984,16 @@ describe( 'ReactObservableContext', () => {
 					const expectedValue = {
 						city3: defaultState.history.places[ 2 ].city,
 						country3: defaultState.history.places[ 2 ].country,
+						friends: defaultState.friends,
 						year3: defaultState.history.places[ 2 ].year,
 						isActive: defaultState.isActive,
 						tag6: defaultState.tags[ 5 ],
-						tag7: defaultState.tags[ 6 ]
+						tag7: defaultState.tags[ 6 ],
+						tags: defaultState.tags
 					};
 					expect( store.data ).toEqual( expectedValue );
 					store.setState({
+						friends: { [ MOVE_TAG ]: [ -1, 1 ] },
 						isActive: true,
 						history: {
 							places: {
@@ -996,14 +1002,19 @@ describe( 'ReactObservableContext', () => {
 									country: 'Morocco'
 								}
 							}
-						}
+						},
+						tags: { [ DELETE_TAG ]: [ 3, 5 ] }
 					});
 					await new Promise( resolve => setTimeout( resolve, 10 ) );
 					expect( store.data ).toEqual({
 						...expectedValue,
 						city3: 'Marakesh',
 						country3: 'Morocco',
-						isActive: true
+						friends: [ 0, 2, 1 ].map( i => defaultState.friends[ i ] ),
+						isActive: true,
+						tag6: undefined,
+						tag7: undefined,
+						tags: [ 0, 1, 2, 4, 6 ].map( i => defaultState.tags[ i ] )
 					});
 				} );
 				test( 'holds the complete current state object whenever `@@STATE` entry appears in the selectorMap', async () => {

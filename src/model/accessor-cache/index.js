@@ -37,7 +37,7 @@ class AccessorCache {
 		this.#accessors[ cacheKey ] = accessor;
 		for( const path of accessor.paths ) {
 			if( !( path in atoms ) ) {
-				atoms[ path ] = new Atom( this.#getOriginAt( path ) );
+				atoms[ path ] = new Atom( this.#getOriginAt( path ).value );
 			}
 		}
 		return this.#accessors[ cacheKey ];
@@ -45,12 +45,16 @@ class AccessorCache {
 
 	/**
 	 * @param {string} propertyPath
-	 * @returns {*}
+	 * @returns {{
+	 * 	[x: string]: *,
+	 * 	exists: boolean,
+	 * 	value: *
+	 * }}
 	 */
 	#getOriginAt( propertyPath ) {
-		return propertyPath !== FULL_STATE_SELECTOR
-			? getProperty( this.#origin, propertyPath ).value
-			: this.#origin
+		return propertyPath === FULL_STATE_SELECTOR
+			? { exists: true, value: this.#origin }
+			: getProperty( this.#origin, propertyPath );
 	}
 
 	/**
@@ -101,9 +105,14 @@ class AccessorCache {
 		const atoms = this.#atoms;
 		const updatedPaths = [];
 		for( const path in atoms ) {
-			if( path !== FULL_STATE_SELECTOR && !getProperty( originChanges, path ).exists ) { continue }
-			const newAtomVal = this.#getOriginAt( path )
-			if( isEqual( newAtomVal, atoms[ path ].value ) ) { continue }
+			const { exists, value: newAtomVal } = this.#getOriginAt( path );
+			if(( path !== FULL_STATE_SELECTOR &&
+				exists &&
+				typeof newAtomVal === 'undefined' &&
+				!getProperty( originChanges, path ).exists
+			) || isEqual( newAtomVal, atoms[ path ].value )) {
+				continue;
+			}
 			atoms[ path ].setValue( newAtomVal );
 			updatedPaths.push( path );
 		}

@@ -19,27 +19,7 @@ import useRenderKeyProvider from './hooks/use-render-key-provider';
 
 import useStore from './hooks/use-store';
 
-/**
- * @param {ObservableContext<T>} context Refers to the PublicObservableContext<T> type of the ObservableContext<T>
- * @param {SelectorMap<T>} [selectorMap] Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
- * @returns {(WrappedComponent: C) => MemoExoticComponent<P>}
- * @template {State} T
- * @template {PartialStore<T> & {[x:string]:*}} [P=PartialStore<T>]
- * @template {ComponentType<P>|ExoticComponent<P>} C
- * @see {ObservableContext<T>}
- * @see {useContext} for selectorMap sample
- */
-export const connect = ( context, selectorMap ) => WrappedComponent => {
-	if( !( isPlainObject( WrappedComponent ) && 'compare' in WrappedComponent ) ) {
-		WrappedComponent = memo( WrappedComponent );
-	}
-	const ConnectedComponent = memo( ownProps => {
-		const store = useContext( context, selectorMap );
-		return( <WrappedComponent { ...store } { ...ownProps } /> );
-	} );
-	ConnectedComponent.displayName = 'ObservableContext.Connected';
-	return ConnectedComponent;
-};
+import * as constants from '../constants';
 
 /**
  * @returns {ObservableContext<T>} Refers to the IObservableContext<T> type of the ObservableContext<T>
@@ -57,8 +37,6 @@ export const createContext = () => {
 	Context.Provider = makeObservable( provider );
 	return Context;
 };
-
-export class UsageError extends Error {}
 
 /**
  * Actively monitors the store and triggers component re-render if any of the watched keys in the state objects changes
@@ -89,7 +67,7 @@ export const useContext = ( context, selectorMap = {} ) => {
 
 	/** @type {StoreInternal<T>} */
 	const {
-		getState: _getState,
+		getState,
 		resetState: _resetState,
 		subscribe,
 		unlinkCache,
@@ -114,7 +92,7 @@ export const useContext = ( context, selectorMap = {} ) => {
 	const [ data, setData ] = React.useState(() => {
 		const data = {};
 		if( isEmpty( _renderKeys ) ) { return data }
-		const state = _getState( clientId, ..._renderKeys );
+		const state = getState( clientId, ..._renderKeys );
 		for( const path of _renderKeys ) {
 			data[ selectorMapInverse[ path ] ] = state[ path ];
 		}
@@ -123,7 +101,7 @@ export const useContext = ( context, selectorMap = {} ) => {
 
 	const updateData = () => {
 		let hasChanges = false;
-		const state = _getState( clientId, ..._renderKeys );
+		const state = getState( clientId, ..._renderKeys );
 		for( const path of _renderKeys ) {
 			if( data[ selectorMapInverse[ path ] ] !== state[ path ] ) {
 				data[ selectorMapInverse[ path ] ] = state[ path ];
@@ -159,6 +137,81 @@ export const useContext = ( context, selectorMap = {} ) => {
 
 	return useMemo(() => ({ data, resetState, setState }), [ data ]);
 };
+
+/**
+ * @param {ObservableContext<T>} context Refers to the PublicObservableContext<T> type of the ObservableContext<T>
+ * @param {SelectorMap<T>} [selectorMap] Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
+ * @returns {(WrappedComponent: C) => MemoExoticComponent<P>}
+ * @template {State} T
+ * @template {PartialStore<T> & {[x:string]:*}} [P=PartialStore<T>]
+ * @template {ComponentType<P>|ExoticComponent<P>} C
+ * @see {ObservableContext<T>}
+ * @see {useContext} for selectorMap sample
+ */
+export const connect = ( context, selectorMap ) => WrappedComponent => {
+	if( !( isPlainObject( WrappedComponent ) && 'compare' in WrappedComponent ) ) {
+		WrappedComponent = memo( WrappedComponent );
+	}
+	const ConnectedComponent = memo( ownProps => {
+		const store = useContext( context, selectorMap );
+		return( <WrappedComponent { ...store } { ...ownProps } /> );
+	} );
+	ConnectedComponent.displayName = 'ObservableContext.Connected';
+	return ConnectedComponent;
+};
+
+/** @example changes = { property: CLEAR_TAG } */
+export const CLEAR_TAG = constants.CLEAR_TAG;
+
+/**
+ * @example
+ * changes = {
+ * 	property: {
+ * 		[DELETE_TAG]: [keys/indexes to remove from property]
+ * 	}
+ * }
+ */
+export const DELETE_TAG = constants.DELETE_TAG;
+
+export const FULL_STATE_SELECTOR = constants.FULL_STATE_SELECTOR;
+
+/**
+ * @example
+ * changes = {
+ * 	arrayProperty: {
+ * 		[MOVE_TAG]: [-/+fromIndex, -/+toIndex, +numItems?] // numItems = 1 by default
+ * 	}
+ * }
+ */
+export const MOVE_TAG = constants.MOVE_TAG;
+
+/** @example changes = { arrayProperty: { [PUSH_TAG]: [new items to append to array] } } */
+export const PUSH_TAG = constants.PUSH_TAG;
+
+/** @example changes = { property: { [REPLACE_TAG]: replacement } } */
+export const REPLACE_TAG = constants.REPLACE_TAG;
+
+/**
+ * @example
+ * changes = {
+ * 	property: {
+ * 		[SET_TAG]: replacement // or a compute replacement function (i.e. currentProperty => replacement)
+ * 	}
+ * }
+ */
+export const SET_TAG = constants.SET_TAG;
+
+/**
+ * @example
+ * changes = {
+ *   arrayProperty: {
+ *     [SPLICE_TAG]: [-/+fromIndex, +deleteCount, ...newItems?] // newItems = ...[] by default
+ *   }
+ * }
+ */
+export const SPLICE_TAG = constants.SPLICE_TAG;
+
+export class UsageError extends Error {}
 
 /** @type {FC<{child: ReactNode}>} */
 const ChildMemo = (() => {
@@ -267,8 +320,24 @@ function reportNonReactUsage() {
  * @template {State} T
  */
 
+/** @typedef {typeof CLEAR_TAG} CLEAR_TAG */
+
+/** @typedef {typeof DELETE_TAG} DELETE_TAG */
+
+/** @typedef {import("../types").FULL_STATE_SELECTOR} FULL_STATE_SELECTOR */
+
+/** @typedef {typeof MOVE_TAG} MOVE_TAG */
+
+/** @typedef {typeof PUSH_TAG} PUSH_TAG */
+
+/** @typedef {typeof REPLACE_TAG} REPLACE_TAG */
+
+/** @typedef {typeof SET_TAG} SET_TAG */
+
+/** @typedef {typeof SPLICE_TAG} SPLICE_TAG */
+
 /**
- * @typedef {{[dataPropKey: string]: string|keyof T} & {[dataPropKey: string]: import("../types").FULL_STATE_SELECTOR}} SelectorMap
+ * @typedef {{[dataPropKey: string]: string|keyof T} & {[dataPropKey: string]: FULL_STATE_SELECTOR}} SelectorMap
  * @template {State} T
  */
 

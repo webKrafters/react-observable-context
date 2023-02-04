@@ -145,7 +145,7 @@ export const $delete = ( state, stateKey, stats, changes ) => {
  * const state = {name: 'test', nested: {name: 'nested', items: ['a', 'b', 'c', 'd', 'e', 'f'], fn: () => {}}}
  * $move(state.nested, 'items', {hasChanges: false}, {items: {'@@MOVE': [0, 3, 2], ...}, ...}) // moves `state.nested.items` 'a' and 'b' from indexes 0 and 1 to indexes 3 and 4.
  *
- * @type {TagFunction<T, K,  import("../../../types").MoveCommand}>} as in {"@@MOVE": [-/+fromIndex, -/+toIndex, +numItems? ]}. numItems = 1 by default.
+ * @type {TagFunction<T, K,  import("../../../types").MoveCommand}>} as in {"@@MOVE": [-/+fromIndex, -/+toIndex, +numItems?]}. numItems = 1 by default.
  * @template T, K
  */
 export const $move = ( state, stateKey, stats, changes ) => {

@@ -137,6 +137,7 @@ export const getProperty = (() => {
 
 /**
  * Checks if value is either a plain object or an array
+ *
  * @returns {boolean}
  */
 export function isDataContainer( v ) { return isPlainObject( v ) || Array.isArray( v ) }
