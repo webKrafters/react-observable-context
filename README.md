@@ -92,6 +92,8 @@ A special property path [@@STATE](#fullstate-selectorkey) may be used to access 
 ## Provider
 The Provider component is a property of the `React-Observable-Context` context object. As a `React.context` based provider, it accepts the customary `children` and `value` props. It also accepts **2** optional props: <a href="#prehooks"><code>prehooks</code></a> and <a href="#storage"><code>storage</code></a>.
 
+External direct access to the context store may be obtained via the `ref` attribute. Please see a [Provider Usage](#provider-usage) sample below. 
+
 Routinely, the `value` prop is initialized with the full initial state. It may only be updated with parts of the state which are changing. Please see a [Provider Usage](#provider-usage) sample below. 
 
 <h2 id="selector-map">Selector Map</h2>
@@ -541,6 +543,8 @@ const storageStub = {
 };
 
 const Provider = ({ c = DEFAULT_C }) => {
+
+  const storeRef = useRef();
 	
   const [ state, setState ] = useState(() => ({
     a: { b: { c, x: { y: { z: [ 2022 ] } } } }
@@ -557,6 +561,7 @@ const Provider = ({ c = DEFAULT_C }) => {
   return (
     <ObservableContext.Provider
       prehooks={ updateHooks }
+	  ref={ storeRef }
       storage={ storageStub }
       value={ state }
     >
@@ -580,16 +585,15 @@ ReactDOM.render( <Provider />, document.getElementById( 'root' ) );
 ```
 
 <h1 id="changes">What's Changed?</h1>
-<b>v4.1.0</b>
+
 <table>
+	<thead><tr><th>v4.1.0</th></tr></thead>
 	<tbody>
 		<tr><td><b>1.</b></td><td>Added new setState <a href="#setstate-tags">tags</a> to facilitate state update operations.</td></tr>
+		<tr><td><b>2.</b></td><td>Exposing the store via its Context Provider `ref` attribute.</td></tr>
+		<tr><td><b>3.</b></td><td>Exporting crucial constants such as @@STATE and setState <a href="#setstate-tags">tags</a> such as @@CLEAR, @@MOVE etc.</td></tr>
 	</tbody>
-</table>
-<hr />
-
-<b>v4.0.0</b>
-<table>
+	<thead><tr><th>v4.0.0</th></tr></thead>
 	<tbody>
 		<tr><td><b>1.</b></td><td>Added the <a href="#connect"><code>connect</code></a> function to facilitate the encapsulated context-usage method.</td></tr>
 		<tr><td><b>2.</b></td><td>Added stronger support for deeply nested state structure. See <a href="#store-setstate"><code>store.setState</code></a></td></tr>

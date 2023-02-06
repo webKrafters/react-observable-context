@@ -129,7 +129,7 @@ const useStore = ( prehooks, value, storage ) => {
 	}, [ stateWatch ]);
 
 	return useState(() => ({
-		getState: select, resetState, setState, subscribe, unlinkCache: unlink
+		getState: select, resetState, setState, state, subscribe, unlinkCache: unlink
 	}))[ 0 ];
 };
 

@@ -2,8 +2,10 @@ import React, {
 	Children,
 	cloneElement,
 	createContext as _createContext,
+	forwardRef,
 	memo,
 	useCallback,
+	useImperativeHandle,
 	useMemo,
 	useRef
 } from 'react';
@@ -15,11 +17,13 @@ import omit from 'lodash.omit';
 
 import { v4 as uuid } from 'uuid';
 
+import * as constants from '../constants';
+
+import { clonedeep } from '../utils';
+
 import useRenderKeyProvider from './hooks/use-render-key-provider';
 
 import useStore from './hooks/use-store';
-
-import * as constants from '../constants';
 
 /**
  * @returns {ObservableContext<T>} Refers to the IObservableContext<T> type of the ObservableContext<T>
@@ -243,16 +247,30 @@ function makeObservable( Provider ) {
 	 * @type {ObservableProvider<T>}
 	 * @template {State} T
 	 */
-	const Observable = ({
+	const Observable = forwardRef(({
 		children = null,
 		prehooks = defaultPrehooks,
 		storage = null,
 		value
-	}) => (
-		<Provider value={ useStore( prehooks, value, storage ) }>
-			{ memoizeImmediateChildTree( children ) }
-		</Provider>
-	);
+	}, storeRef ) => {
+		const _store = useStore( prehooks, value, storage );
+		const { state, store } = useMemo(() => {
+			const { state, ...store } = _store;
+			return { state, store };
+		}, [ _store ]);
+		useImperativeHandle( storeRef, () => ({
+			...storeRef?.current ?? {},
+			getState: () => clonedeep( state ),
+			resetState: store.resetState,
+			setState: store.setState,
+			subscribe: store.subscribe
+		}), [ storeRef?.current, state ] );
+		return (
+			<Provider value={ store }>
+				{ memoizeImmediateChildTree( children ) }
+			</Provider>
+		);
+	} );
 	Observable.displayName = 'ObservableContext.Provider';
 	return Observable;
 }
@@ -299,12 +317,27 @@ function reportNonReactUsage() {
  */
 
 /**
- * @typedef {FC<{
+ * @typedef {ForwardRefExoticComponent<ProviderProps<T>, StoreRef<T>>} ObservableProvider
+ * @template {State} T
+ */
+
+/**
+ * @typedef {{
  * 		children?: ReactNode,
  * 		prehooks?: Prehooks<T>
  * 		storage?: IStorage<T>
  * 		value: PartialState<T>
- * }>} ObservableProvider
+ * }} ProviderProps
+* @template {State} T
+ */
+
+/**
+ * @typedef {{
+ * 		[x: string]: *,
+ * 		getState: () => T
+ * } & {
+ * 		[K in "resetState"|"setState"|"subscribe"]: StoreInternal<T>[K]
+ * }} StoreRef
  * @template {State} T
  */
 
@@ -368,6 +401,13 @@ function reportNonReactUsage() {
 /** @typedef {import("../types").Data} Data */
 
 /** @typedef {import("react").ReactNode} ReactNode */
+
+/**
+ * @typedef {import('react').ForwardRefExoticComponent<
+ * 	import('react').PropsWithRef<P> & import('react').RefAttributes<T>
+ * >} ForwardRefExoticComponent
+ * @template P, T
+ */
 
 /**
  * @typedef {import('react').MemoExoticComponent<ComponentType<P>} MemoExoticComponent

@@ -8,7 +8,7 @@ import '@testing-library/jest-dom';
 
 import { clonedeep } from '../utils';
 
-import { connect, UsageError, useContext } from '.';
+import { connect, FULL_STATE_SELECTOR, UsageError, useContext } from '.';
 
 import createSourceData from '../test-artifacts/data/create-state-obj';
 
@@ -700,12 +700,97 @@ describe( 'ReactObservableContext', () => {
 				});
 				expect( ObservableContext._defaultValue ).toBeNull();
 				expect( ObservableContext.Consumer ).toBeInstanceOf( Object );
-				expect( ObservableContext.Provider ).toBeInstanceOf( Function );
+				expect( ObservableContext.Consumer.$$typeof.toString() ).toEqual( 'Symbol(react.context)' );
+				expect( ObservableContext.Provider ).toBeInstanceOf( Object );
+				expect( ObservableContext.Provider.$$typeof.toString() ).toEqual( 'Symbol(react.forward_ref)' );
 			} );
-			test( 'creates a context whose provider also allows for no children', () => {
-				let renderResult;
-				expect(() => { renderResult = render( <ObservableContext.Provider value={{}} /> ) }).not.toThrow();
-				expect( renderResult.container ).toBeEmptyDOMElement();
+			describe( 'Context provider component property', () => {
+				test( 'also allows for no children', () => {
+					let renderResult;
+					expect(() => { renderResult = render( <ObservableContext.Provider value={{}} /> ) }).not.toThrow();
+					expect( renderResult.container ).toBeEmptyDOMElement();
+				} );
+				describe( 'with store object reference for external exposure', () => {
+					let state, storeRef, TestProvider;
+					beforeAll(() => {
+						state = {
+							color: 'Burgundy',
+							customer: {
+								name: { first: 'tFirst', last: 'tLast' },
+								phone: null
+							},
+							price: 22.5,
+							type: 'TEST TYPE'
+						}
+						TestProvider = () => { // eslint-disable-line react/display-name
+							storeRef = React.useRef();
+							return (
+								<ObservableContext.Provider ref={ storeRef } value={ state }>
+									<TallyDisplay />
+								</ObservableContext.Provider>
+							);
+						};
+					});
+					test( 'is provided', () => {
+						render( <TestProvider /> );
+						expect( storeRef.current ).toStrictEqual( expect.objectContaining({
+							getState: expect.any( Function ),
+							resetState: expect.any( Function ),
+							setState: expect.any( Function ),
+							subscribe: expect.any( Function )
+						}) );
+					} );
+					test( 'gets a copy of the current state', () => {
+						render( <TestProvider /> );
+						const currentState = storeRef.current.getState();
+						expect( currentState ).not.toBe( state );
+						expect( currentState ).toStrictEqual( state );
+					} );
+					test( 'updates internal state', async () => {
+						const { renderCount } = perf( React );
+						render( <TestProvider /> );
+						await wait(() => {});
+						expect( renderCount.current.TallyDisplay.value ).toBe( 1 );
+						const currentState = storeRef.current.getState();
+						storeRef.current.setState({ price: 45 });
+						const newState = { ...state, price: 45 };
+						await wait(() => {});
+						await new Promise( resolve => setTimeout( resolve, 50 ) );
+						expect( renderCount.current.TallyDisplay.value ).toBe( 2 );
+						expect( currentState ).not.toEqual( newState );
+						expect( storeRef.current.getState() ).toEqual( newState );
+						storeRef.current.resetState([ FULL_STATE_SELECTOR ]); // resets store internal state
+						await wait(() => {});
+						await new Promise( resolve => setTimeout( resolve, 50 ) );
+						expect( renderCount.current.TallyDisplay.value ).toBe( 3 );
+						const currentState2 = storeRef.current.getState();
+						expect( currentState2 ).not.toBe( state );
+						expect( currentState2 ).toStrictEqual( state );
+						expect( currentState2 ).not.toBe( currentState );
+						expect( currentState2 ).toStrictEqual( currentState );
+						cleanupPerfTest();
+					} );
+					test( 'subscribes to state changes', async () => {
+						render( <TestProvider /> );
+						const changes = { price: 45 };
+						const onChangeMock = jest.fn();
+						const unsub = storeRef.current.subscribe( onChangeMock );
+						expect( onChangeMock ).not.toHaveBeenCalled();
+						storeRef.current.setState( changes );
+						expect( onChangeMock ).toHaveBeenCalled();
+						expect( onChangeMock ).toHaveBeenCalledWith( changes );
+						onChangeMock.mockClear();
+						storeRef.current.resetState([ FULL_STATE_SELECTOR ]);
+						expect( onChangeMock ).toHaveBeenCalled();
+						expect( onChangeMock ).toHaveBeenCalledWith( state );
+						onChangeMock.mockClear();
+						unsub();
+						storeRef.current.setState( changes );
+						expect( onChangeMock ).not.toHaveBeenCalled();
+						storeRef.current.resetState([ FULL_STATE_SELECTOR ]);
+						expect( onChangeMock ).not.toHaveBeenCalled();
+					} );
+				} );
 			} );
 		} );
 		describe( 'useContext(...)', () => {
