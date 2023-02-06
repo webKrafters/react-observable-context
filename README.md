@@ -41,6 +41,43 @@ npm install --save @webkrafters/react-observable-context
 
 May also see <b><a href="#changes">What's Changed?</a></b> section below.
 
+<h1 id="toc">Table of Contents</h1>
+
+<a href="#intro">Intro</a><br />
+<a href="#concepts">Concepts</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#client">Client</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#prehooks">Prehooks</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#property-path">Property Path</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#fullstate-selectorkey">@@STATE</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#provider">Provider</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#selector-map">Selector Map</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#storage">Storage</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#store">Store</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#store-resetstate">Reset State</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#store-setstate">Set State</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#indexing">Array Indexing</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#setstate-tags">Using Tag Commands</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#clear-tag-usage">@@CLEAR Usage Example</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#delete-tag-usage">@@DELETE Usage Example</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#move-tag-usage">@@MOVE Usage Example</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#push-tag-usage">@@PUSH Usage Example</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#replace-tag-usage">@@REPLACE Usage Example</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#set-tag-usage">@@SET Usage Example</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#splice-tag-usage">@@SPLICE Usage Example</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#set-state-with-tags">Combination Usage Example</a><br />
+<a href="#api">API</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#connect">Connect HoC</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#create-context">CreateContext Function</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#usage-error">UsageError Exception</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#usecontext">UseContext Hook</a><br />
+<a href="#usage">Usage</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#create-context-usage">Creating context</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#provider-usage">Setting up the Provider</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#connect-usage">Consuming context (hoc method)</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#usecontext-usage">Consuming context (hook with memo method)</a><br />
+<a href="#changes">What's Changed?</a><br />
+<a href="#license">License</a><br />
+
 # Intro
 
 A context bearing an observable consumer [store](#store). State changes within the store's internal state are only broadcasted to components subscribed to the store (the [clients](#client)). In this way, the `React-Observable-Context` prevents repeated automatic re-renderings of entire component trees resulting from ***context*** state changes.
@@ -215,7 +252,7 @@ To overwrite current state slices with new values, <b>7</b> tag commands have be
 </ol>
 <b>Examples:</b><br /><br />
 
-<i><b>@@CLEAR:</b> (takes no arguments)</i>
+<i id="clear-tag-usage"><b>@@CLEAR:</b> (takes no arguments)</i>
 
 ```jsx
 const state = {
@@ -242,7 +279,7 @@ store.setState({ a: { b: [ '@@CLEAR', state.a.b[1] ] } }) // or store.setState({
 store.setState({ a: { b: { 0: '@@CLEAR' } } }) // or store.setState({ a: { b: { 0: { '@@CLEAR': <anything> } } } })
 ```
 
-<i><b>@@DELETE:</b> (takes an array argument listing property keys to delete)</i>
+<i id="delete-tag-usage"><b>@@DELETE:</b> (takes an array argument listing property keys to delete)</i>
 
 ```jsx
 const state = {
@@ -264,7 +301,7 @@ store.setState({ a: { b: [ state.a.b[ 0 ], { '@@DELETE': [ 'x', 'z' ] } ] } })
 store.setState({ a: { b: { 1: { '@@DELETE': [ 'x', 'z' ] } } } })
 ```
 
-<i><b>@@MOVE:</b> (takes an array argument listing: -/+fromIndex, -/+toIndex and optional +numItems?. numItems = 1 by default)</i>
+<i id="move-tag-usage"><b>@@MOVE:</b> (takes an array argument listing: -/+fromIndex, -/+toIndex and optional +numItems?. numItems = 1 by default)</i>
 
 ```jsx
 const state = {
@@ -282,7 +319,7 @@ store.setState({ a: { b: { '@@MOVE': [ 0, 1 ] } } }) // or store.setState({ a: {
 store.setState({ a: { q: { '@@MOVE': [ 4, 1, 4 ] } } }) // or store.setState({ a: { q: { '@@MOVE': [ -5, -8, 4 ] } } })
 ```
 
-<i><b>@@PUSH:</b> (takes an array argument listing new values to append)</i>
+<i id="push-tag-usage"><b>@@PUSH:</b> (takes an array argument listing new values to append)</i>
 
 ```jsx
 const state = {
@@ -296,7 +333,7 @@ store.setState({ a: { '@@PUSH': [{ n: 5 }] } }) // assigning a '@@PUSH' command 
 store.setState({ a: { b: { '@@PUSH': [{ x: 27, y: 28, z: 29 }, { x: 37, y: 38, z: 39 }] } } })
 ```
 
-<i><b>@@REPLACE:</b> (takes an argument holding the replacment value)</i>
+<i id="replace-tag-usage"><b>@@REPLACE:</b> (takes an argument holding the replacment value)</i>
 
 ```jsx
 const state = {
@@ -315,7 +352,7 @@ store.setState({ a: { b: [ state.a.b[ 0 ], { '@@REPLACE': { x: 97, y: 98, z: 99 
 store.setState({ a: { b: { 1: { '@@REPLACE': { x: 97, y: 98, z: 99 } } } } })
 ```
 
-<i><b>@@SET:</b> (takes an argument holding either the replacment value or a compute function returning the replacement value)</i>
+<i id="set-tag-usage"><b>@@SET:</b> (takes an argument holding either the replacment value or a compute function returning the replacement value)</i>
 
 ```jsx
 /*
@@ -342,7 +379,7 @@ store.setState({ a: { b: [ state.a.b[ 0 ], { '@@SET': currentValue => ({ ...curr
 store.setState({ a: { b: { 1: { '@@SET': currentValue => ({ ...currentValue, x: 97, y: 98, z: 99 }) } } } })
 ```
 
-<i><b>@@SPLICE:</b> (takes an array argument listing: -/+fromIndex, +deleteCount and optional ...newItems? newItems = ...[] by default)</i>
+<i id="splice-tag-usage"><b>@@SPLICE:</b> (takes an array argument listing: -/+fromIndex, +deleteCount and optional ...newItems? newItems = ...[] by default)</i>
 
 ```jsx
 const state = {
@@ -360,7 +397,7 @@ store.setState({ a: { b: { '@@SPLICE': [ 0, 1 ] } } }) // or store.setState({ a:
 store.setState({ a: { q: { '@@SPLICE': [ 4, 4, 33, 88 ] } } }) // or store.setState({ a: { q: { '@@SPLICE': [ -5, 4, 33, 88 ] } } })
 ```
 
-<h3><b><i>Combination Usage:</i></b></h3>
+<h3 id="set-state-with-tags"><b><i>Combination Usage:</i></b></h3>
 
 These tags may be used in combination with the default usage where all top-level tag command results in property are sequentially merged into state followed by the merging of the rest of the property changes.
 
@@ -415,12 +452,12 @@ The React-Observable-Context module exports named constants and the following **
 	</li>
 	<li style="padding-bottom: 5px">
 		<p style="margin: 0 0 5px 5px">
-			<b>createContext</b> is a zero-parameter function returning a <code>React-Observable-Context</code> object. This object is the store-bearing context. To access the context's <a href="#store">store</a>, pass the context as a <code>context</code> parameter to either the <a href="#connect">connect</a> function or the <a href="#usecontext">useContext</a> hook.
+			<b id="create-context">createContext</b> is a zero-parameter function returning a <code>React-Observable-Context</code> object. This object is the store-bearing context. To access the context's <a href="#store">store</a>, pass the context as a <code>context</code> parameter to either the <a href="#connect">connect</a> function or the <a href="#usecontext">useContext</a> hook.
 		</p>
 	</li>
 	<li style="padding-bottom: 5px">
 		<p style="margin: 0 0 5px 5px">
-			<b>UsageError</b> class is the Error type reported for attempts to access this context's store outside of its Provider component tree.
+			<b id="usage-error">UsageError</b> class is the Error type reported for attempts to access this context's store outside of its Provider component tree.
 		</p>
 	</li>
 	<li>
@@ -440,78 +477,11 @@ The React-Observable-Context module exports named constants and the following **
 
 # Usage
 
-<i><u><b>context.js</b></u></i>
+<i id="create-context-usage"><u><b>context.js</b></u></i>
 
 ```jsx
 import { createContext } from '@webkrafters/react-observable-context';
 export default createContext();
-```
-
-<i><u><b>ui.js</b></u> (connect method)</i>
-
-```jsx
-import React, { useCallback, useEffect } from 'react';
-import { connect } from '@webkrafters/react-observable-context';
-import ObservableContext from './context';
-
-export const YearText = ({ data }) => ( <div>Year: { data.year }</div> );
-export const YearInput = ({ data, setState, resetState }) => {
-  const onChange = useCallback( e => setState({
-    a: { b: { x: { y: { z: { 0: e.target.value } } } } }
-  }), [ setState ]);
-  useEffect(() => {
-    data.year > 2049 && resetState([ 'a.b.c' ]);
-  }, [ data.year ]);
-  return ( <div>Year: <input type="number" onChange={ onChange } /> );
-};
-
-const withConnector = connect( ObservablContext, { year: 'a.b.x.y.z[0]' } );
-const Client1 = withConnector( YearText );
-const Client2 = withConnector( YearInput );
-
-const Ui = () => (
-  <div>
-    <Client1 />
-    <Client2 />
-  </div>
-);
-
-export default Ui;
-```
-
-<i><u><b>ui.js</b></u> (useContext with memo method)</i>
-
-```jsx
-import React, { memo, useCallback, useEffect } from 'react';
-import { useContext } from '@webkrafters/react-observable-context';
-import ObservableContext from './context';
-
-const selectorMap = { year: 'a.b.x.y.z[0]' };
-
-const Client1 = memo(() => { // memoize to prevent 'no-change' renders from the parent.
-  const { data } = useContext( ObservableContext, selectorMap );
-  return ( <div>Year: { data.year }</div> );
-});
-
-const Client2 = memo(() => { // memoize to prevent 'no-change' renders from the parent.
-  const { data, setState, resetState } = useContext( ObservableContext, selectorMap );
-  const onChange = useCallback( e => setState({
-    a: { b: { x: { y: { z: { 0: e.target.value } } } } }
-  }), [ setState ]);
-  useEffect(() => {
-    data.year > 2049 && resetState([ 'a.b.c' ]);
-  }, [ data.year ]);
-  return ( <div>Year: <input type="number" onChange={ onChange } /> );
-});
-
-const Ui = () => (
-  <div>
-    <Client1 />
-    <Client2 />
-  </div>
-);
-
-export default Ui;
 ```
 
 <i id="provider-usage"><b><u>provider.js</u></b></i>
@@ -574,6 +544,73 @@ Provider.displayName = 'Provider';
 export default Provider;
 ```
 
+<i id="connect-usage"><u><b>ui.js</b></u> (connect method)</i>
+
+```jsx
+import React, { useCallback, useEffect } from 'react';
+import { connect } from '@webkrafters/react-observable-context';
+import ObservableContext from './context';
+
+export const YearText = ({ data }) => ( <div>Year: { data.year }</div> );
+export const YearInput = ({ data, setState, resetState }) => {
+  const onChange = useCallback( e => setState({
+    a: { b: { x: { y: { z: { 0: e.target.value } } } } }
+  }), [ setState ]);
+  useEffect(() => {
+    data.year > 2049 && resetState([ 'a.b.c' ]);
+  }, [ data.year ]);
+  return ( <div>Year: <input type="number" onChange={ onChange } /> );
+};
+
+const withConnector = connect( ObservablContext, { year: 'a.b.x.y.z[0]' } );
+const Client1 = withConnector( YearText );
+const Client2 = withConnector( YearInput );
+
+const Ui = () => (
+  <div>
+    <Client1 />
+    <Client2 />
+  </div>
+);
+
+export default Ui;
+```
+
+<i id="usecontext-usage"><u><b>ui.js</b></u> (useContext with memo method)</i>
+
+```jsx
+import React, { memo, useCallback, useEffect } from 'react';
+import { useContext } from '@webkrafters/react-observable-context';
+import ObservableContext from './context';
+
+const selectorMap = { year: 'a.b.x.y.z[0]' };
+
+const Client1 = memo(() => { // memoize to prevent 'no-change' renders from the parent.
+  const { data } = useContext( ObservableContext, selectorMap );
+  return ( <div>Year: { data.year }</div> );
+});
+
+const Client2 = memo(() => { // memoize to prevent 'no-change' renders from the parent.
+  const { data, setState, resetState } = useContext( ObservableContext, selectorMap );
+  const onChange = useCallback( e => setState({
+    a: { b: { x: { y: { z: { 0: e.target.value } } } } }
+  }), [ setState ]);
+  useEffect(() => {
+    data.year > 2049 && resetState([ 'a.b.c' ]);
+  }, [ data.year ]);
+  return ( <div>Year: <input type="number" onChange={ onChange } /> );
+});
+
+const Ui = () => (
+  <div>
+    <Client1 />
+    <Client2 />
+  </div>
+);
+
+export default Ui;
+```
+
 <i><b><u>index.js</u></b></i>
 
 ```jsx
@@ -604,7 +641,6 @@ ReactDOM.render( <Provider />, document.getElementById( 'root' ) );
 		<tr><td><b>7.</b></td><td>Removed the need for <code>store.getState</code>. <code>store.data</code> now holds the state slices used at the client. Changes in any of the slices held by the <code>store.data</code> are automatically updated as they occur. The client is immediately notified of the update.</td></tr>
 	</tbody>
 </table>
-
 
 # License
 
