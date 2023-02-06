@@ -397,7 +397,7 @@ store.setState({
 
 # API
 
-The React-Observable-Context module contains **4** exports namely:
+The React-Observable-Context module exports named constants and the following **4** main entities namely:
 <ol>
 	<li style="padding-bottom: 5px">
 		<p style="margin: 0 0 5px 5px">
@@ -561,7 +561,7 @@ const Provider = ({ c = DEFAULT_C }) => {
   return (
     <ObservableContext.Provider
       prehooks={ updateHooks }
-	  ref={ storeRef }
+      ref={ storeRef }
       storage={ storageStub }
       value={ state }
     >
@@ -590,8 +590,8 @@ ReactDOM.render( <Provider />, document.getElementById( 'root' ) );
 	<thead><tr><th>v4.1.0</th></tr></thead>
 	<tbody>
 		<tr><td><b>1.</b></td><td>Added new setState <a href="#setstate-tags">tags</a> to facilitate state update operations.</td></tr>
-		<tr><td><b>2.</b></td><td>Exposing the store via its Context Provider `ref` attribute.</td></tr>
-		<tr><td><b>3.</b></td><td>Exporting crucial constants such as @@STATE and setState <a href="#setstate-tags">tags</a> such as @@CLEAR, @@MOVE etc.</td></tr>
+		<tr><td><b>2.</b></td><td>Exposing the store via its Context Provider <code>ref</code> attribute.</td></tr>
+		<tr><td><b>3.</b></td><td>Exporting crucial constants such as <b>@@STATE</b> and setState <a href="#setstate-tags">tags</a> such as <b>@@CLEAR</b>, <b>@@MOVE</b> etc.</td></tr>
 	</tbody>
 	<thead><tr><th>v4.0.0</th></tr></thead>
 	<tbody>
