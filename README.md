@@ -30,7 +30,7 @@ Subscribing component decides which context state properties' changes to trigger
 
 **Moniker:** Eagle Eye
 
-**Usage:** Please see <b><a href="#getting-started">Getting Started</a></b> section
+**Usage:** Please see <b><a href="#getting-started">Getting Started</a></b>.
 
 **Demo:** [Play with the app on codesandbox](https://codesandbox.io/s/github/webKrafters/react-observable-context-app)\
 If sandbox fails to load app, please refresh dependencies on its lower left.
@@ -39,7 +39,7 @@ If sandbox fails to load app, please refresh dependencies on its lower left.
 npm i -S @webkrafters/react-observable-context\
 npm install --save @webkrafters/react-observable-context
 
-May also see <b><a href="#changes">What's Changed?</a></b> section below.
+May also see <b><a href="#changes">What's Changed?</a></b>.
 
 <h1 id="toc">Table of Contents</h1>
 
@@ -289,9 +289,9 @@ A special property path [@@STATE](#fullstate-selectorkey) may be used to access 
 ## Provider
 The Provider component is a property of the `React-Observable-Context` context object. As a `React.context` based provider, it accepts the customary `children` and `value` props. It also accepts **2** optional props: <a href="#prehooks"><code>prehooks</code></a> and <a href="#storage"><code>storage</code></a>.
 
-External direct access to the context store may be obtained via the `ref` attribute. Please see a [Provider Usage](#provider-usage) sample below. 
+External direct access to the context store may be obtained via the `ref` attribute. Please see a [Provider Usage](#provider-usage) sample. 
 
-Routinely, the `value` prop is initialized with the full initial state. It may only be updated with parts of the state which are changing. Please see a [Provider Usage](#provider-usage) sample below. 
+Routinely, the `value` prop is initialized with the full initial state. It may only be updated with parts of the state which are changing. Please see a [Provider Usage](#provider-usage) sample. 
 
 <h2 id="selector-map">Selector Map</h2>
 A selector map is an object holding key:value pairs.<br />
