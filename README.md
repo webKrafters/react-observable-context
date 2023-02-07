@@ -97,30 +97,7 @@ import React, { useEffect, useState } from 'react';
 import ObservableContext from './context';
 import Ui from './ui';
 
-const DEFAULT_C = 36;
-
-const updateHooks = {
-  resetState: ( ...args ) => {
-    console.log( 'resetting state with >>>> ', JSON.stringify( args ) );
-    return true;
-  },
-  setState: ( ...args ) => {
-    console.log( 'merging following into state >>>> ', JSON.stringify( args ) );
-    return true;
-  }
-};
-
-const storageStub = {
-  clone( data ) { return your_clone_function( data ) }, 
-  data: null,
-  getItem( key ) { return this.data },
-  removeItem( key ) { this.data = null },
-  setItem( key, data ) { this.data = data } 
-};
-
-const Provider = ({ c = DEFAULT_C }) => {
-
-  const storeRef = useRef();
+const Provider = ({ c = 36 }) => {
 	
   const [ state, setState ] = useState(() => ({
     a: { b: { c, x: { y: { z: [ 2022 ] } } } }
@@ -135,12 +112,7 @@ const Provider = ({ c = DEFAULT_C }) => {
   }, [ c ]);
 
   return (
-    <ObservableContext.Provider
-      prehooks={ updateHooks }
-      ref={ storeRef }
-      storage={ storageStub }
-      value={ state }
-    >
+    <ObservableContext.Provider value={ state }>
       <Ui />
     </ObservableContext.Provider>
   );
