@@ -609,8 +609,9 @@ store.setState({
 	<thead><tr><th>v4.1.0</th></tr></thead>
 	<tbody>
 		<tr><td><b>1.</b></td><td>Added new setState <a href="#setstate-tags">tags</a> to facilitate state update operations.</td></tr>
-		<tr><td><b>2.</b></td><td>Exposing the store via its Context Provider <code>ref</code> attribute.</td></tr>
-		<tr><td><b>3.</b></td><td>Exporting crucial constants such as <b>@@STATE</b> and setState <a href="#setstate-tags">tags</a> such as <b>@@CLEAR</b>, <b>@@MOVE</b> etc.</td></tr>
+		<tr><td><b>2.</b></td><td>Added negative indexing capabilities.</td></tr>
+		<tr><td><b>3.</b></td><td>Exposing the store via its Context Provider <code>ref</code> attribute.</td></tr>
+		<tr><td><b>4.</b></td><td>Exporting crucial constants such as <b>@@STATE</b> and setState <a href="#setstate-tags">tags</a> such as <b>@@CLEAR</b>, <b>@@MOVE</b> etc.</td></tr>
 	</tbody>
 	<thead><tr><th>v4.0.0</th></tr></thead>
 	<tbody>
