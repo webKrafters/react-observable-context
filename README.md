@@ -22,9 +22,12 @@
 
 # React-Observable-Context [Eagle Eye]
 
-A context bearing an observable consumer [store](#store).\
-Only re-renders subscribing components ([clients](#client)) on context state changes.\
-Subscribing component decides which context state properties' changes to trigger its update.
+<ul>
+	<li> A context bearing an observable consumer [store](#store).</li>
+	<li> Recognizes <b>negative array indexing</b>. Please see <a href="#property-path">Property Path</a> and <code>store.setState</code> <a href="#indexing">Indexing</a>.</li>
+	<li> Only re-renders subscribing components ([clients](#client)) on context state changes.</li>
+	<li> Subscribing component decides which context state properties' changes to trigger its update.</li>
+</ul>
 
 **Name:** React-Observable-Context
 
@@ -272,19 +275,21 @@ A client is any component consuming the observable context. A client consumes th
 
 <h2 id="property-path">Property path</h2>
 A property path is a dot-notation string leading to a specific property within an object.<br />
-<code>React-Observable-Context</code> recognizes any property path abiding by the <b><i><u>Lodash</u></i></b> property path specifications.<br />
+<code>React-Observable-Context</code> recognizes any property path abiding by the <b><i><u>Lodash</u></i></b> property path specifications. Such property paths may also contain negative integers.<br /><br />
 
-<strong id="property-path-example">Ex. Given the following object:</strong>
+<b>Negative</b> integer (<i>-N</i>) in a property path indicates an array index derived at runtime by counting `abs(-N)` steps backward from array length.<br />
+
+<b id="property-path-example">Ex. Given the following object:</b>
 
 ```jsx
 { a: { c: { e: 5, f: [ 0, 2, 4 ] } } }
 ```
 The property path `a.c.e` accesses the `e=5` property.<br />
-Either of the property paths `a.c.f.1` and `a.c.f[1]`  accesses the `[1]=2` property.<br />
+Either of the property paths `a.c.f.1`, `a.c.f.-2`, `a.c.f[1]` and `a.c.f[-2]` is a valid property path to access the `[1]=2` property.<br />
 A special property path [@@STATE](#fullstate-selectorkey) may be used to access the full given object.<br />
 
 <strong id="fullstate-selectorkey"><u>@@STATE</u></strong> is a special property path to access the full state object as a single slice.<br />
-***Caution:*** :warning: When this property path exists in a <a href="#selector-map">selector map</a>, any change in the state object results in an update of its <a href="#store"><code>store.data</code></a> and a subsequent render of its client(s).
+:warning: <b><i>Caution:</i></b> When this property path exists in a <a href="#selector-map">selector map</a>, any change in the state object results in an update of its <a href="#store"><code>store.data</code></a> and a subsequent render of its client(s).
 
 ## Provider
 The Provider component is a property of the `React-Observable-Context` context object. As a `React.context` based provider, it accepts the customary `children` and `value` props. It also accepts **2** optional props: <a href="#prehooks"><code>prehooks</code></a> and <a href="#storage"><code>storage</code></a>.
@@ -378,6 +383,7 @@ The `React.Observable.Context` context `store` is the client's portal into the c
 <h3 id="indexing"><b><i><u>Indexing</u></i></b></h3>
 Existing array state property can be overridden with a new array.<br />
 Use the indexed object to update array content at indexes.<br />
+Indexed object recognizes negative indexing. See additional <a href="#neg-idx-tip">tip</a> below.<br />
 <strong>Example:</strong>
 
 ```jsx
@@ -392,11 +398,16 @@ store.setState({ a: { b: [ { y: 30 }, 22 ] } });
 store.setState({ a: { b: { 0: { y: 30 }, 1: 22 } } });
 // updates the state to: { a: { b: [ { x: 7, y: 30, z: 9 }, 22 ] }, j: 10 };
 
-// The previous statement is functionally equivalent to the following:
+// The followinng will update the existing array at indexes.
+store.setState({ a: { b: { '-1': { y: 30 }, 1: 22 } } });
+// updates the state to: { a: { b: [ { x: 7, y: 30, z: 9 }, 22 ] }, j: 10 };
+
+// The previous 2 statements are functionally equivalent to the following:
 const [ first, second, ...rest ] = state.a.b;
 store.setState({ ...state, a: { ...state.a, b: [ { ...first, y: 30 }, 22, ...rest ] } });
 // Refrain from doing this, please!
 ```
+:warning: <b id="neg-idx-tip"><i>Tip:</i></b> Negative indexing pointing at an out-of-bounds index is ignored.
 
 <h3 id="setstate-tags"><b><i><u>Rewriting state using tag commands</u></i></b></h3>
 By default, <code>store.setState</code> recursively merges new changes into current state.<br />

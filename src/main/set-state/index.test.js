@@ -111,7 +111,7 @@ describe( 'setState(...)', () => {
 				changes = {
 					friends: {
 						1: { name: { first: 'Virginia' } },
-						2: {
+						'-1': {
 							id: 5,
 							name: { first: 'Kathy', last: 'Smith' }
 						}
@@ -127,7 +127,10 @@ describe( 'setState(...)', () => {
 			test( 'updates state with new changes', () => {
 				expect( state.friends[ 0 ] ).toEqual( origFriendsSlice[ 0 ] ); // remains untouched
 				expect( state.friends[ 1 ].name.first ).toBe( changes.friends[ 1 ].name.first );
-				expect( state.friends[ 2 ] ).toEqual( changes.friends[ 2 ] );
+				expect( state.friends[ 2 ] ).toEqual( changes.friends[ -1 ] );
+			} );
+			test( 'recognizes update by negative indexing', () => {
+				expect( state.friends[ 2 ] ).toEqual( changes.friends[ -1 ] );
 			} );
 			test( 'notifies listeners of state changes', () => {
 				expect( onChangeMock ).toHaveBeenCalledTimes( 1 );
