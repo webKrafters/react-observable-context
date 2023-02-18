@@ -109,7 +109,7 @@ class AccessorCache {
 			if(( path !== FULL_STATE_SELECTOR &&
 				exists &&
 				typeof newAtomVal === 'undefined' &&
-				!getProperty( originChanges, path ).exists
+				!getProperty( originChanges, path ).trail.length
 			) || isEqual( newAtomVal, atoms[ path ].value )) {
 				continue;
 			}

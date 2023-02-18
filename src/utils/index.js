@@ -1,5 +1,4 @@
 import clonedeepwith from 'lodash.clonedeepwith';
-import _get from 'lodash.get';
 import isPlainObject from 'lodash.isplainobject';
 
 import checkEligibility from './clonedeep-eligibility-check';
@@ -76,63 +75,64 @@ export const clonedeep = (() => {
 })();
 
 export const getProperty = (() => {
-	const reDelimiter = /[\[\]|\.]+/g;
-	const reEndBracketLastChar = /\]$/;
-	const reType = /.*\s(\w+)\]$/;
-	/** @type {GetProperty<T, PropertyInfo<T>} */
-	const fromSource = ( source, key, defaultValue ) => {
-		let exists = false;
-		let index = +key;
-		try {
-			if( Array.isArray( source ) ) {
-				if( Number.isInteger( index ) ) {
-					if( index < 0 ) { index = source.length + index }
-					const _value = source[ index ];
-					return { _value, exists: index in source, index, key, source, value: _value ?? defaultValue };
-				}
-			}
-			const _value = source[ key ];
-			exists = key in source;
-			return { _value, exists, index, key, source, value: _value ?? defaultValue };
-		} catch( e ) {
-			return { _value: defaultValue, exists, index, key, source, value: defaultValue };
-		}
-	}
-	/** @type {(source: State|Array, parentPath: Array) => *} */
-	const getImmediateParent = ( source, parentPath ) => {
-		const pLen = parentPath.length;
-		if( !pLen ) { return source }
-		let segmentStart = 0;
-		for( let p = segmentStart; p < pLen; p++ ) {
-			const key = parentPath[ p ];
-			const kNum = +key;
-			if( Number.isInteger( kNum ) && kNum < 0 ) {
-				source = _get( source, parentPath.slice( segmentStart, p ) );
-				segmentStart = p + 1;
-				source = fromSource( source, key ).value;
-				if( segmentStart === pLen || typeof source === 'undefined' ) { break }
-			}
-		}
-		if( segmentStart === 0 ) { return _get( source, parentPath ) }
-		if( segmentStart === pLen || typeof source === 'undefined' ) { return source }
-		return _get( source, parentPath.slice( segmentStart, pLen ) );
-	};
+	const RE_DELIMITER = /[\[\]|\.]+/g;
+	const RE_END_BRACKET_LAST_CHAR = /\]$/;
+	const RE_TYPE = /.*\s(\w+)\]$/;
+	const toString = Object.prototype.toString;
+	const hasEntry = ( key, object ) => { try { return key in object } catch( e ) { return false } };
 	/**
 	 * An extension of the lodash.get function.
 	 *
-	 * @type {GetProperty<T, PropertyInfo<T>}
+	 * @type {GetProperty<T>}
 	 * @see lodash.get documentation
 	 */
-	const getInfo = ( source, path, defaultValue ) => {
-		switch( Object.prototype.toString.call( path ).replace( reType, '$1' ) ) {
-			case 'String': path = path.replace( reEndBracketLastChar, '' ).split( reDelimiter ); break;
+	const get = ( source, path, defaultValue ) => {
+		switch( toString.call( path ).replace( RE_TYPE, '$1' ) ) {
+			case 'String': path = path.replace( RE_END_BRACKET_LAST_CHAR, '' ).split( RE_DELIMITER ); break;
 			case 'Array': break;
+			case 'Undefined': path = []; break;
 			default: path = [ path ];
 		}
-		const key = path.pop();
-		return fromSource( getImmediateParent( source, path ), key, defaultValue );
-	}
-	return getInfo;
+		let _value = source;
+		let exists = true;
+		let index = NaN;
+		const trail = [];
+		for( const p of path ) {
+			index = NaN;
+			if( Array.isArray( _value ) ) {
+				let _index = +p;
+				if( Number.isInteger( _index ) ) {
+					if( _index < 0 ) { _index = _value.length + _index }
+					index = _index
+					if( index in _value ) {
+						source = _value;
+						_value = _value[ index ];
+						trail.push( index );
+						continue;
+					}
+				}
+			}
+			source = _value;
+			if( !hasEntry( p, _value ) ) {
+				exists = false;
+				_value = undefined;
+				break;
+			}
+			_value = _value[ p ];
+			trail.push( p );
+		}
+		return {
+			_value, // actual value found
+			exists, // true when property path was found in object
+			index, // holds a sanitized key corresponding to an index where the parent is an array and the key is alphanumeric integer
+			isSelf: !path.length, // where no property path was supplied: this results in _value === source param
+			key: path?.[ path.length - 1 ],
+			source: path.length && path.length - trail.length < 2 ? source : undefined, // parent containing the property at key
+			trail, // farthest valid property/sub property path found
+			value: _value ?? defaultValue // value returned
+		};
+	};
+	return get;
 })();
 
 /**
@@ -202,11 +202,10 @@ export function mapPathsToObject( source, propertyPaths ) {
 /**
  * @callback GetProperty
  * @param {T} source
- * @param {string|symbol|number|Array<string|symbol|number>} path
+ * @param {KeyType|Array<KeyType>} [path]
  * @param {*} [defaultValue]
- * @returns {R}
+ * @returns {PropertyInfo<T>}
  * @template {State|Array} [T=State|Array]
- * @template [R=*]
  */
 
 /**
@@ -215,3 +214,5 @@ export function mapPathsToObject( source, propertyPaths ) {
  */
 
 /** @typedef {import("../types").State} State */
+
+/** @typedef {import("../types").KeyType} KeyType */

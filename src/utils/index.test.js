@@ -155,42 +155,96 @@ describe( 'utils module', () => {
 				_value: source.tags[ 5 ],
 				exists: true,
 				index: 5,
+				isSelf: false,
 				key: '-2',
 				source: source.tags,
+				trail: [ 'tags', 5 ],
 				value: source.tags[ 5 ]
 			});
 			expect( utils.getProperty( source, 'tags.5' ) ).toStrictEqual({
 				_value: source.tags[ 5 ],
 				exists: true,
 				index: 5,
+				isSelf: false,
 				key: '5',
 				source: source.tags,
+				trail: [ 'tags', 5 ],
 				value: source.tags[ 5 ]
+			});
+			expect( utils.getProperty( source, 'tags.44' ) ).toStrictEqual({
+				_value: undefined,
+				exists: false,
+				index: 44,
+				isSelf: false,
+				key: '44',
+				source: source.tags,
+				trail: [ 'tags' ],
+				value: undefined
+			});
+			expect( utils.getProperty( source, 'tags.length' ) ).toStrictEqual({
+				_value: source.tags.length,
+				exists: true,
+				index: NaN,
+				isSelf: false,
+				key: 'length',
+				source: source.tags,
+				trail: [ 'tags', 'length' ],
+				value: source.tags.length
 			});
 			expect( utils.getProperty( source, 'friends.-3.name.last' ) ).toStrictEqual({
 				_value: source.friends[ 0 ].name.last,
 				exists: true,
 				index: NaN,
+				isSelf: false,
 				key: 'last',
 				source: source.friends[ 0 ].name,
+				trail: [ 'friends', 0, 'name', 'last' ],
 				value: source.friends[ 0 ].name.last
 			});
-			const DEFAULT = '__default_value__';
 			expect( utils.getProperty( source, 'favoriteFruit.does.not.exist', DEFAULT ) ).toStrictEqual({
-				_value: DEFAULT,
+				_value: undefined,
 				exists: false,
 				index: NaN,
+				isSelf: false,
 				key: 'exist',
 				source: undefined,
+				trail: [ 'favoriteFruit' ],
 				value: DEFAULT
 			});
 			expect( utils.getProperty( source, 'history.places[1].does.not.exist', DEFAULT ) ).toStrictEqual({
-				_value: DEFAULT,
+				_value: undefined,
 				exists: false,
 				index: NaN,
+				isSelf: false,
 				key: 'exist',
 				source: undefined,
+				trail: [ 'history', 'places', 1 ],
 				value: DEFAULT
+			});
+			expect( utils.getProperty( source, 'none' ) ).toStrictEqual({
+				_value: undefined,
+				exists: false,
+				index: NaN,
+				isSelf: false,
+				key: 'none',
+				source,
+				trail: [],
+				value: undefined
+			});
+		} );
+		test( 'returns source as-is with empty property paths', () => {
+			const info = utils.getProperty( source, [] );
+			expect( info._value ).toBe( source );
+			expect( info ).toStrictEqual( utils.getProperty( source ) );
+			expect( info ).toStrictEqual({
+				_value: source,
+				exists: true,
+				index: NaN,
+				isSelf: true,
+				key: undefined,
+				source: undefined,
+				trail: [],
+				value: source
 			});
 		} );
 		test( 'accesses top level', () => {

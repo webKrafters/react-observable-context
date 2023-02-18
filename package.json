@@ -8,7 +8,6 @@
   ],
   "dependencies": {
     "lodash.clonedeepwith": "^4.5.0",
-    "lodash.get": "^4.4.2",
     "lodash.isboolean": "^3.0.3",
     "lodash.isempty": "^4.4.0",
     "lodash.isequal": "^4.5.0",
@@ -133,5 +132,5 @@
     "test:watch": "eslint --fix && jest --updateSnapshot --watchAll"
   },
   "types": "dist/main/index.d.ts",
-  "version": "4.1.0-rc.6"
+  "version": "4.1.0-rc.7"
 }

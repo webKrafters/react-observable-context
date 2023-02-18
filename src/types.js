@@ -43,12 +43,14 @@ export default null;
 
 /**
  * @typedef {Object} PropertyInfo
- * @property {*} Property._value Actual value held in state
+ * @property {*} Property._value - Actual value held in object at the property oath
  * @property {boolean} Property.exists
- * @property {number}  Property.index
- * @property {string|symbol|number} Property.key
- * @property {T} Property.source
- * @property {*} Property.value Value returned
+ * @property {number}  Property.index - Sanitized key corresponding to an index where the parent is an array and the key is alphanumeric integer
+ * @property {KeyType} Property.isSelf - Where this._value === object [valid when returning the object for an empty property path]
+ * @property {KeyType} Property.key
+ * @property {T} Property.source - Parent object supposedly containing the property at key
+ * @property {Array<KeyType>} Property.trail - Property path segment representing the farthest valid property/sub property path found.
+ * @property {*} Property.value - Value returned
  * @template {State|Array} T
  */
 
