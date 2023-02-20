@@ -3,6 +3,8 @@ import isPlainObject from 'lodash.isplainobject';
 
 import checkEligibility from './clonedeep-eligibility-check';
 
+import get from '@webkrafters/get-property';
+
 /**
  * Curates the most inclusive propertyPaths from a list of property paths.
  * @example
@@ -30,11 +32,11 @@ export function arrangePropertyPaths( propertyPaths ) {
 					if( superPathTokens.every(( p, i ) => p === pathTokens[ i ]) ) {
 						break L2;
 					}
-				} else {
-					// superset check
-					pathTokens.every(( p, i ) => p === superPathTokens[ i ]) &&
-					replacedSuperPaths.push( superPath );
+					continue;
 				}
+				// superset check
+				pathTokens.every(( p, i ) => p === superPathTokens[ i ]) &&
+				replacedSuperPaths.push( superPath );
 			}
 			superPathTokensMap[ path ] = pathTokens;
 			for( const path of replacedSuperPaths ) {
@@ -74,66 +76,7 @@ export const clonedeep = (() => {
 	return clonedeep;
 })();
 
-export const getProperty = (() => {
-	const RE_DELIMITER = /[\[\]|\.]+/g;
-	const RE_END_BRACKET_LAST_CHAR = /\]$/;
-	const RE_TYPE = /.*\s(\w+)\]$/;
-	const toString = Object.prototype.toString;
-	const hasEntry = ( key, object ) => { try { return key in object } catch( e ) { return false } };
-	/**
-	 * An extension of the lodash.get function.
-	 *
-	 * @type {GetProperty<T>}
-	 * @see lodash.get documentation
-	 */
-	const get = ( source, path, defaultValue ) => {
-		switch( toString.call( path ).replace( RE_TYPE, '$1' ) ) {
-			case 'String': path = path.replace( RE_END_BRACKET_LAST_CHAR, '' ).split( RE_DELIMITER ); break;
-			case 'Array': break;
-			case 'Undefined': path = []; break;
-			default: path = [ path ];
-		}
-		let _value = source;
-		let exists = true;
-		let index = NaN;
-		const trail = [];
-		for( const p of path ) {
-			index = NaN;
-			if( Array.isArray( _value ) ) {
-				let _index = +p;
-				if( Number.isInteger( _index ) ) {
-					if( _index < 0 ) { _index = _value.length + _index }
-					index = _index
-					if( index in _value ) {
-						source = _value;
-						_value = _value[ index ];
-						trail.push( index );
-						continue;
-					}
-				}
-			}
-			source = _value;
-			if( !hasEntry( p, _value ) ) {
-				exists = false;
-				_value = undefined;
-				break;
-			}
-			_value = _value[ p ];
-			trail.push( p );
-		}
-		return {
-			_value, // actual value found
-			exists, // true when property path was found in object
-			index, // holds a sanitized key corresponding to an index where the parent is an array and the key is alphanumeric integer
-			isSelf: !path.length, // where no property path was supplied: this results in _value === source param
-			key: path?.[ path.length - 1 ],
-			source: path.length && path.length - trail.length < 2 ? source : undefined, // parent containing the property at key
-			trail, // farthest valid property/sub property path found
-			value: _value ?? defaultValue // value returned
-		};
-	};
-	return get;
-})();
+export const getProperty = get;
 
 /**
  * Checks if value is either a plain object or an array
@@ -198,21 +141,3 @@ export function mapPathsToObject( source, propertyPaths ) {
 	}
 	return dest;
 }
-
-/**
- * @callback GetProperty
- * @param {T} source
- * @param {KeyType|Array<KeyType>} [path]
- * @param {*} [defaultValue]
- * @returns {PropertyInfo<T>}
- * @template {State|Array} [T=State|Array]
- */
-
-/**
- * @typedef {import("../types").PropertyInfo<T>} PropertyInfo
- * @template {State|Array} T
- */
-
-/** @typedef {import("../types").State} State */
-
-/** @typedef {import("../types").KeyType} KeyType */
