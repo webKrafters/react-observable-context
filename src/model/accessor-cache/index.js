@@ -108,7 +108,7 @@ class AccessorCache {
 			const { exists, value: newAtomVal } = this.#getOriginAt( path );
 			if(( path !== FULL_STATE_SELECTOR &&
 				exists &&
-				typeof newAtomVal === 'undefined' &&
+				( newAtomVal === null || newAtomVal === 'undefined' ) &&
 				!getProperty( originChanges, path ).trail.length
 			) || isEqual( newAtomVal, atoms[ path ].value )) {
 				continue;
