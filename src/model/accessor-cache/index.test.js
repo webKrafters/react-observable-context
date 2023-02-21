@@ -2,7 +2,7 @@ import { FULL_STATE_SELECTOR } from '../../constants';
 import { clonedeep } from '../../utils';
 import AccessorCache from '.';
 
-import createSourceData from '../../test-artifacts/data/create-state-obj';
+import _createSourceData from '../../test-artifacts/data/create-state-obj';
 import { isReadonly } from '../../test-artifacts/utils';
 
 describe( 'AccessorCache class', () => {
@@ -13,6 +13,7 @@ describe( 'AccessorCache class', () => {
 			'friends[1].name.last',
 			'history.places[2].year',
 			'name',
+			'nullTester',
 			'registered.time',
 			'tags[4]'
 		]),
@@ -35,6 +36,7 @@ describe( 'AccessorCache class', () => {
 					first: 'Amber',
 					last: 'Sears'
 				},
+				nullTester: null,
 				'registered.time': {
 					hours: 9,
 					minutes: 55,
@@ -188,3 +190,9 @@ describe( 'AccessorCache class', () => {
 		} );
 	} );
 } );
+
+function createSourceData() {
+	const source = _createSourceData();
+	source.nullTester = null;
+	return source;
+}
