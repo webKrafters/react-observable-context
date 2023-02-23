@@ -19,7 +19,7 @@ export default null;
 /** @typedef {number|string|symbol} KeyType */
 
 /**
- * @typedef {(changes: UpdatePayload<PartialState<T>>) => void} Listener
+ * @typedef {(changes: Changes<T>) => void} Listener
  * @template {State} T
  */
 
