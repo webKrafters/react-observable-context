@@ -19,7 +19,7 @@ export default null;
 /** @typedef {number|string|symbol} KeyType */
 
 /**
- * @typedef {(changes: UpdatePayload<PartialState<T>>) => void} Listener
+ * @typedef {(changes: Changes<T>) => void} Listener
  * @template {State} T
  */
 
@@ -36,7 +36,7 @@ export default null;
  * 			resetData: PartialState<T>,
  * 			state: {current: T, original: T}
  * 		) => boolean,
- * 		setState?: (newChanges: PartialState<T>) => boolean
+ * 		setState?: (newChanges: Changes<T>) => boolean
  * }} Prehooks
  * @template {State} T
  */
@@ -56,8 +56,13 @@ export default null;
  * @typedef {{
  *		data: Data,
  *		resetState: (propertyPaths?: string[]) => void,
- *		setState: (changes: UpdatePayload<PartialState<T>>) => void,
+ *		setState: (changes: Changes<T>) => void,
  * }} Store
+ * @template {State} T
+ */
+
+/**
+ * @typedef {UpdatePayload<PartialState<T>} Changes
  * @template {State} T
  */
 
