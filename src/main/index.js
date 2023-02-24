@@ -45,12 +45,13 @@ export const createContext = () => {
 /**
  * Actively monitors the store and triggers component re-render if any of the watched keys in the state objects changes
  *
- * @param {ObservableContext<T>} context Refers to the PublicObservableContext<T> type of the ObservableContext<T>
- * @param {SelectorMap<T>} [selectorMap = {}] Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
- * @returns {Store<T>}
- * @template {State} T
- * @see {ObservableContext<T>}
- * @example
+ * @param {ObservableContext<STATE>} context Refers to the PublicObservableContext<T> type of the ObservableContext<T>
+ * @param {SELECTOR_MAP} [selectorMap = {}] Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
+ * @returns {Store<STATE>}
+ * @template {State} STATE
+ * @template {SelectorMap<STATE>} [SELECTOR_MAP=SelectorMap<STATE>]
+ * @see {ObservableContext<STATE>}
+ * @exampleS
  * a valid property path follows the `lodash` object property path convention.
  * for a state = { a: 1, b: 2, c: 3, d: { e: 5, f: [6, { x: 7, y: 8, z: 9 } ] } }
  * Any of the following is an applicable selector map.
