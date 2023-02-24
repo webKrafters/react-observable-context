@@ -143,13 +143,17 @@ export const useContext = ( context, selectorMap = {} ) => {
 };
 
 /**
- * @param {ObservableContext<T>} context Refers to the PublicObservableContext<T> type of the ObservableContext<T>
- * @param {SelectorMap<T>} [selectorMap] Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
- * @returns {(WrappedComponent: C) => MemoExoticComponent<P>}
- * @template {State} T
- * @template {PartialStore<T> & {[x:string]:*}} [P=PartialStore<T>]
- * @template {ComponentType<P>|ExoticComponent<P>} C
- * @see {ObservableContext<T>}
+ * Provides an HOC function for connecting its WrappedComponent argument to the context store.
+ *
+ * The HOC function automatically memoizes any un-memoized WrappedComponent argument.
+ *
+ * @param {ObservableContext<STATE>} context - Refers to the PublicObservableContext<T> type of the ObservableContext<T>
+ * @param {SelectorMap<STATE>} [selectorMap] - Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
+ * @returns {(WrappedComponent: C) => ConnectedComponent<OWNPROPS, Store<STATE>>} - Connector HOC function
+ * @template {State} STATE
+ * @template {State} [OWNPROPS = {}]
+ * @template {ComponentType<ConnectedComponentProps<OWNPROPS, PartialStore<STATE>>|ExoticComponent<ConnectedComponentProps<OWNPROPS, PartialStore<STATE>>} [C = ComponentType<ConnectedComponentProps<OWNPROPS, PartialStore<STATE>>]
+ * @see {ObservableContext<STATE>}
  * @see {useContext} for selectorMap sample
  */
 export const connect = ( context, selectorMap ) => WrappedComponent => {
@@ -394,6 +398,18 @@ function reportNonReactUsage() {
 /**
  * @typedef {import("../types").IStorage<T>} IStorage
  * @template {State} T
+ */
+
+/**
+ * @typedef {MemoExoticComponent<ConnectedComponentProps<OWNPROPS, STORE>>} ConnectedComponent
+ * @template {State} [OWNPROPS={}]
+ * @template {Store<State>} [STORE=Store<State>]
+ */
+
+/**
+ * @typedef {STORE & OWNPROPS} ConnectedComponentProps
+ * @template {State} [OWNPROPS={}]
+ * @template {Store<State>} [STORE=Store<State>]
  */
 
 /** @typedef {import("../types").NonReactUsageReport} NonReactUsageReport */
