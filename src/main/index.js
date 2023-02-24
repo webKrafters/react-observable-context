@@ -148,10 +148,11 @@ export const useContext = ( context, selectorMap = {} ) => {
  * The HOC function automatically memoizes any un-memoized WrappedComponent argument.
  *
  * @param {ObservableContext<STATE>} context - Refers to the PublicObservableContext<T> type of the ObservableContext<T>
- * @param {SelectorMap<STATE>} [selectorMap] - Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
+ * @param {SELECTOR_MAP} [selectorMap] - Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
  * @returns {(WrappedComponent: C) => ConnectedComponent<OWNPROPS, Store<STATE>>} - Connector HOC function
  * @template {State} STATE
  * @template {State} [OWNPROPS = {}]
+ * @template {SelectorMap<STATE>} [SELECTOR_MAP=SelectorMap<STATE>]
  * @template {ComponentType<ConnectedComponentProps<OWNPROPS, PartialStore<STATE>>|ExoticComponent<ConnectedComponentProps<OWNPROPS, PartialStore<STATE>>} [C = ComponentType<ConnectedComponentProps<OWNPROPS, PartialStore<STATE>>]
  * @see {ObservableContext<STATE>}
  * @see {useContext} for selectorMap sample
@@ -374,7 +375,13 @@ function reportNonReactUsage() {
 /** @typedef {typeof SPLICE_TAG} SPLICE_TAG */
 
 /**
- * @typedef {{[dataPropKey: string]: string|keyof T} & {[dataPropKey: string]: FULL_STATE_SELECTOR}} SelectorMap
+ * @typedef {MAP} SelectorMap
+ * @template {State} [T=State]
+ * @template {BaseSelectorMap<T>} [MAP=BaseSelectorMap<T>]
+ */
+
+/**
+ * @typedef {{[dataPropKey: string]: string|keyof T} & {[dataPropKey: string]: FULL_STATE_SELECTOR}} BaseSelectorMap
  * @template {State} T
  */
 
