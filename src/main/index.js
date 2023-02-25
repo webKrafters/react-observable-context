@@ -45,12 +45,12 @@ export const createContext = () => {
 /**
  * Actively monitors the store and triggers component re-render if any of the watched keys in the state objects changes
  *
- * @param {ObservableContext<STATE>} context Refers to the PublicObservableContext<T> type of the ObservableContext<T>
+ * @param {ObservableContext<STATE, SELECTOR_MAP>} context Refers to the PublicObservableContext<T> type of the ObservableContext<T>
  * @param {SELECTOR_MAP} [selectorMap = {}] Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
- * @returns {Store<STATE>}
+ * @returns {Store<STATE, SELECTOR_MAP>}
  * @template {State} STATE
  * @template {SelectorMap<STATE>} [SELECTOR_MAP=SelectorMap<STATE>]
- * @see {ObservableContext<STATE>}
+ * @see {ObservableContext<STATE,SELECTOR_MAP>}
  * @exampleS
  * a valid property path follows the `lodash` object property path convention.
  * for a state = { a: 1, b: 2, c: 3, d: { e: 5, f: [6, { x: 7, y: 8, z: 9 } ] } }
@@ -148,14 +148,14 @@ export const useContext = ( context, selectorMap = {} ) => {
  *
  * The HOC function automatically memoizes any un-memoized WrappedComponent argument.
  *
- * @param {ObservableContext<STATE>} context - Refers to the PublicObservableContext<T> type of the ObservableContext<T>
+ * @param {ObservableContext<STATE, SELECTOR_MAP>} context - Refers to the PublicObservableContext<T> type of the ObservableContext<T>
  * @param {SELECTOR_MAP} [selectorMap] - Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
- * @returns {(WrappedComponent: C) => ConnectedComponent<OWNPROPS, Store<STATE>>} - Connector HOC function
+ * @returns {(WrappedComponent: C) => ConnectedComponent<OWNPROPS, Store<STATE, SELECTOR_MAP>>} - Connector HOC function
  * @template {State} STATE
  * @template {State} [OWNPROPS = {}]
  * @template {SelectorMap<STATE>} [SELECTOR_MAP=SelectorMap<STATE>]
- * @template {ComponentType<ConnectedComponentProps<OWNPROPS, PartialStore<STATE>>|ExoticComponent<ConnectedComponentProps<OWNPROPS, PartialStore<STATE>>} [C = ComponentType<ConnectedComponentProps<OWNPROPS, PartialStore<STATE>>]
- * @see {ObservableContext<STATE>}
+ * @template {ComponentType<ConnectedComponentProps<OWNPROPS, PartialStore<STATE, SELECTOR_MAP>>|ExoticComponent<ConnectedComponentProps<OWNPROPS, PartialStore<STATE, SELECTOR_MAP>>} [C = ComponentType<ConnectedComponentProps<OWNPROPS, PartialStore<STATE, SELECTOR_MAP>>]
+ * @see {ObservableContext<STATE,SELECTOR_MAP>}
  * @see {useContext} for selectorMap sample
  */
 export const connect = ( context, selectorMap ) => WrappedComponent => {
@@ -302,13 +302,15 @@ function reportNonReactUsage() {
 }
 
 /**
- * @typedef {IObservableContext<T>|PublicObservableContext<T>} ObservableContext
+ * @typedef {IObservableContext<T>|PublicObservableContext<T, SELECTOR_MAP>} ObservableContext
  * @template {State} T
+ * @template {SelectorMap<T>} [SELECTOR_MAP=SelectorMap<T>]
  */
 
 /**
- * @typedef {WithObservableProvider<Context<Store<T>>, T>} PublicObservableContext
+ * @typedef {WithObservableProvider<Context<Store<T, SELECTOR_MAP>>, T>} PublicObservableContext
  * @template {State} T
+ * @template {SelectorMap<T>} [SELECTOR_MAP=SelectorMap<T>]
  */
 
 /**
@@ -376,14 +378,14 @@ function reportNonReactUsage() {
 /** @typedef {typeof SPLICE_TAG} SPLICE_TAG */
 
 /**
- * @typedef {MAP} SelectorMap
- * @template {State} [T=State]
- * @template {BaseSelectorMap<T>} [MAP=BaseSelectorMap<T>]
+ * @typedef {import("../types").BaseSelectorMap<T>} BaseSelectorMap
+ * @template {State} T
  */
 
 /**
- * @typedef {{[dataPropKey: string]: string|keyof T} & {[dataPropKey: string]: FULL_STATE_SELECTOR}} BaseSelectorMap
- * @template {State} T
+ * @typedef {import("../types").SelectorMap<T, MAP>} SelectorMap
+ * @template {State} [T=State]
+ * @template {BaseSelectorMap<T>} [MAP=BaseSelectorMap<T>]
  */
 
 /**
@@ -392,13 +394,15 @@ function reportNonReactUsage() {
  */
 
 /**
- * @typedef {{[K in keyof Store<T>]?: Store<T>[K]}} PartialStore
+ * @typedef {{[K in keyof Store<T, SELECTOR_MAP>]?: Store<T, SELECTOR_MAP>[K]}} PartialStore
  * @template {State} T
+ * @template {SelectorMap<T>} [SELECTOR_MAP=SelectorMap<T>]
  */
 
 /**
- * @typedef {import("../types").Store<T>} Store
+ * @typedef {import("../types").Store<T, SELECTOR_MAP>} Store
  * @template {State} T
+ * @template {SelectorMap<T>} [SELECTOR_MAP=SelectorMap<T>]
  */
 
 /** @typedef {import("../types").IStore} IStore */
@@ -422,7 +426,10 @@ function reportNonReactUsage() {
 
 /** @typedef {import("../types").NonReactUsageReport} NonReactUsageReport */
 
-/** @typedef {import("../types").Data} Data */
+/**
+ * @typedef {import("../types").Data<SELECTOR_MAP>} Data
+ * @template {SelectorMap} [SELECTOR_MAP=SelectorMap]
+ */
 
 /** @typedef {import("react").ReactNode} ReactNode */
 

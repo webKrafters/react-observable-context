@@ -1,8 +1,16 @@
 export default null;
 
+/**
+ * @typedef {{[dataPropKey: string]: string|keyof T} & {[dataPropKey: string]: FULL_STATE_SELECTOR}} BaseSelectorMap
+ * @template {State} T
+ */
+
 /** @typedef {Array|{[x:string]:*}|boolean|KeyType} BaseType */
 
-/** @typedef {{[selectorKey: string]: Readonly<*>}} Data */
+/**
+ * @typedef {{[selectorKey in keyof SELECTOR_MAP]: Readonly<*>}} Data
+ * @template {SelectorMap} [SELECTOR_MAP=SelectorMap]
+ */
 
 /**
  * @typedef {{
@@ -41,6 +49,12 @@ export default null;
  * @template {State} T
  */
 
+/**
+ * @typedef {MAP} SelectorMap
+ * @template {State} [T=State]
+ * @template {BaseSelectorMap<T>} [MAP=BaseSelectorMap<T>]
+ */
+
 /** @typedef {{[x: KeyType]: *}} State */
 
 /**
@@ -54,11 +68,12 @@ export default null;
 
 /**
  * @typedef {{
- *		data: Data,
+ *		data: Data<SELECTOR_MAP>,
  *		resetState: (propertyPaths?: string[]) => void,
  *		setState: (changes: Changes<T>) => void,
  * }} Store
  * @template {State} T
+ * @template {SelectorMap<T>} [SELECTOR_MAP=SelectorMap<T>]
  */
 
 /**
