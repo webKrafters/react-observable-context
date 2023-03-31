@@ -113,7 +113,7 @@ const useStore = ( prehooks, value, storage ) => {
 			mounted.current = true;
 			return;
 		}
-		setState( clonedeep( value ) );
+		setState( value );
 	}, [ value ]);
 
 	useEffect(() => {
