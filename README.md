@@ -109,7 +109,9 @@ const Provider = ({ c = 36 }) => {
   useEffect(() => {
     // similar to `store.setState`, use the following to update
     // only the changed slice of the context internal state.
-    setState({ a: { b: { c } } });
+	// Please see `Set State` section
+    setState({ a: { b: { c } } }); // OR
+	// setState({ a: { b: { c: { '@@REPLACE': c } } } });
     // Do not do the following: it will override the context internal state.
     // setState({ ...state, a: { ...state.a, b: { ...state.a.b, c } } });
   }, [ c ]);
@@ -514,7 +516,7 @@ const state = {
 
 store.setState({ '@@REPLACE': { a: 'Demo', j: 17 } }) // rewrites state to { a: 'Demo', j: 17 };
 
-store.setState({ a: { '@@REPLACE': { message: 'Testing...' } } }) // rewrites state.a.b to { message: 'Testing...' }
+store.setState({ a: { '@@REPLACE': { message: 'Testing...' } } }) // rewrites state.a to { message: 'Testing...' }
 
 /* rewrites state.a.b[1] to { x: 97, y: 98, z: 99 }; leaving state.a.b = [{ x: 7, y: 8, z: 9 }, { x: 97, y: 98, z: 99 }] */
 store.setState({ a: { b: [ state.a.b[ 0 ], { '@@REPLACE': { x: 97, y: 98, z: 99 } } ] } })
@@ -527,11 +529,11 @@ store.setState({ a: { b: { 1: { '@@REPLACE': { x: 97, y: 98, z: 99 } } } } })
 
 ```jsx
 /*
-This tag is for handling edge cases only. Please use sparingly. In most cases, store.setState with or without any of the other tags is sufficient and most efficient.
-
-This and the '@@REPLACE' tags are functionally equivalent when used with a replacement value argument.
-
-Be aware that the compute function argument may be `undefined` for properties which do not yet exist in the state.
+ This tag is for handling edge cases only. Please use sparingly. In most cases, store.setState with or without any of the other tags is sufficient and most efficient.
+ 
+ This and the '@@REPLACE' tags are functionally equivalent when used with a replacement value argument.
+ 
+ Be aware that the compute function argument may be `undefined` for properties which do not yet exist in the state.
 */
 
 const state = {
@@ -541,7 +543,7 @@ const state = {
 
 store.setState({ '@@SET': currentValue => ({ ...currentValue, a: 'Demo', j: 17 }) }) // rewrites state to { ...state, a: 'Demo', j: 17 };
 
-store.setState({ a: { '@@SET': currentValue => ({ ...currentValue, message: 'Testing...' }) } }) // rewrites state.a.b to { ...state, message: 'Testing...' }
+store.setState({ a: { '@@SET': currentValue => ({ ...currentValue, message: 'Testing...' }) } }) // rewrites state.a to { ...state, message: 'Testing...' }
 
 /* rewrites state.a.b[1] to { x: 97, y: 98, z: 99 }; leaving state.a.b = [{ x: 7, y: 8, z: 9 }, { x: 97, y: 98, z: 99 }] */
 store.setState({ a: { b: [ state.a.b[ 0 ], { '@@SET': currentValue => ({ ...currentValue, x: 97, y: 98, z: 99 }) } ] } })
