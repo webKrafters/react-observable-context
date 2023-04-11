@@ -107,23 +107,23 @@ const MILLIS_PER_MINUTE = 6e4;
 let numCreated = 0;
 
 const App = () => {
-	const [ age, updateAge ] = useState( 0 );
-	const [ testNumber ] = useState( () => ++numCreated );
+  const [ age, updateAge ] = useState( 0 );
+  const [ testNumber ] = useState( () => ++numCreated );
 
-	useEffect(() => {
-		const t = setTimeout(
-			() => updateAge( age => age + 1 ),
-			MILLIS_PER_MINUTE
-		); 
-		return () => clearTimeout( t );
-	}, [ age ]);
+  useEffect(() => {
+    const t = setTimeout(
+      () => updateAge( age => age + 1 ),
+      MILLIS_PER_MINUTE
+    ); 
+    return () => clearTimeout( t );
+  }, [ age ]);
 
-	return (
-		<div>
-			<h2>App instance #: { testNumber }</H2>
-			<ProviderDeno ageInMinutes={ age } />
-		</div>
-	);
+  return (
+    <div>
+      <h2>App instance #: { testNumber }</H2>
+      <ProviderDeno ageInMinutes={ age } />
+    </div>
+  );
 }
 export default App;
 ```
@@ -143,13 +143,13 @@ import ObservableContext from './context';
 import Ui from './ui';
 
 const createInitialState = c = ({
-	a: { b: { c, x: { y: { z: [ 2022 ] } } } }
+  a: { b: { c, x: { y: { z: [ 2022 ] } } } }
 });
 
 const ProviderDemo = ({ ageInMinutes = 0 }) => {
 	
   const [ state, setState ] = useState(
-	() => createInitialState( ageInMinutes )
+    () => createInitialState( ageInMinutes )
   );
 
   useEffect(() => {
