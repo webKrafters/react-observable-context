@@ -86,6 +86,48 @@ A context bearing an observable consumer [store](#store). State changes within t
 
 <h1 id="getting-started">Getting Started</h1>
 
+<i><b><u>index.js</u></b></i>
+
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './app';
+
+ReactDOM.render( <App />, document.getElementById( 'root' ) );
+```
+
+<i><b><u>app.js</u></b></i>
+
+```jsx
+import React, { useEffect, useState } from 'react';
+import ProviderDeno from './provider-demo';
+
+const MILLIS_PER_MINUTE = 6e4;
+
+let numCreated = 0;
+
+const App = () => {
+	const [ age, updateAge ] = useState( 0 );
+	const [ testNumber ] = useState( () => ++numCreated );
+
+	useEffect(() => {
+		const t = setTimeout(
+			() => updateAge( age => age + 1 ),
+			MILLIS_PER_MINUTE
+		); 
+		return () => clearTimeout( t );
+	}, [ age ]);
+
+	return (
+		<div>
+			<h2>App instance #: { testNumber }</H2>
+			<ProviderDeno ageInMinutes={ age } />
+		</div>
+	);
+}
+export default App;
+```
+
 <i id="create-context-usage"><u><b>context.js</b></u></i>
 
 ```jsx
@@ -93,28 +135,32 @@ import { createContext } from '@webkrafters/react-observable-context';
 export default createContext();
 ```
 
-<i id="provider-usage"><b><u>provider.js</u></b></i>
+<i id="provider-usage"><b><u>provider-demo.js</u></b></i>
 
 ```jsx
 import React, { useEffect, useState } from 'react';
 import ObservableContext from './context';
 import Ui from './ui';
 
-const Provider = ({ c = 36 }) => {
+const createInitialState = c = ({
+	a: { b: { c, x: { y: { z: [ 2022 ] } } } }
+});
+
+const ProviderDemo = ({ ageInMinutes = 0 }) => {
 	
-  const [ state, setState ] = useState(() => ({
-    a: { b: { c, x: { y: { z: [ 2022 ] } } } }
-  }));
+  const [ state, setState ] = useState(
+	() => createInitialState( ageInMinutes )
+  );
 
   useEffect(() => {
     // similar to `store.setState`, use the following to update
     // only the changed slice of the context internal state.
-	// Please see `Set State` section
-    setState({ a: { b: { c } } }); // OR
-	// setState({ a: { b: { c: { '@@REPLACE': c } } } });
+    // Please see `Set State` section
+    setState({ a: { b: { c: ageInMinutes } } }); // OR
+    // setState({ a: { b: { c: { '@@REPLACE': ageInMinutes } } } });
     // Do not do the following: it will override the context internal state.
-    // setState({ ...state, a: { ...state.a, b: { ...state.a.b, c } } });
-  }, [ c ]);
+    // setState({ ...state, a: { ...state.a, b: { ...state.a.b, c: ageInMinutes } } });
+  }, [ ageInMinutes ]);
 
   return (
     <ObservableContext.Provider value={ state }>
@@ -122,9 +168,9 @@ const Provider = ({ c = 36 }) => {
     </ObservableContext.Provider>
   );
 };
-Provider.displayName = 'Provider';
+ProviderDemo.displayName = 'ProviderDemo';
 
-export default Provider;
+export default ProviderDemo;
 ```
 
 <i id="connect-usage"><u><b>ui.js</b></u> (connect method)</i>
@@ -135,13 +181,16 @@ import { connect } from '@webkrafters/react-observable-context';
 import ObservableContext from './context';
 
 export const YearText = ({ data }) => ( <div>Year: { data.year }</div> );
-export const YearInput = ({ data, setState, resetState }) => {
+
+export const YearInput = ({ data, resetState, setState }) => {
   const onChange = useCallback( e => setState({
     a: { b: { x: { y: { z: { 0: e.target.value } } } } }
   }), [ setState ]);
+
   useEffect(() => {
     data.year > 2049 && resetState([ 'a.b.c' ]);
   }, [ data.year ]);
+  
   return ( <div>Year: <input type="number" onChange={ onChange } /> );
 };
 
@@ -175,12 +224,15 @@ const Client1 = memo(() => { // memoize to prevent 'no-change' renders from the 
 
 const Client2 = memo(() => { // memoize to prevent 'no-change' renders from the parent.
   const { data, setState, resetState } = useContext( ObservableContext, selectorMap );
+
   const onChange = useCallback( e => setState({
     a: { b: { x: { y: { z: { 0: e.target.value } } } } }
   }), [ setState ]);
+
   useEffect(() => {
     data.year > 2049 && resetState([ 'a.b.c' ]);
   }, [ data.year ]);
+
   return ( <div>Year: <input type="number" onChange={ onChange } /> );
 });
 
@@ -192,16 +244,6 @@ const Ui = () => (
 );
 
 export default Ui;
-```
-
-<i><b><u>index.js</u></b></i>
-
-```jsx
-import React from 'react';
-import ReactDOM from 'react-dom';
-import Provider from './provider';
-
-ReactDOM.render( <Provider />, document.getElementById( 'root' ) );
 ```
 
 # API
