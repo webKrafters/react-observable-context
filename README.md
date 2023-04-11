@@ -146,21 +146,19 @@ const createInitialState = c = ({
   a: { b: { c, x: { y: { z: [ 2022 ] } } } }
 });
 
-const ProviderDemo = ({ ageInMinutes = 0 }) => {
+const ProviderDemo = ({ ageInMinutes: c = 0 }) => {
 	
-  const [ state, setState ] = useState(
-    () => createInitialState( ageInMinutes )
-  );
+  const [ state, setState ] = useState(() => createInitialState( c ));
 
   useEffect(() => {
     // similar to `store.setState`, use the following to update
     // only the changed slice of the context internal state.
     // Please see `Set State` section
-    setState({ a: { b: { c: ageInMinutes } } }); // OR
-    // setState({ a: { b: { c: { '@@REPLACE': ageInMinutes } } } });
+    setState({ a: { b: { c } } }); // OR
+    // setState({ a: { b: { c: { '@@REPLACE': c } } } });
     // Do not do the following: it will override the context internal state.
-    // setState({ ...state, a: { ...state.a, b: { ...state.a.b, c: ageInMinutes } } });
-  }, [ ageInMinutes ]);
+    // setState({ ...state, a: { ...state.a, b: { ...state.a.b, c } } });
+  }, [ c ]);
 
   return (
     <ObservableContext.Provider value={ state }>
