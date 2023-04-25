@@ -648,6 +648,14 @@ store.setState({
 <h1 id="changes">What's Changed?</h1>
 
 <table>
+	<thead><tr><th>v4.4.0</th></tr></thead>
+	<tbody>
+		<tr><td><b>1.</b></td><td>Returns <code>undefined</code> for selector map pointing at a non-existent state slice. <i>(Previously returned <code>null</code>)</i></td></tr>
+	</tbody>
+	<thead><tr><th>v4.3.0</th></tr></thead>
+	<tbody>
+		<tr><td><b>1.</b></td><td>Added <code>React.Ref</code> forwarding to <code>connect</code>ed hoc client components.</td></tr>
+	</tbody>
 	<thead><tr><th>v4.1.0</th></tr></thead>
 	<tbody>
 		<tr><td><b>1.</b></td><td>Added new setState <a href="#setstate-tags">tags</a> to facilitate state update operations.</td></tr>

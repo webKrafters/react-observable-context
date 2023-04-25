@@ -6,7 +6,7 @@ describe( 'Atom class', () => {
 	beforeAll(() => { atom = new Atom() })
 	test( 'creates an atom', () => expect( atom ).toBeInstanceOf( Atom ) );
 	describe( 'value property', () => {
-		test( 'is null by default', () => expect( atom.value ).toBeNull() );
+		test( 'is `undefined` by default', () => expect( atom.value ).toBeUndefined() );
 		test( 'is readonly', () => expect( Object.isFrozen( atom.value ) ).toBe( true ) );
 		test( 'converts all assignments to readonly', () => {
 			atom.setValue({ testFlag: true });

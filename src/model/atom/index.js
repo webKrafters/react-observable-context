@@ -8,7 +8,8 @@ class Atom {
 	/** @type {Readonly<T>} */
 	#value;
 
-	constructor( value = null ) {
+	/** @param {T|Readonly<T>} [value] */
+	constructor( value = undefined ) {
 		this.#connections = new Set();
 		this.setValue( value );
 	}
