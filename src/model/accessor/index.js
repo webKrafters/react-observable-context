@@ -42,6 +42,7 @@ class Accessor {
 	 * @template V
 	 */
 	#setValueAt( propertyPath, atom ) {
+		if( !atom ) { return }
 		!atom.isConnected( this.#id ) &&
 		atom.connect( this.#id );
 		this.#value[ propertyPath ] = atom.value;
