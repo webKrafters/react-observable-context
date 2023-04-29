@@ -112,7 +112,7 @@ describe( 'Accessor class', () => {
 		let accessor, accessedPropertyPaths;
 		/** @type {(state?: {[x:string]:*}, paths?: string[]) => {[path: string]: Atom<string>}} */
 		let createAccessorAtoms;
-		let source, initVal, retVal, retValExpected;
+		let source, initVal, retVal, retValExpected, runTest;
 		beforeAll(() => {
 			source = createSourceData();
 			retValExpected = {
@@ -135,6 +135,26 @@ describe( 'Accessor class', () => {
 			accessor = new Accessor( source, accessedPropertyPaths );
 			initVal = accessor.value;
 			retVal = accessor.refreshValue( createAccessorAtoms( source ) );
+			runTest = createAccessor => {
+				const source = createSourceData();
+				const updates = {
+					about: 'SOME TEST TEXT',
+					address: 'SOME TEST TEXT',
+					age: 52,
+					balance: 268957
+				};
+				const updatedPaths = Object.keys( updates );
+				const accessedPropertyPaths = [ 'id', ...updatedPaths, 'company', 'email', 'eyeColor', 'favoriteFruit', 'friends.name' ];
+				const accessor = createAccessor( source, accessedPropertyPaths );
+				const atomMap = createAccessorAtoms( source, accessedPropertyPaths );
+				accessor.refreshValue( atomMap );
+				updatedPaths.forEach( p => {
+					source[ p ] = updates[ p ];
+					atomMap[ p ].setValue( updates[ p ] );
+				} );
+				accessor.outdatedPaths = updatedPaths;
+				expect( accessor.refreshValue( atomMap ) ).toEqual( expect.objectContaining( updates ) );
+			};
 		});
 		test( "immediately constructs atoms' current values into an accessor value", () => {
 			expect( initVal ).toEqual( retValExpected );
@@ -145,27 +165,11 @@ describe( 'Accessor class', () => {
 		test( 'ensures readonly property values', () => {
 			expect( Object.values( accessor.value ).every( isReadonly ) ).toBe( true );
 		} );
+		describe( 'attempts to reference non-existent atoms', () => {
+			test( 'are ignored', () => runTest(( source, accessedPropertyPaths ) => new Accessor( source, [ ...accessedPropertyPaths, 'UNKNOWN' ] )) );
+		} );
 		describe( 'when updated paths < resident accessor paths while resident accessor paths > MODERATE_NUM_PATHS_THRESHOLD', () => {
-			test( 'optimizes refresh operation (coverage test)', () => {
-				const source = createSourceData();
-				const updates = {
-					about: 'SOME TEST TEXT',
-					address: 'SOME TEST TEXT',
-					age: 52,
-					balance: 268957
-				};
-				const updatedPaths = Object.keys( updates );
-				const accessedPropertyPaths = [ 'id', ...updatedPaths, 'company', 'email', 'eyeColor', 'favoriteFruit', 'friends.name' ];
-				const accessor = new Accessor( source, accessedPropertyPaths );
-				const atomMap = createAccessorAtoms( source, accessedPropertyPaths );
-				accessor.refreshValue( atomMap );
-				updatedPaths.forEach( p => {
-					source[ p ] = updates[ p ];
-					atomMap[ p ].setValue( updates[ p ] );
-				} );
-				accessor.outdatedPaths = updatedPaths;
-				expect( accessor.refreshValue( atomMap ) ).toEqual( expect.objectContaining( updates ) );
-			} );
+			test( 'optimizes refresh operation (coverage test)', () => runTest(( ...args ) => new Accessor( ...args )) )
 		} );
 	} );
 } );
