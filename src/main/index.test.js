@@ -570,7 +570,7 @@ describe( 'ReactObservableContext', () => {
 			let ConnectedComponent1, ConnectedComponent2, ConnectedRefForwardingComponent, ConnectedMemoizedComponent;
 			let compOneProps, compTwoProps, refForwardingCompProps, memoCompProps;
 			beforeAll(() => {
-				selectorMap = { box: 'items.1.name' };
+				selectorMap = { box: 'items.1.name', all: FULL_STATE_SELECTOR };
 				connector = connect( ObservableContext, selectorMap );
 				ConnectedComponent1 = connector( props => { compOneProps = props; return null } );
 				ConnectedComponent2 = connector( props => { compTwoProps = props; return null } );
@@ -826,7 +826,7 @@ describe( 'ReactObservableContext', () => {
 				const onChange = s => { store = s };
 				render(
 					<Wrapper>
-						<Client onChange={ onChange } selectorMap={[ 'tags' ]} />
+						<Client onChange={ onChange } selectorMap={{ tags: 'tags', all: FULL_STATE_SELECTOR }} />
 					</Wrapper>
 				);
 				expect( store ).toEqual({
