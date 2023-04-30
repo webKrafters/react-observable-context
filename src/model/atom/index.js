@@ -1,5 +1,14 @@
 import { clonedeep, makeReadonly } from '../../utils';
 
+const isFunction = (() => {
+	const toString = Function.prototype.toString;
+	/** @returns {boolean} */
+	const is = v => {
+		try { return toString.call( v ) } catch( e ) { return false }
+	};
+	return is;
+})();
+
 /** An atom represents an entry for each individual property path of the state still in use by client components */
 /** @template T */
 class Atom {
@@ -38,7 +47,11 @@ class Atom {
 	isConnected( accessorId ) { return this.#connections.has( accessorId ) }
 
 	/** @param {T|Readonly<T>} newValue */
-	setValue( newValue ) { this.#value = makeReadonly( clonedeep( newValue ) ) }
+	setValue( newValue ) {
+		this.#value = !isFunction( newValue )
+			? makeReadonly( clonedeep( newValue ) )
+			: newValue;
+	}
 }
 
 export default Atom;

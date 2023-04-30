@@ -1,7 +1,11 @@
 export default null;
 
 /**
- * @typedef {{[dataPropKey: string]: string|keyof T} & {[dataPropKey: string]: FULL_STATE_SELECTOR}} BaseSelectorMap
+ * @typedef {Array<string|keyof T|FULL_STATE_SELECTOR> | ({
+ * 		[dataPropKey: string]: string|keyof T
+ * } & {
+ * 		[dataPropKey: string]: FULL_STATE_SELECTOR
+ * })} BaseSelectorMap
  * @template {State} T
  */
 

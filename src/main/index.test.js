@@ -901,6 +901,31 @@ describe( 'ReactObservableContext', () => {
 						} );
 					} );
 				} );
+				describe( 'accepting an array of propertyPaths in place of a selector map', () => {
+					/** @type {Store<SourceData>} */ let store;
+					beforeAll(() => {
+						const onChange = s => { store = s };
+						render(
+							<Wrapper>
+								<Client onChange={ onChange } selectorMap={[
+									'history.places[2].year',
+									'isActive',
+									'tags[5]',
+									FULL_STATE_SELECTOR
+								]} />
+							</Wrapper>
+						);
+					});
+					test( 'produces an indexed-based context state data object', () => {
+						const stateSource = createSourceData();
+						expect( store.data ).toStrictEqual({
+							0: stateSource.history.places[ 2 ].year,
+							1: stateSource.isActive,
+							2: stateSource.tags[ 5 ],
+							3: stateSource
+						});
+					} );
+				} );
 				describe( 'when the new selectorMap is empty', () => {
 					describe( 'and existing data is not empty', () => {
 						let mockConsumer, mockSetData, mockUnsubscribe;
