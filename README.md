@@ -342,6 +342,7 @@ Routinely, the `value` prop is initialized with the full initial state. It may o
 
 <h2 id="selector-map">Selector Map</h2>
 A selector map is an object holding key:value pairs.<br />
+<i><b>An array of <a href="#property-path">property paths</a> is also acceptable:</b> indexes serve as keys for this purpose.</i><br />
 <span style="margin-right: 10px">-</span><code>key</code> refers to an arbitrary name to be assigned to a given property in the <a href="#store"><code>store.data</code></a>.<br />
 <span style="margin-right: 10px">-</span><code>value</code> refers to the <a href="#property-path">property path</a> leading to a state slice whose value will be assigned to and observed by this <a href="#store"><code>store.data</code></a> property.<br />
 <span style="margin-right: 10px">-</span>A special '<a href="#fullstate-selectorkey">@@STATE</a>' value may be used to access and observe the full state object.<br />
@@ -361,7 +362,9 @@ const state = {
   }
 };
 
-// a client observing the following selector map
+/* --------------------------------------------- */
+/* a client observing the following selector map */
+/* --------------------------------------------- */
 const selectorMap = {
   all: '@@STATE',
   myData: 'd',
@@ -373,7 +376,20 @@ store.data = {
   all: state,
   myData: state.d,
   secondFElement: state.d.f[1]
-}
+};
+
+/* --------------------------------------------------- */
+/* a client observing the following property path list */
+/* --------------------------------------------------- */
+const propertyPaths = [ '@@STATE', 'd', 'd.f[1]' ];
+
+// will receive the following store data
+store.data = {
+  0: state,
+  1: state.d,
+  2: state.d.f[1]
+};
+
 ```
 
 ## Storage
