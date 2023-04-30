@@ -8,6 +8,15 @@ describe( 'Atom class', () => {
 	describe( 'value property', () => {
 		test( 'is `undefined` by default', () => expect( atom.value ).toBeUndefined() );
 		test( 'is readonly', () => expect( Object.isFrozen( atom.value ) ).toBe( true ) );
+		test( 'sets value by its clone except functions', () => {
+			const data = { testFlag: true };
+			atom.setValue( data );
+			expect( atom.value ).not.toBe( data );
+			expect( atom.value ).toStrictEqual( data );
+			const func = () => {};
+			atom.setValue( func );
+			expect( atom.value ).toBe( func );
+		} );
 		test( 'converts all assignments to readonly', () => {
 			atom.setValue({ testFlag: true });
 			expect(() => { atom.value.testFlag = false }).toThrow(
