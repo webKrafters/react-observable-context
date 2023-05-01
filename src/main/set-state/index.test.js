@@ -344,10 +344,10 @@ describe( 'setState(...)', () => {
 			} );
 		} );
 	} );
-	describe( 'summary setState by the', () => {
+	describe( 'summary setState', () => {
 		let state;
 		beforeAll(() => { state = createSourceData() });
-		describe( `'${ CLEAR_TAG }' tag property key`, () => {
+		describe( `by the '${ CLEAR_TAG }' tag property key`, () => {
 			test( 'sets the entire state to its default value', () => {
 				let state = createSourceData();
 				setState( state, CLEAR_TAG );
@@ -440,7 +440,7 @@ describe( 'setState(...)', () => {
 				expect( onChangeMock ).not.toHaveBeenCalled();
 			} );
 		} );
-		describe( `'${ DELETE_TAG }' tag property key`, () => {
+		describe( `by the '${ DELETE_TAG }' tag property key`, () => {
 			test( 'removes all listed top level properties', () => {
 				const state = createSourceData();
 				const removedKeys = [ '_id', 'address', 'friends', 'picture' ];
@@ -514,7 +514,7 @@ describe( 'setState(...)', () => {
 				expect( onChangeMock ).not.toHaveBeenCalled();
 			} );
 		} );
-		describe( `'${ MOVE_TAG }' tag property key`, () => {
+		describe( `by the '${ MOVE_TAG }' tag property key`, () => {
 			let state;
 			beforeAll(() => { state = createSourceData() });
 			test( 'moves contiguous array items(s) from one index to another', () => {
@@ -608,7 +608,7 @@ describe( 'setState(...)', () => {
 				expect( onChangeMock ).not.toHaveBeenCalled();
 			} );
 		} );
-		describe( `'${ PUSH_TAG }' tag property key`, () => {
+		describe( `by the '${ PUSH_TAG }' tag property key`, () => {
 			let state, newItems;
 			beforeAll(() => {
 				newItems = [ expect.anything(), expect.anything() ];
@@ -660,7 +660,7 @@ describe( 'setState(...)', () => {
 				expect( onChangeMock ).not.toHaveBeenCalled();
 			} );
 		} );
-		describe( `'${ REPLACE_TAG }' tag property key`, () => {
+		describe( `by the '${ REPLACE_TAG }' tag property key`, () => {
 			test( 'adds new and replaces existing referenced top level properties', () => {
 				const _state = createSourceData();
 				const stateReplacement = {
@@ -737,7 +737,7 @@ describe( 'setState(...)', () => {
 				expect( onChangeMock ).toHaveBeenCalled();
 			} );
 		} );
-		describe( `'${ SET_TAG }' tag property key`, () => {
+		describe( `by the '${ SET_TAG }' tag property key`, () => {
 			let newPhone, newTag0;
 			beforeAll(() => {
 				newPhone = { area: '312', line: '1212', local: '644' };
@@ -897,7 +897,7 @@ describe( 'setState(...)', () => {
 				expect( onChangeMock ).toHaveBeenCalled();
 			} );
 		} );
-		describe( `'${ SPLICE_TAG }' tag property key`, () => {
+		describe( `by the '${ SPLICE_TAG }' tag property key`, () => {
 			let state, newItems;
 			/**
 			 * "x" arrayIndex entry signifies when to insert new item values into expected array.
@@ -1022,6 +1022,64 @@ describe( 'setState(...)', () => {
 				setState( _state, { testing: { [ SPLICE_TAG ]: [ 1, 1 ] } }, onChangeMock );
 				expect( _state ).toEqual( state );
 				expect( onChangeMock ).not.toHaveBeenCalled();
+			} );
+		} );
+		describe( 'on currently undefined state', () => {
+			let getUpdate, onChange, state;
+			beforeAll(() => {
+				getUpdate = tag => ({ testing: { value: tag } });
+				onChange = () => {};
+				state = createSourceData();
+			});
+
+			afterEach(() => { delete state.testing });
+
+			test.each`
+				tag											| desc										| expected
+				${ CLEAR_TAG }								| ${ 'as a string tag' }					| ${ {} } 
+				${ [ CLEAR_TAG ] }							| ${ 'in array payload' }					| ${ { value: [ undefined ] } }
+				${ { 1: CLEAR_TAG } }						| ${ 'in indexed-object payload' }			| ${ { value: [ undefined, undefined ] } }	
+				${ { places: [ CLEAR_TAG, CLEAR_TAG ] } }	| ${ 'in a nested payload' }				| ${ { value: { places: [ undefined, undefined ] } } }	
+				${ { places: CLEAR_TAG } }					| ${ 'as a string in a nested payload' }	| ${ { value: {} } }
+			`( `using '${ CLEAR_TAG }' tag property key $desc`, ({ tag, expected }) => {
+				setState( state, getUpdate( tag ), onChange );
+				expect( state.testing ).toEqual( expected );
+			} );
+
+			test( `using '${ DELETE_TAG }' tag property key`, () => {
+				setState( state, getUpdate({
+					[ DELETE_TAG ]: [ 'area', 'country', 'line' ]
+				}), onChange );
+				expect( state.testing ).toEqual({});
+			} );
+			test( `using '${ MOVE_TAG }' tag property key`, () => {
+				setState( state, getUpdate({ [ MOVE_TAG ]: [ 0, 2 ] }), onChange );
+				expect( state.testing ).toEqual({});
+			} );
+			test( `using '${ PUSH_TAG }' tag property key`, () => {
+				const value = [ { prop: expect.anything() }, expect.anything() ];
+				setState( state, getUpdate({ [ PUSH_TAG ]: value }), onChange );
+				expect( state.testing ).toEqual({});
+			} );
+			test( `using '${ REPLACE_TAG }' tag property key`, () => {
+				const value = 'REPLACEMENT STATE VALUE';
+				setState( state, getUpdate({ [ REPLACE_TAG ]: value }), onChange );
+				expect( state.testing ).toEqual({ value });
+			} );
+			test( `using '${ SET_TAG }' tag property key`, () => {
+				const value = 'STATE UPDATE VALUE';
+				setState( state, getUpdate({ [ SET_TAG ]: value }), onChange );
+				expect( state.testing ).toEqual({ value });
+			} );
+			test( `using computed '${ SET_TAG }' tag property key`, () => {
+				const expected = 'COMPUTED STATE UPDATE VALUE';
+				const value = prev => prev ?? expected;
+				setState( state, getUpdate({ [ SET_TAG ]: value }), onChange );
+				expect( state.testing ).toEqual({ value: expected });
+			} );
+			test( `using '${ SPLICE_TAG }' tag property key`, () => {
+				setState( state, getUpdate({ [ SPLICE_TAG ]: [ 1, 1 ] }), onChange );
+				expect( state.testing ).toEqual({});
 			} );
 		} );
 	} );
