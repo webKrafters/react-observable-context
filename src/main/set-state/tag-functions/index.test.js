@@ -455,6 +455,15 @@ describe( '$splice(...)', () => {
 	} );
 } );
 
+describe( 'isArrayOnlyTag(...)', () => {
+	test( 'returns true if argument found in ARRAY_TAG map', () => {
+		expect( tag.isArrayOnlyTag( PUSH_TAG ) ).toBe( true );
+	} );
+	test( 'returns false if argument not found in ARRAY_TAG map', () => {
+		expect( tag.isArrayOnlyTag( expect.anything() ) ).toBe( false );
+	} );
+} );
+
 describe( 'isClosedTag(...)', () => {
 	test( 'returns true if argument found in NO_PARAM_TAG map', () => {
 		expect( tag.isClosedTag( CLEAR_TAG ) ).toBe( true );

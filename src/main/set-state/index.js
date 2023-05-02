@@ -3,9 +3,88 @@ import isPlainObject from 'lodash.isplainobject';
 
 import { clonedeep, isDataContainer } from '../../utils';
 
-import tagFunctions, { isClosedTag } from './tag-functions';
+import tagFunctions, { isArrayOnlyTag, isClosedTag } from './tag-functions';
 
 export default setState;
+
+/** Mutates its arguments */
+const setAtomic = (() => {
+	const toStringProto = Object.prototype.toString;
+	const getCompositeDesc = value => Array.isArray( value ) ? 'ARRAY' : isPlainObject( value ) ? 'OBJECT' : undefined;
+	const finalizeAtomicSet = ( state, changes, stateKey, compositeChangeDesc = undefined ) => {
+		const change = changes[ stateKey ];
+		/* istanbul ignore else */
+		if( !compositeChangeDesc ) {
+			/* istanbul ignore else */
+			if( !isClosedTag( change ) ) {
+				state[ stateKey ] = change;
+				return;
+			}
+		} else if( compositeChangeDesc === 'ARRAY' ) {
+			state[ stateKey ] = [];
+		} else if( compositeChangeDesc === 'OBJECT' ) {
+			if( isIndexBasedObj( change ) ) {
+				state[ stateKey ] = [];
+			} else {
+				const newState = {};
+				for( const k in change ) {
+					const childChange = change[ k ];
+					if( toStringProto.call( childChange ) === '[object String]' ) {
+						newState[ k ] = childChange;
+						continue;
+					}
+					let hasProps = false;
+					for( const p in childChange ?? {} ) { // eslint-disable-line no-unreachable-loop, no-unused-vars
+						hasProps = true;
+						break;
+					}
+					if( !hasProps ) {
+						newState[ k ] = childChange;
+					} else if( isArrayTaggedPayload( childChange ) ) {
+						newState[ k ] = [];
+					}
+				}
+				state[ stateKey ] = newState;
+			}
+		}
+		return setAtomic( state, changes, stateKey );
+	};
+	/**
+	 * @param {HasArrayRoot<K>|HasObjectRoot<K>} state
+	 * @param {HasArrayRoot<K>|HasObjectRoot<K>} changes
+	 * @param {K} stateKey
+	 * @param {Stats} [stats]
+	 * @template {KeyType} K
+	 */
+	const setAtomic = ( state, changes, stateKey, stats = { hasChanges: false } ) => {
+		if( isEqual( state[ stateKey ], changes[ stateKey ] ) ) { return }
+		const tagsResolved = resolveTags( state, changes, stateKey, stats );
+		const compositeChangeDesc = getCompositeDesc( changes[ stateKey ] );
+		if( Array.isArray( state[ stateKey ] ) ) {
+			if( compositeChangeDesc === 'ARRAY' ) {
+				return setArray( state, changes, stateKey, stats );
+			}
+			if( compositeChangeDesc === 'OBJECT' && isIndexBasedObj( changes[ stateKey ] ) ) {
+				return setArrayIndex( state, changes, stateKey, stats );
+			}
+		}
+		if( compositeChangeDesc === 'OBJECT' && isPlainObject( state[ stateKey ] ) ) {
+			return setPlainObject( state, changes, stateKey, stats )
+		}
+		if( tagsResolved.length || !( stateKey in changes ) ) { return };
+		stats.hasChanges = true;
+		finalizeAtomicSet( state, changes, stateKey, compositeChangeDesc );
+	};
+	return setAtomic;
+})();
+
+/** @param {{[x:string]: any}} payload */
+function isArrayTaggedPayload( payload ) {
+	for( const k in payload ) {
+		if( !isArrayOnlyTag( k ) ) { return false }
+	}
+	return true;
+};
 
 /** @param {{[x:string]: any}} obj */
 function isIndexBasedObj( obj ) {
@@ -33,6 +112,9 @@ function resolveTags( state, changes, stateKey, stats ) {
 		changes[ stateKey ] = { [ changes[ stateKey ] ]: null };
 	}
 	if( !isDataContainer( changes[ stateKey ] ) ) { return resolvedTags }
+	if( !( stateKey in state ) && isArrayTaggedPayload( changes[ stateKey ] ) ) {
+		state[ stateKey ] = [];
+	}
 	for( const k in changes[ stateKey ] ) {
 		if( !( stateKey in changes ) ) { break }
 		if( isClosedTag( changes[ stateKey ][ k ] ) ) {
@@ -96,7 +178,6 @@ function setArrayIndex( state, changes, rootKey, stats ) {
 			index = state[ rootKey ].length + index;
 			changes[ rootKey ][ index ] = changes[ rootKey ][ k ];
 			delete changes[ rootKey ][ k ];
-
 		}
 		index >= 0 && incomingIndexes.push( index );
 	}
@@ -108,38 +189,6 @@ function setArrayIndex( state, changes, rootKey, stats ) {
 	for( const i of incomingIndexes ) {
 		setAtomic( state[ rootKey ], changes[ rootKey ], i, stats );
 	}
-}
-
-/**
- * Mutates its arguments
- *
- * @param {HasArrayRoot<K>|HasObjectRoot<K>} state
- * @param {HasArrayRoot<K>|HasObjectRoot<K>} changes
- * @param {K} stateKey
- * @param {Stats} stats
- * @template {KeyType} K
- */
-function setAtomic( state, changes, stateKey, stats ) {
-	if( isEqual( state[ stateKey ], changes[ stateKey ] ) ) { return }
-	const tagsResolved = resolveTags( state, changes, stateKey, stats );
-	const isPlainObjectNewState = isPlainObject( changes[ stateKey ] );
-	const isArrayNewState = Array.isArray( changes[ stateKey ] );
-	if( Array.isArray( state[ stateKey ] ) ) {
-		if( isArrayNewState ) {
-			return setArray( state, changes, stateKey, stats );
-		}
-		if( isPlainObjectNewState && isIndexBasedObj( changes[ stateKey ] ) ) {
-			return setArrayIndex( state, changes, stateKey, stats );
-		}
-	}
-	if( isPlainObjectNewState && isPlainObject( state[ stateKey ] ) ) {
-		return setPlainObject( state, changes, stateKey, stats )
-	}
-	if( tagsResolved.length || !( stateKey in changes ) ) { return };
-	stats.hasChanges = true;
-	state[ stateKey ] = isArrayNewState || isPlainObjectNewState
-		? clonedeep( changes[ stateKey ] )
-		: changes[ stateKey ];
 }
 
 /**

@@ -310,8 +310,30 @@ const tagMap = {
 
 export default tagMap;
 
+const containsTag = ( tagsMap, tag ) => tag in tagsMap && !Array.isArray( tag );
+
 /**
- * Confirms tags whose tagResolver which accept no inputs.\
+ * Confirms tags whose tagResolver only operates on array values.\
+ *
+ * @example
+ * // given the following state:
+ * const state = {test: some value, testArr: [some value 1, ...], testObj: {testKey: some value, ...}, ...}
+ * // we can call setState with array only tags as follows
+ * setState(state, {testArr: {"@@PUSH": [1, 2, 3, ...], ...}, ...});
+ *
+ * @type {(tag: TagKey|BaseType) => boolean}
+ */
+export const isArrayOnlyTag = (() => {
+	const ARRAY_TAGS = {
+		[ MOVE_TAG ]: null,
+		[ PUSH_TAG ]: null,
+		[ SPLICE_TAG ]: null
+	};
+	return tag => containsTag( ARRAY_TAGS, tag );
+})();
+
+/**
+ * Confirms tags whose tagResolver accepts no inputs.\
  * Such tags are normally supplied as string values.\
  * When supplied as an object property, the key is extracted: value is discarded.
  *
@@ -328,7 +350,7 @@ export default tagMap;
  */
 export const isClosedTag = (() => {
 	const NO_PARAM_TAGS = { [ CLEAR_TAG ]: null };
-	return tag => tag in NO_PARAM_TAGS && !Array.isArray( tag );
+	return tag => containsTag( NO_PARAM_TAGS, tag );
 })();
 
 /**
