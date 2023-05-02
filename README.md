@@ -664,9 +664,13 @@ store.setState({
 <h1 id="changes">What's Changed?</h1>
 
 <table>
+	<thead><tr><th>v4.5.0</th></tr></thead>
+	<tbody>
+		<tr><td><b>1.</b></td><td><a href="#setstate-tags">Tags</a> to update non-existent state slices are now recognized. <b>Previously,</b> they had resulted in no-ops. <b>From now on,</b> they will result in new default slices matching the result of the given tag operation.</td></tr>
+	</tbody>
 	<thead><tr><th>v4.4.0</th></tr></thead>
 	<tbody>
-		<tr><td><b>1.</b></td><td>Returns <code>undefined</code> for selector map pointing at a non-existent state slice. <i>(Previously returned <code>null</code>)</i></td></tr>
+		<tr><td><b>1.</b></td><td>Returns <code>undefined</code> for selector map pointing at a non-existent state slice. <i>(Previously returned <code>null</code>)</i>.</td></tr>
 	</tbody>
 	<thead><tr><th>v4.3.0</th></tr></thead>
 	<tbody>
