@@ -593,12 +593,19 @@ describe( 'setState(...)', () => {
 					expect( _state ).toEqual( calcExpected( expectedIndexes ) );
 				} );
 			} );
-			test( 'ignores non-existent properties', () => {
-				const _state = createSourceData();
-				const onChangeMock = jest.fn();
-				setState( _state, { testing: { [ MOVE_TAG ]: [ 1, 1 ] } }, onChangeMock );
-				expect( _state ).toEqual( state );
-				expect( onChangeMock ).not.toHaveBeenCalled();
+			describe( 'case for rnon-existent properties', () => {
+				let _state, onChangeMock;
+				beforeAll(() => {
+					_state = createSourceData();
+					onChangeMock = jest.fn();
+					setState( _state, { testing: { [ MOVE_TAG ]: [ 1, 1 ] } }, onChangeMock );
+				});
+				test( 'creates new entries for non-existent properties', () => {
+					expect( _state ).toEqual({ ...state, testing: [] });
+				} );
+				test( 'does trigger change notification - no move took place', () => {
+					expect( onChangeMock ).not.toHaveBeenCalled();
+				} );
 			} );
 			test( 'ignores move requests from same index to same index', () => {
 				const _state = createSourceData();
@@ -652,12 +659,12 @@ describe( 'setState(...)', () => {
 				expect( _state ).toEqual( state );
 				expect( onChangeMock ).not.toHaveBeenCalled();
 			} );
-			test( 'ignores non-existent properties', () => {
+			test( 'creates new entries for non-existent properties', () => {
 				const _state = createSourceData();
 				const onChangeMock = jest.fn();
 				setState( _state, { testing: { [ PUSH_TAG ]: newItems } }, onChangeMock );
-				expect( _state ).toEqual( state );
-				expect( onChangeMock ).not.toHaveBeenCalled();
+				expect( _state ).toEqual({ ...state, testing: newItems });
+				expect( onChangeMock ).toHaveBeenCalled();
 			} );
 		} );
 		describe( `by the '${ REPLACE_TAG }' tag property key`, () => {
@@ -1016,17 +1023,18 @@ describe( 'setState(...)', () => {
 				expect( _state ).toEqual( state );
 				expect( onChangeMock ).not.toHaveBeenCalled();
 			} );
-			test( 'ignores non-existent properties', () => {
+			test( 'creates new entries for non-existent properties', () => {
 				const _state = createSourceData();
 				const onChangeMock = jest.fn();
 				setState( _state, { testing: { [ SPLICE_TAG ]: [ 1, 1 ] } }, onChangeMock );
-				expect( _state ).toEqual( state );
-				expect( onChangeMock ).not.toHaveBeenCalled();
+				expect( _state ).toEqual({ ...state, testing: [] });
+				expect( onChangeMock ).toHaveBeenCalled();
 			} );
 		} );
 		describe( 'on currently undefined state', () => {
-			let getUpdate, onChange, state;
+			let getShallowUpdate, getUpdate, onChange, state;
 			beforeAll(() => {
+				getShallowUpdate = tag => ({ testing: tag });
 				getUpdate = tag => ({ testing: { value: tag } });
 				onChange = () => {};
 				state = createSourceData();
@@ -1034,7 +1042,7 @@ describe( 'setState(...)', () => {
 
 			afterEach(() => { delete state.testing });
 
-			test.each`
+			describe.each`
 				tag											| desc										| expected
 				${ CLEAR_TAG }								| ${ 'as a string tag' }					| ${ {} } 
 				${ [ CLEAR_TAG ] }							| ${ 'in array payload' }					| ${ { value: [ undefined ] } }
@@ -1042,44 +1050,267 @@ describe( 'setState(...)', () => {
 				${ { places: [ CLEAR_TAG, CLEAR_TAG ] } }	| ${ 'in a nested payload' }				| ${ { value: { places: [ undefined, undefined ] } } }	
 				${ { places: CLEAR_TAG } }					| ${ 'as a string in a nested payload' }	| ${ { value: {} } }
 			`( `using '${ CLEAR_TAG }' tag property key $desc`, ({ tag, expected }) => {
-				setState( state, getUpdate( tag ), onChange );
-				expect( state.testing ).toEqual( expected );
+				test( 'sets shallowly embedded tag', () => {
+					setState( state, getShallowUpdate( tag ), onChange );
+					expect( state.testing ).toEqual( expected.value );
+				} );
+				test( 'sets deeply embedded tag', () => {
+					setState( state, getUpdate( tag ), onChange );
+					expect( state.testing ).toEqual( expected );
+				} );
+				describe( 'from within an array slice ancestor context', () => {
+					test( 'is supported', () => {
+						expected = expected.value;
+						setState( state, getShallowUpdate([ tag ]) );
+						expect( state.testing ).toEqual([ expected ]);
+						delete state.testing;
+						setState( state, getShallowUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual([ undefined, undefined, expected ]);
+						delete state.testing;
+						setState( state, getUpdate([ tag ]) );
+						expect( state.testing ).toEqual({ value: [ expected ] });
+						delete state.testing;
+						setState( state, getUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual({ value: [ undefined, undefined, expected ] });
+						delete state.testing;
+					} );
+				} );
 			} );
-
-			test( `using '${ DELETE_TAG }' tag property key`, () => {
-				setState( state, getUpdate({
-					[ DELETE_TAG ]: [ 'area', 'country', 'line' ]
-				}), onChange );
-				expect( state.testing ).toEqual({});
+			describe( `using '${ DELETE_TAG }' tag property key`, () => {
+				let tag;
+				beforeAll(() => { tag = { [ DELETE_TAG ]: [ 'area', 'country', 'line' ] } });
+				test( 'sets shallowly embedded tag', () => {
+					setState( state, getShallowUpdate( tag ), onChange );
+					expect( state.testing ).toEqual( undefined );
+				} );
+				test( 'sets deeply embedded tag', () => {
+					setState( state, getUpdate( tag ), onChange );
+					expect( state.testing ).toEqual({});
+				} );
+				describe( 'from within an array slice ancestor context', () => {
+					test( 'is supported', () => {
+						setState( state, getShallowUpdate([ tag ]) );
+						expect( state.testing ).toEqual([ undefined ]);
+						delete state.testing;
+						setState( state, getShallowUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual([ undefined, undefined, undefined ]);
+						delete state.testing;
+						setState( state, getUpdate([ tag ]) );
+						expect( state.testing ).toEqual({ value: [ undefined ] });
+						delete state.testing;
+						setState( state, getUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual({ value: [ undefined, undefined, undefined ] });
+						delete state.testing;
+					} );
+				} );
 			} );
-			test( `using '${ MOVE_TAG }' tag property key`, () => {
-				setState( state, getUpdate({ [ MOVE_TAG ]: [ 0, 2 ] }), onChange );
-				expect( state.testing ).toEqual({});
+			describe( `using '${ MOVE_TAG }' tag property key`, () => {
+				let tag;
+				beforeAll(() => { tag = { [ MOVE_TAG ]: [ 0, 2 ] } });
+				test( 'sets shallowly embedded tag', () => {
+					setState( state, getShallowUpdate( tag ), onChange );
+					expect( state.testing ).toEqual( [] );
+				} );
+				test( 'sets deeply embedded tag', () => {
+					setState( state, getUpdate( tag ), onChange );
+					expect( state.testing ).toEqual({ value: [] });
+				} );
+				describe( 'from within an array slice ancestor context', () => {
+					test( 'is supported', () => {
+						setState( state, getShallowUpdate([ tag ]) );
+						expect( state.testing ).toEqual([[]]);
+						delete state.testing;
+						setState( state, getShallowUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual([ undefined, undefined, [] ]);
+						delete state.testing;
+						setState( state, getUpdate([ tag ]) );
+						expect( state.testing ).toEqual({ value: [[]] });
+						delete state.testing;
+						setState( state, getUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual({ value: [ undefined, undefined, [] ] });
+						delete state.testing;
+					} );
+				} );
 			} );
-			test( `using '${ PUSH_TAG }' tag property key`, () => {
-				const value = [ { prop: expect.anything() }, expect.anything() ];
-				setState( state, getUpdate({ [ PUSH_TAG ]: value }), onChange );
-				expect( state.testing ).toEqual({});
+			describe( `using '${ PUSH_TAG }' tag property key`, () => {
+				let tag, value;
+				beforeAll(() => {
+					value = [ { prop: expect.anything() }, expect.anything() ];
+					tag = { [ PUSH_TAG ]: value };
+				});
+				test( 'sets shallowly embedded tag', () => {
+					setState( state, getShallowUpdate( tag ), onChange );
+					expect( state.testing ).toEqual( value );
+				} );
+				test( 'sets deeply embedded tag', () => {
+					setState( state, getUpdate( tag ), onChange );
+					expect( state.testing ).toEqual({ value });
+				} );
+				describe( 'from within an array slice ancestor context', () => {
+					test( 'is supported', () => {
+						setState( state, getShallowUpdate([ tag ]) );
+						expect( state.testing ).toEqual([ value ]);
+						delete state.testing;
+						setState( state, getShallowUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual([ undefined, undefined, value ]);
+						delete state.testing;
+						setState( state, getUpdate([ tag ]) );
+						expect( state.testing ).toEqual({ value: [ value ] });
+						delete state.testing;
+						setState( state, getUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual({ value: [ undefined, undefined, value ] });
+						delete state.testing;
+					} );
+				} );
 			} );
-			test( `using '${ REPLACE_TAG }' tag property key`, () => {
-				const value = 'REPLACEMENT STATE VALUE';
-				setState( state, getUpdate({ [ REPLACE_TAG ]: value }), onChange );
-				expect( state.testing ).toEqual({ value });
+			describe( `using '${ REPLACE_TAG }' tag property key`, () => {
+				let tag, value;
+				beforeAll(() => {
+					value = 'REPLACEMENT STATE VALUE';
+					tag = { [ REPLACE_TAG ]: value };
+				});
+				test( 'sets shallowly embedded tag', () => {
+					setState( state, getShallowUpdate( tag ), onChange );
+					expect( state.testing ).toEqual( value );
+				} );
+				test( 'sets deeply embedded tag', () => {
+					setState( state, getUpdate( tag ), onChange );
+					expect( state.testing ).toEqual({ value });
+				} );
+				describe( 'from within an array slice ancestor context', () => {
+					test( 'is supported', () => {
+						setState( state, getShallowUpdate([ tag ]) );
+						expect( state.testing ).toEqual([ value ]);
+						delete state.testing;
+						setState( state, getShallowUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual([ undefined, undefined, value ]);
+						delete state.testing;
+						setState( state, getUpdate([ tag ]) );
+						expect( state.testing ).toEqual({ value: [ value ] });
+						delete state.testing;
+						setState( state, getUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual({ value: [ undefined, undefined, value ] });
+						delete state.testing;
+					} );
+				} );
 			} );
-			test( `using '${ SET_TAG }' tag property key`, () => {
-				const value = 'STATE UPDATE VALUE';
-				setState( state, getUpdate({ [ SET_TAG ]: value }), onChange );
-				expect( state.testing ).toEqual({ value });
+			describe( `using '${ SET_TAG }' tag property key`, () => {
+				let tag, value;
+				beforeAll(() => {
+					value = 'STATE UPDATE VALUE';
+					tag = { [ SET_TAG ]: value }
+				});
+				test( 'sets shallowly embedded tag', () => {
+					setState( state, getShallowUpdate( tag ), onChange );
+					expect( state.testing ).toEqual( value );
+				} );
+				test( 'sets deeply embedded tag', () => {
+					setState( state, getUpdate( tag ), onChange );
+					expect( state.testing ).toEqual({ value });
+				} );
+				describe( 'from within an array slice ancestor context', () => {
+					test( 'is supported', () => {
+						setState( state, getShallowUpdate([ tag ]) );
+						expect( state.testing ).toEqual([ value ]);
+						delete state.testing;
+						setState( state, getShallowUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual([ undefined, undefined, value ]);
+						delete state.testing;
+						setState( state, getUpdate([ tag ]) );
+						expect( state.testing ).toEqual({ value: [ value ] });
+						delete state.testing;
+						setState( state, getUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual({ value: [ undefined, undefined, value ] });
+						delete state.testing;
+					} );
+				} );
 			} );
-			test( `using computed '${ SET_TAG }' tag property key`, () => {
-				const expected = 'COMPUTED STATE UPDATE VALUE';
-				const value = prev => prev ?? expected;
-				setState( state, getUpdate({ [ SET_TAG ]: value }), onChange );
-				expect( state.testing ).toEqual({ value: expected });
+			describe( `using computed '${ SET_TAG }' tag property key`, () => {
+				let expected, tag;
+				beforeAll(() => {
+					expected = 'COMPUTED STATE UPDATE VALUE';
+					tag = { [ SET_TAG ]: prev => prev ?? expected };
+				});
+				test( 'sets shallowly embedded tag', () => {
+					setState( state, getShallowUpdate( tag ), onChange );
+					expect( state.testing ).toEqual( expected );
+				} );
+				test( 'sets deeply embedded tag', () => {
+					setState( state, getUpdate( tag ), onChange );
+					expect( state.testing ).toEqual({ value: expected });
+				} );
+				describe( 'from within an array slice ancestor context', () => {
+					test( 'is supported', () => {
+						setState( state, getShallowUpdate([ tag ]) );
+						expect( state.testing ).toEqual([ expected ]);
+						delete state.testing;
+						setState( state, getShallowUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual([ undefined, undefined, expected ]);
+						delete state.testing;
+						setState( state, getUpdate([ tag ]) );
+						expect( state.testing ).toEqual({ value: [ expected ] });
+						delete state.testing;
+						setState( state, getUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual({ value: [ undefined, undefined, expected ] });
+						delete state.testing;
+					} );
+				} );
 			} );
-			test( `using '${ SPLICE_TAG }' tag property key`, () => {
-				setState( state, getUpdate({ [ SPLICE_TAG ]: [ 1, 1 ] }), onChange );
-				expect( state.testing ).toEqual({});
+			describe( `using '${ SPLICE_TAG }' tag property key`, () => {
+				let data, dataTag, tag;
+				beforeAll(() => {
+					data = { color: 'blue' };
+					dataTag = { [ SPLICE_TAG ]: [ 1, 1, data ] };
+					tag = { [ SPLICE_TAG ]: [ 1, 1 ] };
+				});
+				describe( 'to remove from undefined state', () => {
+					test( 'shallowly creates empty array by default', () => {
+						setState( state, getShallowUpdate( tag ), onChange );
+						expect( state.testing ).toEqual( [] );
+					} );
+					test( 'creates empty array by default', () => {
+						setState( state, getUpdate( tag ), onChange );
+						expect( state.testing ).toEqual({ value: [] });
+					} );
+				} );
+				describe( 'to remove from and insert into undefined state', () => {
+					test( 'shallowly creates new array state slice and inserts new elements', () => {
+						setState( state, getShallowUpdate( dataTag ), onChange );
+						expect( state.testing ).toEqual([ data ]);
+					} );
+					test( 'creates new array state slice and inserts new elements', () => {
+						setState( state, getUpdate( dataTag ), onChange );
+						expect( state.testing ).toEqual({ value: [ data ] });
+					} );
+				} );
+				describe( 'from within an array slice ancestor context', () => {
+					test( 'is supported', () => {
+						setState( state, getShallowUpdate([ tag ]) );
+						expect( state.testing ).toEqual([[]]);
+						delete state.testing;
+						setState( state, getShallowUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual([ undefined, undefined, [] ]);
+						delete state.testing;
+						setState( state, getUpdate([ tag ]) );
+						expect( state.testing ).toEqual({ value: [[]] });
+						delete state.testing;
+						setState( state, getUpdate({ 2: tag }) );
+						expect( state.testing ).toEqual({ value: [ undefined, undefined, [] ] });
+						delete state.testing;
+						setState( state, getShallowUpdate([ dataTag ]) );
+						expect( state.testing ).toEqual([[ data ]]);
+						delete state.testing;
+						setState( state, getShallowUpdate({ 2: dataTag }) );
+						expect( state.testing ).toEqual([ undefined, undefined, [ data ] ]);
+						delete state.testing;
+						setState( state, getUpdate([ dataTag ]) );
+						expect( state.testing ).toEqual({ value: [[ data ]] });
+						delete state.testing;
+						setState( state, getUpdate({ 2: dataTag }) );
+						expect( state.testing ).toEqual({ value: [ undefined, undefined, [ data ] ] });
+						delete state.testing;
+					} );
+				} );
 			} );
 		} );
 	} );
@@ -1090,6 +1321,10 @@ describe( 'setState(...)', () => {
 			state.faveColors = [ 'white', 'grey', 'green', 'blue', 'navy', 'midnight blue', 'indigo', 'sky blue' ];
 			state.pets = [ 'Coco', 'Mimi', 'Kiki', 'Titi', 'Fifi', 'Lili' ];
 			const _state = clonedeep( state );
+			const NEW_PUSH_TAG_VALUES = [ { prop: 55 }, 22 ];
+			const NEW_REPLACE_TAG_VALUE = 'REPLACEMENT STATE VALUE';
+			const NEW_SET_TAG_VALUE = 'STATE UPDATE VALUE';
+			const NEW_SET_TAG_VALUE_COMPUTED = 'COMPUTED STATE UPDATE VALUE';
 			const changes = {
 				age: 97,
 				faveColors: {
@@ -1097,6 +1332,31 @@ describe( 'setState(...)', () => {
 					[ SPLICE_TAG ]: [ 0, 2, 'red', 'orange', 'yellow' ], // ['red', 'orange', 'yellow', 'blue', 'navy', 'midnight blue', 'indigo', 'green', 'sky blue']
 					[ PUSH_TAG ]: [ 'silver', 'gold', 'bronze' ] // [...,'silver', 'gold', 'bronze']
 				},
+				CLEAR_TAG_ON_NEW_PROPS_A: CLEAR_TAG,
+				CLEAR_TAG_ON_NEW_PROPS_B: { value: CLEAR_TAG },
+				CLEAR_TAG_ON_NEW_PROPS_C: { value: { places: CLEAR_TAG } },
+				CLEAR_TAG_ON_NEW_PROPS_D: { value: { places: [ CLEAR_TAG, CLEAR_TAG ] } },
+				DELETE_TAG_ON_NEW_PROPS_A: { [ DELETE_TAG ]: [ 'area', 'country', 'line' ] },
+				DELETE_TAG_ON_NEW_PROPS_B: { value: { [ DELETE_TAG ]: [ 'area', 'country', 'line' ] } },
+				DELETE_TAG_ON_NEW_PROPS_C: { value: { places: { [ DELETE_TAG ]: [ 'area', 'country', 'line' ] } } },
+				MOVE_TAG_ON_NEW_PROPS_A: { [ MOVE_TAG ]: [ 0, 2 ] },
+				MOVE_TAG_ON_NEW_PROPS_B: { value: { [ MOVE_TAG ]: [ 0, 2 ] } },
+				MOVE_TAG_ON_NEW_PROPS_C: { value: { places: { [ MOVE_TAG ]: [ 0, 2 ] } } },
+				PUSH_TAG_ON_NEW_PROPS_A: { [ PUSH_TAG ]: NEW_PUSH_TAG_VALUES },
+				PUSH_TAG_ON_NEW_PROPS_B: { value: { [ PUSH_TAG ]: NEW_PUSH_TAG_VALUES } },
+				PUSH_TAG_ON_NEW_PROPS_C: { value: { places: { [ PUSH_TAG ]: NEW_PUSH_TAG_VALUES } } },
+				REPLACE_TAG_ON_NEW_PROPS_A: { [ REPLACE_TAG ]: NEW_REPLACE_TAG_VALUE },
+				REPLACE_TAG_ON_NEW_PROPS_B: { value: { [ REPLACE_TAG ]: NEW_REPLACE_TAG_VALUE } },
+				REPLACE_TAG_ON_NEW_PROPS_C: { value: { places: { [ REPLACE_TAG ]: NEW_REPLACE_TAG_VALUE } } },
+				SET_TAG_ON_NEW_PROPS_A: { [ SET_TAG ]: NEW_SET_TAG_VALUE },
+				SET_TAG_ON_NEW_PROPS_B: { value: { [ SET_TAG ]: NEW_SET_TAG_VALUE } },
+				SET_TAG_ON_NEW_PROPS_C: { value: { places: { [ SET_TAG ]: NEW_SET_TAG_VALUE } } },
+				SET_TAG_ON_NEW_PROPS_COMPUTED_A: { [ SET_TAG ]: prev => prev ?? NEW_SET_TAG_VALUE_COMPUTED },
+				SET_TAG_ON_NEW_PROPS_COMPUTED_B: { value: { [ SET_TAG ]: prev => prev ?? NEW_SET_TAG_VALUE_COMPUTED } },
+				SET_TAG_ON_NEW_PROPS_COMPUTED_C: { value: { places: { [ SET_TAG ]: prev => prev ?? NEW_SET_TAG_VALUE_COMPUTED } } },
+				SPLICE_TAG_ON_NEW_PROPS_A: { [ SPLICE_TAG ]: [ 1, 1 ] },
+				SPLICE_TAG_ON_NEW_PROPS_B: { value: { [ SPLICE_TAG ]: [ 1, 1 ] } },
+				SPLICE_TAG_ON_NEW_PROPS_C: { value: { places: { [ SPLICE_TAG ]: [ 1, 1 ] } } },
 				friends: {
 					[ DELETE_TAG ]: [ 0, -2 ],
 					1: { name: { first: 'Mary' } },
@@ -1132,7 +1392,30 @@ describe( 'setState(...)', () => {
 				friends: [ state.friends[ 2 ], { name: { first: 'Mary' } }, undefined ],
 				history: { places: [ state.history.places[ 1 ] ] },
 				pets: [ 'Titi', 'Deedee', '', 'Momo', state.pets[ 4 ], 'Lala', 'Lulu', 'Chuchu' ],
-				tags: [ 'minim', 'new 2nd item', 'dolor', 'in', 'ullamco_7', 'laborum', 'new last item' ]
+				tags: [ 'minim', 'new 2nd item', 'dolor', 'in', 'ullamco_7', 'laborum', 'new last item' ],
+				CLEAR_TAG_ON_NEW_PROPS_B: {},
+				CLEAR_TAG_ON_NEW_PROPS_C: { value: {} },
+				CLEAR_TAG_ON_NEW_PROPS_D: { value: { places: [ undefined, undefined ] } },
+				DELETE_TAG_ON_NEW_PROPS_B: {},
+				DELETE_TAG_ON_NEW_PROPS_C: { value: {} },
+				MOVE_TAG_ON_NEW_PROPS_A: [],
+				MOVE_TAG_ON_NEW_PROPS_B: { value: [] },
+				MOVE_TAG_ON_NEW_PROPS_C: { value: { places: [] } },
+				PUSH_TAG_ON_NEW_PROPS_A: [ { prop: 55 }, 22 ],
+				PUSH_TAG_ON_NEW_PROPS_B: { value: [ { prop: 55 }, 22 ] },
+				PUSH_TAG_ON_NEW_PROPS_C: { value: { places: [ { prop: 55 }, 22 ] } },
+				REPLACE_TAG_ON_NEW_PROPS_A: 'REPLACEMENT STATE VALUE',
+				REPLACE_TAG_ON_NEW_PROPS_B: { value: 'REPLACEMENT STATE VALUE' },
+				REPLACE_TAG_ON_NEW_PROPS_C: { value: { places: 'REPLACEMENT STATE VALUE' } },
+				SET_TAG_ON_NEW_PROPS_A: 'STATE UPDATE VALUE',
+				SET_TAG_ON_NEW_PROPS_B: { value: 'STATE UPDATE VALUE' },
+				SET_TAG_ON_NEW_PROPS_C: { value: { places: 'STATE UPDATE VALUE' } },
+				SET_TAG_ON_NEW_PROPS_COMPUTED_A: 'COMPUTED STATE UPDATE VALUE',
+				SET_TAG_ON_NEW_PROPS_COMPUTED_B: { value: 'COMPUTED STATE UPDATE VALUE' },
+				SET_TAG_ON_NEW_PROPS_COMPUTED_C: { value: { places: 'COMPUTED STATE UPDATE VALUE' } },
+				SPLICE_TAG_ON_NEW_PROPS_A: [],
+				SPLICE_TAG_ON_NEW_PROPS_B: { value: [] },
+				SPLICE_TAG_ON_NEW_PROPS_C: { value: { places: [] } }
 			});
 			const arg = onChangeMock.mock.calls[ 0 ][ 0 ];
 			expect( arg ).toBe( changes );
