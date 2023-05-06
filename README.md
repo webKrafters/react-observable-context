@@ -484,101 +484,111 @@ To overwrite current state slices with new values, <b>7</b> tag commands have be
 <i id="clear-tag-usage"><b>@@CLEAR:</b> (takes no arguments)</i>
 
 ```jsx
+import { CLEAR_TAG } from '@webkrafters/react-observable-context'; // CLEAR_TAG = "@@CLEAR"
+
 const state = {
   a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
   j: 10
 };
 
 /* empties the state; sets state = {} */
-store.setState( '@@CLEAR' ) // or store.setState({ '@@CLEAR': <anything> })
+store.setState( CLEAR_TAG ) // or store.setState({ [ CLEAR_TAG ]: <anything> })
 
 /* empties the value at state.a.b; sets state.a.b = [] */
-store.setState({ a: { b: '@@CLEAR' } }) // or store.setState({ a: { b: { '@@CLEAR': <anything> } } })
+store.setState({ a: { b: CLEAR_TAG } }) // or store.setState({ a: { b: { [ CLEAR_TAG ]: <anything> } } })
 
 /* empties the value at state.a.j; sets state.a.j = null */
-store.setState({ a: { j: '@@CLEAR' } }) // or store.setState({ a: { j: { '@@CLEAR': <anything> } } })
+store.setState({ a: { j: CLEAR_TAG } }) // or store.setState({ a: { j: { [ CLEAR_TAG ]: <anything> } } })
 
 /* empties the value at state.a.b[ 0 ]; sets state.a.b = [{}] */
-store.setState({ a: { b: [ '@@CLEAR' ] } }) // or store.setState({ a: { b: [ { '@@CLEAR': <anything> } ] } })
+store.setState({ a: { b: [ CLEAR_TAG ] } }) // or store.setState({ a: { b: [ { [ CLEAR_TAG ]: <anything> } ] } })
 
 /* empties the value at state.a.b[0]; sets state.a.b = [{}, state.a.b[1]] */
-store.setState({ a: { b: [ '@@CLEAR', state.a.b[1] ] } }) // or store.setState({ a: { b: [ { '@@CLEAR': <anything> }, state.a.b[1] ] } })
+store.setState({ a: { b: [ CLEAR_TAG, state.a.b[1] ] } }) // or store.setState({ a: { b: [ { [ CLEAR_TAG ]: <anything> }, state.a.b[1] ] } })
 
 /* empties the value at state.a.b[0]; sets state.a.b = [{}, a.b[1]] using indexing (RECOMMENDED) */
-store.setState({ a: { b: { 0: '@@CLEAR' } } }) // or store.setState({ a: { b: { 0: { '@@CLEAR': <anything> } } } })
+store.setState({ a: { b: { 0: CLEAR_TAG } } }) // or store.setState({ a: { b: { 0: { [ CLEAR_TAG ]: <anything> } } } })
 ```
 
 <i id="delete-tag-usage"><b>@@DELETE:</b> (takes an array argument listing property keys to delete)</i>
 
 ```jsx
+import { DELETE_TAG } from '@webkrafters/react-observable-context'; // DELETE_TAG = "@@DELETE"
+
 const state = {
   a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
   j: 10
 };
 
-store.setState({ '@@DELETE': [ 'a' ] }) // removes state.a; sets state = {j: 10}
+store.setState({ [ DELETE_TAG ]: [ 'a' ] }) // removes state.a; sets state = {j: 10}
 
-store.setState({ a: { '@@DELETE': [ 'b' ] } }) // removes state.a.b; sets state.a = {}
+store.setState({ a: { [ DELETE_TAG ]: [ 'b' ] } }) // removes state.a.b; sets state.a = {}
 
 /* removes state.a.b[0]; leaving state.a.b = [{ x: 17, y: 18, z: 19 }] */
-store.setState({ a: { b: { '@@DELETE': [ 0 ] } } }) // or store.setState({ a: { b: { '@@DELETE': [ -2 ] } } })
+store.setState({ a: { b: { [ DELETE_TAG ]: [ 0 ] } } }) // or store.setState({ a: { b: { [ DELETE_TAG ]: [ -2 ] } } })
 
 /* removes `x` and `z` properties from state.a.b[1]; sets state.a.b = [{ x: 7, y: 8, z: 9 }, {y: 18}] */
-store.setState({ a: { b: [ state.a.b[ 0 ], { '@@DELETE': [ 'x', 'z' ] } ] } })
+store.setState({ a: { b: [ state.a.b[ 0 ], { [ DELETE_TAG ]: [ 'x', 'z' ] } ] } })
 
 /* removes `x` and `z` properties from state.a.b[1]; sets state.a.b = [{ x: 7, y: 8, z: 9 }, {y: 18}] using indexing (RECOMMENDED) */
-store.setState({ a: { b: { 1: { '@@DELETE': [ 'x', 'z' ] } } } })
+store.setState({ a: { b: { 1: { [ DELETE_TAG ]: [ 'x', 'z' ] } } } })
 ```
 
 <i id="move-tag-usage"><b>@@MOVE:</b> (takes an array argument listing: -/+fromIndex, -/+toIndex and optional +numItems?. numItems = 1 by default)</i>
 
 ```jsx
+import { MOVE_TAG } from '@webkrafters/react-observable-context'; // MOVE_TAG = "@@MOVE"
+
 const state = {
   a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
   j: 10,
   q: [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
 };
 
-store.setState({ a: { '@@MOVE': [ 0, 1 ] } }) // assigning a '@@MOVE' command to a non-array property has no effect.
+store.setState({ a: { [ MOVE_TAG ]: [ 0, 1 ] } }) // assigning a '@@MOVE' command to a non-array property has no effect.
 
 /* moves state.a.b[0] into index 1; leaving state.a.b = [{ x: 17, y: 18, z: 19 }, { x: 7, y: 8, z: 9 }] */
-store.setState({ a: { b: { '@@MOVE': [ 0, 1 ] } } }) // or store.setState({ a: { b: { '@@MOVE': [ -2, -1 ] } } })
+store.setState({ a: { b: { [ MOVE_TAG ]: [ 0, 1 ] } } }) // or store.setState({ a: { b: { [ MOVE_TAG ]: [ -2, -1 ] } } })
 
 /* moves state.q[4] - [7] into indexes 1 - 4; leaving state.q = [ 1, 5, 6, 7, 8, 2, 3, 4, 9 ] */
-store.setState({ a: { q: { '@@MOVE': [ 4, 1, 4 ] } } }) // or store.setState({ a: { q: { '@@MOVE': [ -5, -8, 4 ] } } })
+store.setState({ a: { q: { [ MOVE_TAG ]: [ 4, 1, 4 ] } } }) // or store.setState({ a: { q: { [ MOVE_TAG ]: [ -5, -8, 4 ] } } })
 ```
 
 <i id="push-tag-usage"><b>@@PUSH:</b> (takes an array argument listing new values to append)</i>
 
 ```jsx
+import { PUSH_TAG } from '@webkrafters/react-observable-context'; // PUSH_TAG = "@@PUSH"
+
 const state = {
   a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
   j: 10
 };
 
-store.setState({ a: { '@@PUSH': [{ n: 5 }] } }) // assigning a '@@PUSH' command to a non-array property has no effect.
+store.setState({ a: { [ PUSH_TAG ]: [{ n: 5 }] } }) // assigning a '@@PUSH' command to a non-array property has no effect.
 
 /* appends 2 new items into state.a.b; leaving state.a.b = [...state.a.b, { x: 27, y: 28, z: 29 }, { x: 37, y: 38, z: 39 }] */
-store.setState({ a: { b: { '@@PUSH': [{ x: 27, y: 28, z: 29 }, { x: 37, y: 38, z: 39 }] } } })
+store.setState({ a: { b: { [ PUSH_TAG ]: [{ x: 27, y: 28, z: 29 }, { x: 37, y: 38, z: 39 }] } } })
 ```
 
 <i id="replace-tag-usage"><b>@@REPLACE:</b> (takes an argument holding the replacment value)</i>
 
 ```jsx
+import { REPLACE_TAG } from '@webkrafters/react-observable-context'; // REPLACE_TAG = "@@REPLACE"
+
 const state = {
   a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
   j: 10
 };
 
-store.setState({ '@@REPLACE': { a: 'Demo', j: 17 } }) // rewrites state to { a: 'Demo', j: 17 };
+store.setState({ [ REPLACE_TAG ]: { a: 'Demo', j: 17 } }) // rewrites state to { a: 'Demo', j: 17 };
 
-store.setState({ a: { '@@REPLACE': { message: 'Testing...' } } }) // rewrites state.a to { message: 'Testing...' }
+store.setState({ a: { [ REPLACE_TAG ]: { message: 'Testing...' } } }) // rewrites state.a to { message: 'Testing...' }
 
 /* rewrites state.a.b[1] to { x: 97, y: 98, z: 99 }; leaving state.a.b = [{ x: 7, y: 8, z: 9 }, { x: 97, y: 98, z: 99 }] */
-store.setState({ a: { b: [ state.a.b[ 0 ], { '@@REPLACE': { x: 97, y: 98, z: 99 } } ] } })
+store.setState({ a: { b: [ state.a.b[ 0 ], { [ REPLACE_TAG ]: { x: 97, y: 98, z: 99 } } ] } })
 
 /* rewrites state.a.b[1] to { x: 97, y: 98, z: 99 }; leaving state.a.b = [{ x: 7, y: 8, z: 9 }, { x: 97, y: 98, z: 99 }] using indexing (RECOMMENDED) */
-store.setState({ a: { b: { 1: { '@@REPLACE': { x: 97, y: 98, z: 99 } } } } })
+store.setState({ a: { b: { 1: { [ REPLACE_TAG ]: { x: 97, y: 98, z: 99 } } } } })
 ```
 
 <i id="set-tag-usage"><b>@@SET:</b> (takes an argument holding either the replacment value or a compute function returning the replacement value)</i>
@@ -592,38 +602,42 @@ store.setState({ a: { b: { 1: { '@@REPLACE': { x: 97, y: 98, z: 99 } } } } })
  Be aware that the compute function argument may be `undefined` for properties which do not yet exist in the state.
 */
 
+import { SET_TAG } from '@webkrafters/react-observable-context'; // SET_TAG = "@@SET"
+
 const state = {
   a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
   j: 10
 };
 
-store.setState({ '@@SET': currentValue => ({ ...currentValue, a: 'Demo', j: 17 }) }) // rewrites state to { ...state, a: 'Demo', j: 17 };
+store.setState({ [ SET_TAG ]: currentValue => ({ ...currentValue, a: 'Demo', j: 17 }) }) // rewrites state to { ...state, a: 'Demo', j: 17 };
 
-store.setState({ a: { '@@SET': currentValue => ({ ...currentValue, message: 'Testing...' }) } }) // rewrites state.a to { ...state, message: 'Testing...' }
+store.setState({ a: { [ SET_TAG ]: currentValue => ({ ...currentValue, message: 'Testing...' }) } }) // rewrites state.a to { ...state, message: 'Testing...' }
 
 /* rewrites state.a.b[1] to { x: 97, y: 98, z: 99 }; leaving state.a.b = [{ x: 7, y: 8, z: 9 }, { x: 97, y: 98, z: 99 }] */
-store.setState({ a: { b: [ state.a.b[ 0 ], { '@@SET': currentValue => ({ ...currentValue, x: 97, y: 98, z: 99 }) } ] } })
+store.setState({ a: { b: [ state.a.b[ 0 ], { [ SET_TAG ]: currentValue => ({ ...currentValue, x: 97, y: 98, z: 99 }) } ] } })
 
 /* rewrites state.a.b[1] to { x: 97, y: 98, z: 99 }; leaving state.a.b = [{ x: 7, y: 8, z: 9 }, { x: 97, y: 98, z: 99 }] using indexing (RECOMMENDED) */
-store.setState({ a: { b: { 1: { '@@SET': currentValue => ({ ...currentValue, x: 97, y: 98, z: 99 }) } } } })
+store.setState({ a: { b: { 1: { [ SET_TAG ]: currentValue => ({ ...currentValue, x: 97, y: 98, z: 99 }) } } } })
 ```
 
-<i id="splice-tag-usage"><b>@@SPLICE:</b> (takes an array argument listing: -/+fromIndex, +deleteCount and optional ...newItems? newItems = ...[] by default)</i>
+<i id="splice-tag-usage"><b>@@SPLICE:</b> (takes an array argumenst listing: -/+fromIndex, +deleteCount and optional ...newItems? newItems = ...[] by default)</i>
 
 ```jsx
+import { SPLICE_TAG } from '@webkrafters/react-observable-context'; // SPLICE_TAG = "@@SPLICE"
+
 const state = {
   a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
   j: 10,
   q: [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
 };
 
-store.setState({ a: { '@@SPLICE': [ 0, 1 ] } }) // assigning a '@@SPLICE' command to a non-array property has no effect.
+store.setState({ a: { [ SPLICE_TAG ]: [ 0, 1 ] } }) // assigning a '@@SPLICE' command to a non-array property has no effect.
 
 /* removes state.a.b[0]; leaving state.a.b = [{ x: 17, y: 18, z: 19 }] */
-store.setState({ a: { b: { '@@SPLICE': [ 0, 1 ] } } }) // or store.setState({ a: { b: { '@@SPLICE': [ -2, -1 ] } } })
+store.setState({ a: { b: { [ SPLICE_TAG ]: [ 0, 1 ] } } }) // or store.setState({ a: { b: { [ SPLICE_TAG ]: [ -2, -1 ] } } })
 
 /* replaces state.q[4] - [7] with 2 items; leaving state.q = [ 1, 2, 3, 4, 33, 88, 9 ] */
-store.setState({ a: { q: { '@@SPLICE': [ 4, 4, 33, 88 ] } } }) // or store.setState({ a: { q: { '@@SPLICE': [ -5, 4, 33, 88 ] } } })
+store.setState({ a: { q: { [ SPLICE_TAG ]: [ 4, 4, 33, 88 ] } } }) // or store.setState({ a: { q: { [ SPLICE_TAG ]: [ -5, 4, 33, 88 ] } } })
 ```
 
 <h3 id="set-state-with-tags"><b><i>Combination Usage:</i></b></h3>
@@ -633,6 +647,8 @@ These tags may be used in combination with the default usage where all top-level
 <strong>Example:</strong>
 
 ```jsx
+import * as ctx from '@webkrafters/react-observable-context';
+
 const state = {
   a: { b: [{ x: 7, y: 8, z: 9 }, { x: 17, y: 18, z: 19 }] },
   j: 10,
@@ -642,15 +658,15 @@ const state = {
 store.setState({
   a: {
     b: {
-      /* evaluated 1st */ '@@DELETE': [ 0 ], // upon deleting state.a.b[0] -> state.a.b[1] becomes the new state.a.b[0]
-      /* evaluated 3rd */ 0: '@@CLEAR', // clear the new state.a.b[0]
+      /* evaluated 1st */ [ ctx.DELETE_TAG ]: [ 0 ], // upon deleting state.a.b[0] -> state.a.b[1] becomes the new state.a.b[0]
+      /* evaluated 3rd */ 0: ctx.CLEAR_TAG, // clear the new state.a.b[0]
       /* evaluated 4th */ 2: { x: 47, y: 48, z: 49 }, // add new item at state.a.b[2],
-      /* evaluated 2md */ '@@PUSH': [{ x: 107, y: 108, z: 109 }] // appends state.a.b[1]
+      /* evaluated 2md */ [ ctx.PUSH_TAG ]: [{ x: 107, y: 108, z: 109 }] // appends state.a.b[1]
     }
   },
-  j: { '@@SET': currentValue => currentValue < 10 ? currentValue : 0 },
+  j: { [ ctx.SET_TAG ]: currentValue => currentValue < 10 ? currentValue : 0 },
   q: {
-    /* evaluated 1st */ '@@MOVE': [ 5, 3, 2 ],
+    /* evaluated 1st */ [ ctx.MOVE_TAG ]: [ 5, 3, 2 ],
     /* evaluated 2md */ 12: 11
   }
 })
