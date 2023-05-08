@@ -82,7 +82,7 @@ May also see <b><a href="#changes">What's Changed?</a></b>.
 
 # Intro
 
-A context bearing an observable consumer [store](#store). State changes within the store's internal state are only broadcasted to components subscribed to the store (the [clients](#client)). In this way, the `React-Observable-Context` prevents repeated automatic re-renderings of entire component trees resulting from ***context*** state changes.
+A context bearing an observable consumer [store](#store) whose internal state is <u><b>immutable</b></u> and <u><b>private</b></u>. State changes within the store's internal state are only broadcasted to components (the [clients](#client)) subscribed to the store. In this way, the `React-Observable-Context` prevents repeated automatic re-renderings of entire component trees resulting from ***context*** state changes.
 
 <h1 id="getting-started">Getting Started</h1>
 
@@ -148,20 +148,20 @@ const createInitialState = c = ({
 
 const ProviderDemo = ({ ageInMinutes: c = 0 }) => {
 	
-  const [ state, setState ] = useState(() => createInitialState( c ));
+  const [ value, setValue ] = useState(() => createInitialState( c ));
 
   useEffect(() => {
     // similar to `store.setState`, use the following to update
     // only the changed slice of the context internal state.
-    // Please see `Set State` section
-    setState({ a: { b: { c } } }); // OR
-    // setState({ a: { b: { c: { '@@REPLACE': c } } } });
+    // Please use the `Set State` link in the TOC for more details.
+    setValue({ a: { b: { c } } }); // OR
+    // setValue({ a: { b: { c: { '@@REPLACE': c } } } });
     // Do not do the following: it will override the context internal state.
-    // setState({ ...state, a: { ...state.a, b: { ...state.a.b, c } } });
+    // setValue({ ...value, a: { ...value.a, b: { ...value.a.b, c } } });
   }, [ c ]);
 
   return (
-    <ObservableContext.Provider value={ state }>
+    <ObservableContext.Provider value={ value }>
       <Ui />
     </ObservableContext.Provider>
   );
@@ -189,7 +189,7 @@ export const YearInput = ({ data, resetState, setState }) => {
     data.year > 2049 && resetState([ 'a.b.c' ]);
   }, [ data.year ]);
   
-  return ( <div>Year: <input type="number" onChange={ onChange } /> );
+  return ( <div>Year: <input type="number" onChange={ onChange } /></div> );
 };
 
 const withConnector = connect( ObservablContext, { year: 'a.b.x.y.z[0]' } );
@@ -231,7 +231,7 @@ const Client2 = memo(() => { // memoize to prevent 'no-change' renders from the 
     data.year > 2049 && resetState([ 'a.b.c' ]);
   }, [ data.year ]);
 
-  return ( <div>Year: <input type="number" onChange={ onChange } /> );
+  return ( <div>Year: <input type="number" onChange={ onChange } /></div> );
 });
 
 const Ui = () => (
@@ -436,6 +436,8 @@ The `React.Observable.Context` context `store` is the client's portal into the c
 <span style="margin: 5px 10px 0 0">-</span>Performs no state reset when a client with no selector map invokes this method with 0 arguments.
 
 <h3 id="store-setstate" style="margin-top:10px"><code>store.setState</code> Usage</h3>
+<blockquote>[This store's] internal state is <u><b>immutable</b></u> and <u><b>private</b></u>.</blockquote>
+New updates are merged into state by default. To overwrite state, use the <a href="setstate-tags">tag</a> command.<br />
 :warning: <b><i>Do this:</i></b> <code>setState({stateKey0: changes0[, ...]});</code><br />
 :warning: <b><i>Not this:</i></b> <code>setState({stateKey0: {...state.stateKey0, ...changes0}[, ...]});</code>
 <h3 id="indexing"><b><i><u>Indexing</u></i></b></h3>
@@ -467,7 +469,7 @@ store.setState({ ...state, a: { ...state.a, b: [ { ...first, y: 30 }, 22, ...res
 ```
 :warning: <b id="neg-idx-tip"><i>Tip:</i></b> Negative indexing pointing at an out-of-bounds index is ignored.
 
-<h3 id="setstate-tags"><b><i><u>Rewriting state using tag commands</u></i></b></h3>
+<h3 id="setstate-tags"><b><i><u>Overwriting state using tag commands</u></i></b></h3>
 By default, <code>store.setState</code> recursively merges new changes into current state.<br />
 To overwrite current state slices with new values, <b>7</b> tag commands have been provided:
 <ol>
