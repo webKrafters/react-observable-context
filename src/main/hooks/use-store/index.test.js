@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react-hooks';
 
 import '../../../test-artifacts/suppress-render-compat';
 
-import { FULL_STATE_SELECTOR } from '../../../constants';
+import { FULL_STATE_SELECTOR, REPLACE_TAG } from '../../../constants';
 
 import useStore, { deps } from '.';
 
@@ -155,7 +155,7 @@ describe( 'useStore', () => {
 						prehooks.resetState.mockClear();
 						setStateSpy.mockClear();
 						stateKey0 = Object.keys( initialState )[ 0 ];
-						resetData = { [ stateKey0 ]: initialState[ stateKey0 ] };
+						resetData = { [ stateKey0 ]: { [ REPLACE_TAG ]: initialState[ stateKey0 ] } };
 						store.resetState([ stateKey0 ]);
 					} );
 					test( 'runs the available prehook with update data corresponding to resetState argument', () => {
@@ -186,10 +186,10 @@ describe( 'useStore', () => {
 							storage.getItem.mockReset().mockImplementation( storageGetItemMockImpl );
 						});
 						test( 'runs the available prehook with update data equaling the initial state', () => {
-							expect( prehooks.resetState.mock.calls[ 0 ][ 0 ] ).toEqual( initialState );
+							expect( prehooks.resetState.mock.calls[ 0 ][ 0 ] ).toEqual({ [ REPLACE_TAG ]: initialState });
 						} );
 						test( 'merges the initial state into current state', () => {
-							expect( setStateSpy.mock.calls[ 0 ][ 1 ] ).toEqual( initialState );
+							expect( setStateSpy.mock.calls[ 0 ][ 1 ] ).toEqual({ [ REPLACE_TAG ]: initialState });
 						} );
 					} );
 				} );

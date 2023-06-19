@@ -15,7 +15,7 @@ import createSourceData from '../test-artifacts/data/create-state-obj';
 import AppNormal, { ObservableContext, Product, TallyDisplay } from './test-apps/normal';
 import AppWithConnectedChildren from './test-apps/with-connected-children';
 import AppWithPureChildren from './test-apps/with-pure-children';
-import { DELETE_TAG, MOVE_TAG } from '../constants';
+import { DELETE_TAG, MOVE_TAG, REPLACE_TAG } from '../constants';
 
 beforeAll(() => {
 	jest.spyOn( console, 'log' ).mockImplementation(() => {});
@@ -418,14 +418,16 @@ describe( 'ReactObservableContext', () => {
 					fireEvent.click( screen.getByRole( 'button', { name: 'reset context' } ) );
 					expect( prehooks.resetState ).toHaveBeenCalledTimes( 1 );
 					expect( prehooks.resetState ).toHaveBeenCalledWith({
-						// data slices from original state to reset current state slices
-						color: 'Burgundy',
-						customer: {
-							name: { first: null, last: null },
-							phone: null
-						},
-						price: 22.5,
-						type: 'Computer'
+						[ REPLACE_TAG ]: {
+							// data slices from original state to reset current state slices
+							color: 'Burgundy',
+							customer: {
+								name: { first: null, last: null },
+								phone: null
+							},
+							price: 22.5,
+							type: 'Computer'
+						}
 					}, {
 						// current: context state value after the `update type` & `update color` button clicks
 						current: {
@@ -782,7 +784,7 @@ describe( 'ReactObservableContext', () => {
 						onChangeMock.mockClear();
 						storeRef.current.resetState([ FULL_STATE_SELECTOR ]);
 						expect( onChangeMock ).toHaveBeenCalled();
-						expect( onChangeMock ).toHaveBeenCalledWith( state );
+						expect( onChangeMock ).toHaveBeenCalledWith({ [ REPLACE_TAG ]: state });
 						onChangeMock.mockClear();
 						unsub();
 						storeRef.current.setState( changes );

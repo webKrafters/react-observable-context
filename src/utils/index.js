@@ -108,15 +108,19 @@ export function makeReadonly( v ) {
 	return v;
 };
 
+/** @type {Tranform} */
+const defaultForamtValue = ({ value }) => value;
+
 /**
  * Pulls propertyPath values from state and compiles them into a partial state object
  *
  * @param {T} source
  * @param {Array<string>} propertyPaths
+ * @param {Tranform} [transform] - transforms value
  * @returns {{[K in keyof T]?:*}}
  * @template {{[x: string]:*}} T
  */
-export function mapPathsToObject( source, propertyPaths ) {
+export function mapPathsToObject( source, propertyPaths, transform = defaultForamtValue ) {
 	const paths = [];
 	for( const path of propertyPaths ) {
 		paths.push( path.replace( /\.?\[/g, '.' ).replace( /^\.|\]/g, '' ) );
@@ -124,12 +128,12 @@ export function mapPathsToObject( source, propertyPaths ) {
 	const dest = {};
 	let object = dest;
 	for( const path of arrangePropertyPaths( paths ) ) {
-		const { exists, value } = getProperty( source, path );
-		if( !exists ) { continue }
+		const property = getProperty( source, path );
+		if( !property.exists ) { continue }
 		for( let tokens = path.split( '.' ), tLen = tokens.length, t = 0; t < tLen; t++ ) {
 			const token = tokens[ t ];
 			if( t + 1 === tLen ) {
-				object[ token ] = value;
+				object[ token ] = transform( property );
 				object = dest;
 				break;
 			}
@@ -141,3 +145,5 @@ export function mapPathsToObject( source, propertyPaths ) {
 	}
 	return dest;
 }
+
+/** @typedef {(property: import("@webkrafters/get-property").PropertyInfo) => T} Tranform */
