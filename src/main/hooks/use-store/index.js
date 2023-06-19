@@ -14,6 +14,7 @@ import usePrehooksRef from '../use-prehooks-ref';
 import useStateManager from '../use-state-manager';
 
 import _setState from '../../set-state';
+import { REPLACE_TAG } from '../..';
 
 // to facilitate testing
 export const deps = {
@@ -82,8 +83,8 @@ const useStore = ( prehooks, value, storage ) => {
 		const resetData = !propertyPaths.length
 			? {}
 			: propertyPaths.includes( FULL_STATE_SELECTOR )
-				? original
-				: mapPathsToObject( original, propertyPaths );
+				? { [ REPLACE_TAG ]: original }
+				: mapPathsToObject( original, propertyPaths, ({ value }) => ({ [ REPLACE_TAG ]: value }) );
 		runPrehook( prehooksRef.current, 'resetState', [
 			resetData, { current: clonedeep( state ), original }
 		]) && deps.setState( state, resetData, onChange );
