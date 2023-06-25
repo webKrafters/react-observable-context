@@ -288,7 +288,7 @@ function makeObservable( Provider ) {
 /** @type {(children: ReactNode) => ReactNode} */
 function memoizeImmediateChildTree( children ) {
 	return Children.map( children, child => {
-		if( typeof child.type === 'object' && 'compare' in child.type ) { return child } // memo element
+		if( !child?.type || ( typeof child.type === 'object' && 'compare' in child.type ) ) { return child } // skip memoized or non element(s)
 		if( child.props?.children ) {
 			child = cloneElement(
 				child,
