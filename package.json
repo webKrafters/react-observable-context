@@ -7,7 +7,7 @@
     "steveswork <stephen.isienyi@gmail.com> (https://github.com/steveswork)"
   ],
   "dependencies": {
-    "@webkrafters/get-property": "^1.1.0",
+    "@webkrafters/get-property": "^1.1.1",
     "lodash.clonedeepwith": "^4.5.0",
     "lodash.isboolean": "^3.0.3",
     "lodash.isempty": "^4.4.0",
@@ -133,5 +133,5 @@
     "test:watch": "eslint --fix && jest --updateSnapshot --watchAll"
   },
   "types": "dist/main/index.d.ts",
-  "version": "4.5.2"
+  "version": "4.5.3"
 }
