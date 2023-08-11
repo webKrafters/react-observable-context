@@ -33,12 +33,7 @@ const setAtomic = (() => {
 						newState[ k ] = childChange;
 						continue;
 					}
-					let hasProps = false;
-					for( const p in childChange ?? {} ) { // eslint-disable-line no-unreachable-loop, no-unused-vars
-						hasProps = true;
-						break;
-					}
-					if( !hasProps ) {
+					if( !( Object.keys( childChange ?? {} ).length ) ) {
 						newState[ k ] = childChange;
 					} else if( isArrayTaggedPayload( childChange ) ) {
 						newState[ k ] = [];
