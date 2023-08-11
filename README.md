@@ -23,6 +23,7 @@
 # React-Observable-Context [Eagle Eye]
 
 <ul>
+	<li> Update-friendly context.</li>
 	<li> A context bearing an observable consumer [store](#store).</li>
 	<li> Recognizes <b>negative array indexing</b>. Please see <a href="#property-path">Property Path</a> and <code>store.setState</code> <a href="#indexing">Indexing</a>.</li>
 	<li> Only re-renders subscribing components ([clients](#client)) on context state changes.</li>

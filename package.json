@@ -16,7 +16,7 @@
     "lodash.omit": "^4.5.0",
     "uuid": "^9.0.0"
   },
-  "description": "Observable react context - prevents an automatic total component tree tear-down and re-rendering during context updates.",
+  "description": "Observable react context - Update-friendly context. Prevents automatic total component tree tear-down and re-rendering during context updates.",
   "devDependencies": {
     "@babel/cli": "^7.17.0",
     "@babel/core": "^7.20.5",
@@ -133,5 +133,5 @@
     "test:watch": "eslint --fix && jest --updateSnapshot --watchAll"
   },
   "types": "dist/main/index.d.ts",
-  "version": "4.5.3"
+  "version": "4.5.4"
 }
