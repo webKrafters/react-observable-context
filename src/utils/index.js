@@ -109,7 +109,7 @@ export function makeReadonly( v ) {
 };
 
 /** @type {Tranform} */
-const defaultForamtValue = ({ value }) => value;
+const defaultFormatValue = ({ value }) => value;
 
 /**
  * Pulls propertyPath values from state and compiles them into a partial state object
@@ -120,7 +120,7 @@ const defaultForamtValue = ({ value }) => value;
  * @returns {{[K in keyof T]?:*}}
  * @template {{[x: string]:*}} T
  */
-export function mapPathsToObject( source, propertyPaths, transform = defaultForamtValue ) {
+export function mapPathsToObject( source, propertyPaths, transform = defaultFormatValue ) {
 	const paths = [];
 	for( const path of propertyPaths ) {
 		paths.push( path.replace( /\.?\[/g, '.' ).replace( /^\.|\]/g, '' ) );
