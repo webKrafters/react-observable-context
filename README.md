@@ -683,6 +683,10 @@ store.setState({
 <h1 id="changes">What's Changed?</h1>
 
 <table>
+	<thead><tr><th>v4.6.0</th></tr></thead>
+	<tbody>
+		<tr><td><b>1.</b></td><td><a href="#store-resetstate"><code>store.resetState</code></a> can now update reset current state even when initial state does not exist. Formerly, a resetState call on a non-existent initial state had no effect.</td></tr>
+	</tbody>
 	<thead><tr><th>v4.5.0</th></tr></thead>
 	<tbody>
 		<tr><td><b>1.</b></td><td><a href="#setstate-tags">Tags</a> to update non-existent state slices are now recognized. <b>Previously,</b> they had resulted in no-ops. <b>From now on,</b> they will result in new default slices matching the result of the given tag operation.</td></tr>

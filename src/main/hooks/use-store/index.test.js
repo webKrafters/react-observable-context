@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react-hooks';
 
 import '../../../test-artifacts/suppress-render-compat';
 
-import { FULL_STATE_SELECTOR, REPLACE_TAG } from '../../../constants';
+import { CLEAR_TAG, DELETE_TAG, FULL_STATE_SELECTOR, REPLACE_TAG } from '../../../constants';
 
 import useStore, { deps } from '.';
 
@@ -191,6 +191,50 @@ describe( 'useStore', () => {
 						test( 'merges the initial state into current state', () => {
 							expect( setStateSpy.mock.calls[ 0 ][ 1 ] ).toEqual({ [ REPLACE_TAG ]: initialState });
 						} );
+					} );
+				} );
+				describe( 'path arguments not occurring in intial state', () => {
+					let nonInitStatePaths, resetData;
+					beforeAll(() => {
+						prehooks.resetState.mockClear();
+						setStateSpy.mockClear();
+						nonInitStatePaths = [
+							'a',
+							'dsdfd.adfsdff',
+							'dsdfd.sfgrwfg'
+						];
+						resetData = {
+							a: { [ REPLACE_TAG ]: initialState.a },
+							dsdfd: { [ DELETE_TAG ]: [ 'adfsdff', 'sfgrwfg' ] }
+						};
+						store.resetState( nonInitStatePaths );
+					});
+					test( 'are deleted from current state', () => {
+						expect( setStateSpy.mock.calls[ 0 ][ 1 ] ).toEqual( resetData );
+					} );
+				} );
+				describe( 'with paths containing the `' + FULL_STATE_SELECTOR + '` path where initial state is empty', () => {
+					let storageCloneMockImpl, storageGetItemMockImpl;
+					beforeAll(() => {
+						storageCloneMockImpl = storage.clone.getMockImplementation();
+						storageGetItemMockImpl = storage.getItem.getMockImplementation();
+						prehooks.resetState.mockClear();
+						setStateSpy.mockClear();
+						storage.clone.mockReset().mockReturnValue();
+						storage.getItem.mockReset().mockReturnValue();
+						const { result } = renderHook(
+							({ prehooks: p, storage: s }) => useStore( p, undefined, s ),
+							{ initialProps: { prehooks, storage } }
+						);
+						const store = result.current;
+						store.resetState([ 'a', FULL_STATE_SELECTOR, 'b.z' ]);
+					});
+					afterAll(() => {
+						storage.clone.mockReset().mockImplementation( storageCloneMockImpl );
+						storage.getItem.mockReset().mockImplementation( storageGetItemMockImpl );
+					});
+					test( 'empties the current state', () => {
+						expect( setStateSpy.mock.calls[ 0 ][ 1 ] ).toEqual( CLEAR_TAG );
 					} );
 				} );
 			} );
