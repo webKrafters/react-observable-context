@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import isBoolean from 'lodash.isboolean';
+import isEmpty from 'lodash.isempty';
 
 import { v4 } from 'uuid';
 
-import { FULL_STATE_SELECTOR } from '../../../constants';
+import { CLEAR_TAG, DELETE_TAG, FULL_STATE_SELECTOR, REPLACE_TAG } from '../../../constants';
 
-import { clonedeep, mapPathsToObject } from '../../../utils';
+import { clonedeep, mapPathsToObject, stringToDotPath } from '../../../utils';
 
 import Storage from '../../../model/storage';
 
@@ -14,7 +15,6 @@ import usePrehooksRef from '../use-prehooks-ref';
 import useStateManager from '../use-state-manager';
 
 import _setState from '../../set-state';
-import { REPLACE_TAG } from '../..';
 
 // to facilitate testing
 export const deps = {
@@ -80,11 +80,39 @@ const useStore = ( prehooks, value, storage ) => {
 	/** @type {StoreInternal<T>["resetState"]} */
 	const resetState = useCallback(( propertyPaths = [] ) => {
 		const original = _storage.clone( _storage.getItem( storageKey.current ) );
-		const resetData = !propertyPaths.length
-			? {}
-			: propertyPaths.includes( FULL_STATE_SELECTOR )
-				? { [ REPLACE_TAG ]: original }
-				: mapPathsToObject( original, propertyPaths, ({ value }) => ({ [ REPLACE_TAG ]: value }) );
+		let resetData;
+		if( !propertyPaths.length ) {
+			resetData = {};
+		} else if( propertyPaths.includes( FULL_STATE_SELECTOR ) ) {
+			resetData = isEmpty( original ) ? CLEAR_TAG : { [ REPLACE_TAG ]: original };
+		} else {
+			const visitedPathMap = {};
+			resetData = mapPathsToObject( original, propertyPaths, ({ trail, value }) => {
+				visitedPathMap[ trail ] = null;
+				return { [ REPLACE_TAG ]: value };
+			} );
+			if( Object.keys( visitedPathMap ).length < propertyPaths.length ) {
+				for( let path of propertyPaths ) {
+					path = stringToDotPath( path );
+					if( path in visitedPathMap ) { continue }
+					let trail = path.split( '.' );
+					const keyTuple = trail.slice( -1 );
+					trail = trail.slice( 0, -1 );
+					let node = resetData;
+					for( const t of trail ) {
+						if( isEmpty( node[ t ] ) ) {
+							node[ t ] = {};
+						}
+						node = node[ t ];
+					}
+					if( DELETE_TAG in node ) {
+						node[ DELETE_TAG ].push( ...keyTuple );
+					} else {
+						node[ DELETE_TAG ] = keyTuple;
+					}
+				}
+			}
+		}
 		runPrehook( prehooksRef.current, 'resetState', [
 			resetData, { current: clonedeep( state ), original }
 		]) && deps.setState( state, resetData, onChange );

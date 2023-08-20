@@ -111,6 +111,13 @@ export function makeReadonly( v ) {
 /** @type {Tranform} */
 const defaultFormatValue = ({ value }) => value;
 
+/** @type {(path: string) => string} */
+export const stringToDotPath = (() => {
+	const BRACKET_OPEN = /\.?\[/g;
+	const BRACKET_CLOSE = /^\.|\]/g;
+	return path => path.replace( BRACKET_OPEN, '.' ).replace( BRACKET_CLOSE, '' );
+})();
+
 /**
  * Pulls propertyPath values from state and compiles them into a partial state object
  *
@@ -123,7 +130,7 @@ const defaultFormatValue = ({ value }) => value;
 export function mapPathsToObject( source, propertyPaths, transform = defaultFormatValue ) {
 	const paths = [];
 	for( const path of propertyPaths ) {
-		paths.push( path.replace( /\.?\[/g, '.' ).replace( /^\.|\]/g, '' ) );
+		paths.push( stringToDotPath( path ) );
 	}
 	const dest = {};
 	let object = dest;
