@@ -116,7 +116,15 @@ function resolveTags( state, changes, stateKey, stats ) {
 			changes[ stateKey ][ k ] = { [ changes[ stateKey ][ k ] ]: null };
 		}
 		if( k in tagFunctions ) {
-			tagFunctions[ k ]( state, stateKey, stats, changes );
+			let s = state;
+			/* istanbul ignore else */
+			if( Array.isArray( state ) ) {
+				s = [ ...state ];
+			} else if( isPlainObject( state ) ) {
+				s = { ...state };
+			}
+			tagFunctions[ k ]( s, stateKey, stats, changes );
+			state[ stateKey ] = s[ stateKey ];
 			resolvedTags.push( k );
 		}
 	}
