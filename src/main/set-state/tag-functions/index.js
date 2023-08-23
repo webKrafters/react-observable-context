@@ -376,7 +376,12 @@ function applyReplaceCommand( tag, state, changes, stateKey, stats ) {
 	if( isEqual( state[ stateKey ], replacement ) ) {
 		return finishTagRequest( changes, stateKey, tag );
 	}
-	if( Array.isArray( replacement ) && Array.isArray( state[ stateKey ] ) ) {
+	if(
+		Array.isArray( replacement ) &&
+		Array.isArray( state[ stateKey ] ) &&
+		state[ stateKey ].length !== replacement.length
+	) {
+		state[ stateKey ] = [ ...state[ stateKey ] ];
 		state[ stateKey ].length = replacement.length;
 	}
 	for( const k in state[ stateKey ] ) {
