@@ -243,7 +243,7 @@ export const $set = (() => {
 	 */
 	const set = ( state, stateKey, stats, changes ) => {
 		if( toString.call( changes[ stateKey ][ SET_TAG ] ) === '[object Function]' ) {
-			changes[ stateKey ][ SET_TAG ] = changes[ stateKey ][ SET_TAG ]( clonedeep( state[ stateKey ] ) );
+			changes[ stateKey ][ SET_TAG ] = clonedeep( changes[ stateKey ][ SET_TAG ]( clonedeep( state[ stateKey ] ) ) );
 		}
 		applyReplaceCommand( SET_TAG, state, changes, stateKey, stats );
 	};
