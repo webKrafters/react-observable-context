@@ -24,9 +24,9 @@
 
 <ul>
 	<li> Update-friendly context.</li>
-	<li> A context bearing an observable consumer [store](#store).</li>
+	<li> A context bearing an observable consumer <a href="#store">store</a>.</li>
 	<li> Recognizes <b>negative array indexing</b>. Please see <a href="#property-path">Property Path</a> and <code>store.setState</code> <a href="#indexing">Indexing</a>.</li>
-	<li> Only re-renders subscribing components ([clients](#client)) on context state changes.</li>
+	<li> Only re-renders subscribing components (<a href="#client">clients</a>) on context state changes.</li>
 	<li> Subscribing component decides which context state properties' changes to trigger its update.</li>
 </ul>
 
@@ -437,25 +437,29 @@ The `React.Observable.Context` context `store` is the client's portal into the c
 <span style="margin: 5px 10px 0 0">-</span>Performs no state reset when a client with no selector map invokes this method with 0 arguments.
 
 <h3 id="store-setstate" style="margin-top:10px"><code>store.setState</code> Usage</h3>
-<blockquote>[This store's] internal state is <u><b>immutable</b></u> and <u><b>private</b></u>.</blockquote>
-New updates are merged into state by default. To overwrite state, use the <a href="setstate-tags">tag</a> command.<br />
-:warning: <b><i>Do this:</i></b> <code>setState({stateKey0: changes0[, ...]});</code><br />
-:warning: <b><i>Not this:</i></b> <code>setState({stateKey0: {...state.stateKey0, ...changes0}[, ...]});</code><br />
-:warning: <b><i>Or this:</i></b> <code>setState([<br />
-&nbsp;&nbsp;&nbsp;&nbsp;{ stateKey0: changes0[, ...] },<br />
-&nbsp;&nbsp;&nbsp;&nbsp;{ stateKey1: changes1[, ...] },<br />
-&nbsp;&nbsp;&nbsp;&nbsp;...<br />
+
+<blockquote>[This store's] internal state is <u><b>immutable</b></u> and <u><b>private</b></u>.<br />Direct mutation attempts on its properties have no effect.</blockquote>
+New updates are merged into state by default. So only supply the exact changes to be merged <b><i>(i.e. do not spread the new state changes into the current state as is commonly done in React development)</i></b>. And to overwrite a slice of state, use the <a href="#setstate-tags">tag</a> command.<br />
+:warning: <b><i>Do this:</i></b> <code>setState({stateKey0: changes0});</code><br />
+:warning: <b><i>Not this:</i></b> <code>setState({...state, stateKey0: {...state.stateKey0, ...changes0}});</code><br />
+
+<h3 id="batched-update"><i><u>Batched update</u></i></h3>
+provides a way to update the state as a transaction of several state changes. This can be achieved by collecting a series of state changes in an array and passing that array as an argument to the <code>store.setState</code> method. The state changes are resolved sequentially from <code>index 0</code> to the <code>last index</code>. <a href="#client">Clients</a> are only notified at batched update completion.<br />
+:warning: <b><i>Do this:</i></b> <code>setState([<br />
+&nbsp;&nbsp;&nbsp;&nbsp;{stateKey0: changes0},<br />
+&nbsp;&nbsp;&nbsp;&nbsp;{stateKey1: changes1},<br />
+&nbsp;&nbsp;&nbsp;&nbsp;// et cetera ... et cetera<br />
 ]);</code><br />
 :warning: <b><i>Not this:</i></b> <code>setState([<br />
-&nbsp;&nbsp;&nbsp;&nbsp;{stateKey0: {...state.stateKey0, ...changes0}[, ...]},<br />
-&nbsp;&nbsp;&nbsp;&nbsp;{stateKey1: {...state.stateKey1, ...changes1}[, ...]},<br />
-&nbsp;&nbsp;&nbsp;&nbsp;...<br />
+&nbsp;&nbsp;&nbsp;&nbsp;{...state, stateKey0: {...state.stateKey0, ...changes0}},<br />
+&nbsp;&nbsp;&nbsp;&nbsp;{...state, stateKey1: {...state.stateKey1, ...changes1}},<br />
+&nbsp;&nbsp;&nbsp;&nbsp;// et cetera ... et cetera<br />
 ]);</code>
 
-<h3 id="indexing"><b><i><u>Indexing</u></i></b></h3>
-Existing array state property can be overridden with a new array.<br />
-Use the indexed object to update array content at indexes.<br />
-Indexed object recognizes negative indexing. See additional <a href="#neg-idx-tip">tip</a> below.<br />
+<h3 id="indexing"><i><u>Indexing</u></i></h3>
+Traditionally, array state properties are updated by a new array replacement. This overwrites the existing state property.<br />
+Hence the need for `indexing`. Indexing provides a mechanism for updating array state properties at specific indexes using an indexed state change object.<br />
+The store also recognizes and resolves negative indexes when present in the indexed state change object. See additional <a href="#neg-idx-tip">tip</a> below.<br />
 <strong>Example:</strong>
 
 ```jsx
