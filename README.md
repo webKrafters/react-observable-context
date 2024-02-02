@@ -458,7 +458,7 @@ provides a way to update the state as a transaction of several state changes. Th
 
 <h3 id="indexing"><i><u>Indexing</u></i></h3>
 Traditionally, array state properties are updated by a new array replacement. This overwrites the existing state property.<br />
-Hence the need for `indexing`. Indexing provides a mechanism for updating array state properties at specific indexes using an indexed state change object.<br />
+Hence the need for <code>indexing</code>. Indexing provides a mechanism for updating array state properties at specific indexes using an indexed state change object.<br />
 The store also recognizes and resolves negative indexes when present in the indexed state change object. See additional <a href="#neg-idx-tip">tip</a> below.<br />
 <strong>Example:</strong>
 
