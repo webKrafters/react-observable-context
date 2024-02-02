@@ -418,13 +418,13 @@ The `React.Observable.Context` context `store` is the client's portal into the c
 	<li>
 		<p style="margin: 0 0 0 10px">
 			<a href="#store-resetstate"><b>resetState:</b></a> 
-			<code style="margin-left: 5px">(propertyPaths?: Array<string>) => void // resets slices of state referenced by the property paths to their initial values.</code>
+			<code style="margin-left: 5px">(propertyPaths?: Array&lt;string&gt;) => void // resets slices of state referenced by the property paths to their initial values.</code>
 		</p>
 	</li>
 	<li>
 		<p style="margin: 0 0 0 10px">
 			<a href="#store-setstate"><b>setState:</b></a> 
-			<code style="margin-left: 5px">(changes: PartialState<State>) => void // merges only new/changed state slices.</code>
+			<code style="margin-left: 5px">(changes: Changes&lt;State&gt;) => void // merges only new/changed state slices.</code>
 		</p>
 	</li>
 </ol>
@@ -440,7 +440,18 @@ The `React.Observable.Context` context `store` is the client's portal into the c
 <blockquote>[This store's] internal state is <u><b>immutable</b></u> and <u><b>private</b></u>.</blockquote>
 New updates are merged into state by default. To overwrite state, use the <a href="setstate-tags">tag</a> command.<br />
 :warning: <b><i>Do this:</i></b> <code>setState({stateKey0: changes0[, ...]});</code><br />
-:warning: <b><i>Not this:</i></b> <code>setState({stateKey0: {...state.stateKey0, ...changes0}[, ...]});</code>
+:warning: <b><i>Not this:</i></b> <code>setState({stateKey0: {...state.stateKey0, ...changes0}[, ...]});</code><br />
+:warning: <b><i>Or this:</i></b> <code>setState([<br />
+&nbsp;&nbsp;&nbsp;&nbsp;{ stateKey0: changes0[, ...] },<br />
+&nbsp;&nbsp;&nbsp;&nbsp;{ stateKey1: changes1[, ...] },<br />
+&nbsp;&nbsp;&nbsp;&nbsp;...<br />
+]);</code><br />
+:warning: <b><i>Not this:</i></b> <code>setState([<br />
+&nbsp;&nbsp;&nbsp;&nbsp;{stateKey0: {...state.stateKey0, ...changes0}[, ...]},<br />
+&nbsp;&nbsp;&nbsp;&nbsp;{stateKey1: {...state.stateKey1, ...changes1}[, ...]},<br />
+&nbsp;&nbsp;&nbsp;&nbsp;...<br />
+]);</code>
+
 <h3 id="indexing"><b><i><u>Indexing</u></i></b></h3>
 Existing array state property can be overridden with a new array.<br />
 Use the indexed object to update array content at indexes.<br />
@@ -573,7 +584,7 @@ store.setState({ a: { [ PUSH_TAG ]: [{ n: 5 }] } }) // assigning a '@@PUSH' comm
 store.setState({ a: { b: { [ PUSH_TAG ]: [{ x: 27, y: 28, z: 29 }, { x: 37, y: 38, z: 39 }] } } })
 ```
 
-<i id="replace-tag-usage"><b>@@REPLACE:</b> (takes an argument holding the replacment value)</i>
+<i id="replace-tag-usage"><b>@@REPLACE:</b> (takes an argument holding the replacement value)</i>
 
 ```jsx
 import { REPLACE_TAG } from '@webkrafters/react-observable-context'; // REPLACE_TAG = "@@REPLACE"
@@ -623,7 +634,7 @@ store.setState({ a: { b: [ state.a.b[ 0 ], { [ SET_TAG ]: currentValue => ({ ...
 store.setState({ a: { b: { 1: { [ SET_TAG ]: currentValue => ({ ...currentValue, x: 97, y: 98, z: 99 }) } } } })
 ```
 
-<i id="splice-tag-usage"><b>@@SPLICE:</b> (takes an array argumenst listing: -/+fromIndex, +deleteCount and optional ...newItems? newItems = ...[] by default)</i>
+<i id="splice-tag-usage"><b>@@SPLICE:</b> (takes an array argument listing: -/+fromIndex, +deleteCount and optional ...newItems? newItems = ...[] by default)</i>
 
 ```jsx
 import { SPLICE_TAG } from '@webkrafters/react-observable-context'; // SPLICE_TAG = "@@SPLICE"
@@ -683,6 +694,10 @@ store.setState({
 <h1 id="changes">What's Changed?</h1>
 
 <table>
+	<thead><tr><th>v4.7.0</th></tr></thead>
+	<tbody>
+		<tr><td><b>1.</b></td><td><a href="#store-setstate"><code>store.setState</code></a> can now accept an array of updates for gurranteed orderly processing.</td></tr>
+	</tbody>
 	<thead><tr><th>v4.6.0</th></tr></thead>
 	<tbody>
 		<tr><td><b>1.</b></td><td><a href="#store-resetstate"><code>store.resetState</code></a> can now update reset current state even when initial state does not exist. Formerly, a resetState call on a non-existent initial state had no effect.</td></tr>

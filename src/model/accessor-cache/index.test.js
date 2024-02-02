@@ -1,9 +1,11 @@
-import { FULL_STATE_SELECTOR } from '../../constants';
+import * as constants from '../../constants';
 import { clonedeep } from '../../utils';
 import AccessorCache from '.';
 
 import _createSourceData from '../../test-artifacts/data/create-state-obj';
 import { isReadonly } from '../../test-artifacts/utils';
+
+const { FULL_STATE_SELECTOR } = constants;
 
 describe( 'AccessorCache class', () => {
 	const source = createSourceData();
@@ -26,6 +28,127 @@ describe( 'AccessorCache class', () => {
 		])
 	];
 	const cache = new AccessorCache( source );
+	describe( 'atomize(...)', () => {
+		const CLIENT_ID = 'TEST_AUTO_UPDATED';
+		let newChanges, latestFetchedSlice, origFetchedSlice, oldValues, registeredDay;
+		beforeAll(() => {
+			registeredDay = source.registered.day;
+			newChanges = {
+				friends: { 1: { name: { first: 'Amanda' } } },
+				history: { places: { 2: { year: '2017 - 2022' } } },
+				registered: {
+					day: 30,
+					time: {
+						minutes: 0,
+						seconds: 0
+					}
+				},
+				tags: { 4: 'MY_TAG' }
+			}
+			oldValues = clonedeep({
+				address: source.address,
+				'friends[1]': source.friends[ 1 ],
+				history: source.history,
+				'registered.time': source.registered.time,
+				'tags[4]': source.tags[ 4 ]
+			});
+			origFetchedSlice = clonedeep( cache.get( CLIENT_ID, ...accessorPaths[ 1 ] ) );
+			// simulate state change
+			source.friends[ 1 ].name.first = newChanges.friends[ 1 ].name.first;
+			source.history.places[ 2 ].year = newChanges.history.places[ 2 ].year;
+			source.registered.day = newChanges.registered.day;
+			source.registered.time.minutes = newChanges.registered.time.minutes;
+			source.registered.time.seconds = newChanges.registered.time.seconds;
+			source.tags[ 4 ] = newChanges.tags[ 4 ];
+			/* simulate state change notification publishing */
+			cache.atomize( newChanges );
+			/* simulate client's request to refresh own state slice */
+			latestFetchedSlice = cache.get( CLIENT_ID, ...accessorPaths[ 1 ] );
+		});
+		afterAll(() => {
+			source.address = oldValues.address;
+			source.friends[ 1 ] = oldValues[ 'friends[1]' ];
+			source.history = oldValues.history;
+			source.registered.day = registeredDay;
+			source.registered.time = oldValues[ 'registered.time' ];
+			source.tags[ 4 ] = oldValues[ 'tags[4]' ];
+			newChanges = null;
+			latestFetchedSlice = null;
+			origFetchedSlice = null;
+			oldValues = null;
+		});
+		test( 'confirms pre-update state slice returns current slice from original state', () => {
+			expect( Object.keys( origFetchedSlice ) ).toEqual( accessorPaths[ 1 ] );
+			expect( origFetchedSlice ).toStrictEqual({
+				address: oldValues.address,
+				'friends[1]': oldValues[ 'friends[1]' ],
+				history: oldValues.history,
+				'registered.time': oldValues[ 'registered.time' ],
+				'tags[4]': oldValues[ 'tags[4]' ]
+			});
+		} );
+		test( 'confirms post-update state slice returns current slice from the updated state', () => {
+			const expected = clonedeep({
+				address: oldValues.address,
+				'friends[1]': oldValues[ 'friends[1]' ],
+				history: oldValues.history,
+				'registered.time': oldValues[ 'registered.time' ],
+				'tags[4]': oldValues[ 'tags[4]' ]
+			});
+			expected[ 'friends[1]' ].name.first = newChanges.friends[ 1 ].name.first;
+			expected.history.places[ 2 ].year = newChanges.history.places[ 2 ].year;
+			expected[ 'registered.time' ].minutes = newChanges.registered.time.minutes;
+			expected[ 'registered.time' ].seconds = newChanges.registered.time.seconds;
+			expected[ 'tags[4]' ] = newChanges.tags[ 4 ];
+			expect( latestFetchedSlice ).toStrictEqual( expected );
+		} );
+		test( 'is disinterested in state changes not occurring in any of its registered propertyPaths', () => {
+			expect( 'registered.day' in origFetchedSlice ).toBe( false );
+			expect( 'registered.day' in latestFetchedSlice ).toBe( false );
+		} );
+		test( 'will accepts array of update payloads', () => {
+			const source = createSourceData();
+			const cache = new AccessorCache( source );
+			const existingVal = cache.get( CLIENT_ID, 'nullTester', 'tags' );
+			expect(() => {
+				cache.atomize([
+					{ tags: { [ constants.PUSH_TAG ]: [ '_88_' ] } },
+					{ tags: { [ constants.MOVE_TAG ]: [ 0, 2 ] } },
+					{ tags: { [ constants.DELETE_TAG ]: [ 2 ] } },
+					{ nullTester: undefined },
+					{ tags: { [ constants.SPLICE_TAG ]: [ 4, 1, '_90_' ] } },
+					{ tags: { 2: 'jiveTest' } }
+				]);
+				cache.atomize({ nullTester: null });
+			}).not.toThrow();
+		} );
+		describe( 'incorporating new data updates', () => {
+			let existingVal, existingValClone, updatedVal;
+			beforeAll(() => {
+				const source = createSourceData();
+				const cache = new AccessorCache( source );
+				const paths = [ ...accessorPaths[ 0 ], 'history', 'history.places[0].year' ];
+				existingVal = cache.get( CLIENT_ID, ...paths );
+				existingValClone = clonedeep( existingVal );
+				newChanges = { history: { places: { 2: { year: '2030' } } } };
+				source.history.places[ 2 ].year = '2030';
+				cache.atomize( newChanges );
+				updatedVal = cache.get( CLIENT_ID, ...paths );
+			});
+			test( 'never alters its value property object reference', () => {
+				expect( existingVal ).toBe( updatedVal );
+				expect( existingVal ).toStrictEqual( updatedVal );
+				expect( existingValClone ).not.toEqual( updatedVal );
+			});
+			test( 'changes only properties of its return value affected by the new updates', () => {
+				for( const k in existingVal ) {
+					k === 'history' || k === 'history.places[2].year'
+						? expect( existingValClone[ k ] ).not.toEqual( updatedVal[ k ] )
+						: expect( existingValClone[ k ] ).toEqual( updatedVal[ k ] );
+				}
+			} );
+		} );
+	} );
 	describe( 'get(...)', () => {
 		describe( 'returned value', () => {
 			const retValExpected = {
@@ -82,111 +205,6 @@ describe( 'AccessorCache class', () => {
 		} );
 		test( 'disconnects any resulting clientless accessor from storage atom cell', () => {
 			expect( atomDisconnectSpy ).toHaveBeenCalledWith( expect.any( Number ) );
-		} );
-	} );
-	describe( 'watchSource(...)', () => {
-		const CLIENT_ID = 'TEST_AUTO_UPDATED';
-		let newChanges, latestFetchedSlice, origFetchedSlice, oldValues, registeredDay;
-		beforeAll(() => {
-			registeredDay = source.registered.day;
-			newChanges = {
-				friends: { 1: { name: { first: 'Amanda' } } },
-				history: { places: { 2: { year: '2017 - 2022' } } },
-				registered: {
-					day: 30,
-					time: {
-						minutes: 0,
-						seconds: 0
-					}
-				},
-				tags: { 4: 'MY_TAG' }
-			}
-			oldValues = clonedeep({
-				address: source.address,
-				'friends[1]': source.friends[ 1 ],
-				history: source.history,
-				'registered.time': source.registered.time,
-				'tags[4]': source.tags[ 4 ]
-			});
-			origFetchedSlice = clonedeep( cache.get( CLIENT_ID, ...accessorPaths[ 1 ] ) );
-			// simulate state change
-			source.friends[ 1 ].name.first = newChanges.friends[ 1 ].name.first;
-			source.history.places[ 2 ].year = newChanges.history.places[ 2 ].year;
-			source.registered.day = newChanges.registered.day;
-			source.registered.time.minutes = newChanges.registered.time.minutes;
-			source.registered.time.seconds = newChanges.registered.time.seconds;
-			source.tags[ 4 ] = newChanges.tags[ 4 ];
-			/* simulate state change notification publishing */
-			cache.watchSource( newChanges );
-			/* simulate client's request to refresh own state slice */
-			latestFetchedSlice = cache.get( CLIENT_ID, ...accessorPaths[ 1 ] );
-		});
-		afterAll(() => {
-			source.address = oldValues.address;
-			source.friends[ 1 ] = oldValues[ 'friends[1]' ];
-			source.history = oldValues.history;
-			source.registered.day = registeredDay;
-			source.registered.time = oldValues[ 'registered.time' ];
-			source.tags[ 4 ] = oldValues[ 'tags[4]' ];
-			newChanges = null;
-			latestFetchedSlice = null;
-			origFetchedSlice = null;
-			oldValues = null;
-		});
-		test( 'confirms pre-update state slice returns current slice from original state', () => {
-			expect( Object.keys( origFetchedSlice ) ).toEqual( accessorPaths[ 1 ] );
-			expect( origFetchedSlice ).toStrictEqual({
-				address: oldValues.address,
-				'friends[1]': oldValues[ 'friends[1]' ],
-				history: oldValues.history,
-				'registered.time': oldValues[ 'registered.time' ],
-				'tags[4]': oldValues[ 'tags[4]' ]
-			});
-		} );
-		test( 'confirms post-update state slice returns current slice from the updated state', () => {
-			const expected = clonedeep({
-				address: oldValues.address,
-				'friends[1]': oldValues[ 'friends[1]' ],
-				history: oldValues.history,
-				'registered.time': oldValues[ 'registered.time' ],
-				'tags[4]': oldValues[ 'tags[4]' ]
-			});
-			expected[ 'friends[1]' ].name.first = newChanges.friends[ 1 ].name.first;
-			expected.history.places[ 2 ].year = newChanges.history.places[ 2 ].year;
-			expected[ 'registered.time' ].minutes = newChanges.registered.time.minutes;
-			expected[ 'registered.time' ].seconds = newChanges.registered.time.seconds;
-			expected[ 'tags[4]' ] = newChanges.tags[ 4 ];
-			expect( latestFetchedSlice ).toStrictEqual( expected );
-		} );
-		test( 'is disinterested in state changes not occurring in any of its registered propertyPaths', () => {
-			expect( 'registered.day' in origFetchedSlice ).toBe( false );
-			expect( 'registered.day' in latestFetchedSlice ).toBe( false );
-		} );
-		describe( 'incorporating new data updates', () => {
-			let existingVal, existingValClone, updatedVal;
-			beforeAll(() => {
-				const source = createSourceData();
-				const cache = new AccessorCache( source );
-				const paths = [ ...accessorPaths[ 0 ], 'history', 'history.places[0].year' ];
-				existingVal = cache.get( CLIENT_ID, ...paths );
-				existingValClone = clonedeep( existingVal );
-				newChanges = { history: { places: { 2: { year: '2030' } } } };
-				source.history.places[ 2 ].year = '2030';
-				cache.watchSource( newChanges );
-				updatedVal = cache.get( CLIENT_ID, ...paths );
-			});
-			test( 'never alters its value property object reference', () => {
-				expect( existingVal ).toBe( updatedVal );
-				expect( existingVal ).toStrictEqual( updatedVal );
-				expect( existingValClone ).not.toEqual( updatedVal );
-			});
-			test( 'changes only properties of its return value affected by the new updates', () => {
-				for( const k in existingVal ) {
-					k === 'history' || k === 'history.places[2].year'
-						? expect( existingValClone[ k ] ).not.toEqual( updatedVal[ k ] )
-						: expect( existingValClone[ k ] ).toEqual( updatedVal[ k ] );
-				}
-			} );
 		} );
 	} );
 } );

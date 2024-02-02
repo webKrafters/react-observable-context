@@ -17,10 +17,10 @@ const useStateManager = initStateValue => {
 	const [ cache ] = useState(() => new AccessorCache( state ));
 
 	/** @type {StoreInternal<T>["getState"]} */
-	const select = useCallback( cache.get.bind( cache ), []);
+	const select = useCallback( cache.get.bind( cache ), [] );
 
 	/** @type {Listener<T>} */
-	const stateWatch = useCallback( cache.watchSource.bind( cache ), [] );
+	const stateWatch = useCallback( cache.atomize.bind( cache ), [] );
 
 	/** @type {StoreInternal<T>["unlinkCache"]} */
 	const unlink = useCallback( clientId => cache.unlinkClient( clientId ), [] );

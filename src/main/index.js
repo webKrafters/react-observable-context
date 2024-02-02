@@ -112,8 +112,9 @@ export const useContext = ( context, selectorMap = {} ) => {
 		let hasChanges = false;
 		const state = getState( clientId, ..._renderKeys );
 		for( const path of _renderKeys ) {
-			if( data[ selectorMapInverse[ path ] ] !== state[ path ] ) {
-				data[ selectorMapInverse[ path ] ] = state[ path ];
+			const dPath = selectorMapInverse[ path ]
+			if( data[ dPath ] !== state[ path ] ) {
+				data[ dPath ] = state[ path ];
 				hasChanges = true;
 			}
 		}
@@ -128,7 +129,8 @@ export const useContext = ( context, selectorMap = {} ) => {
 
 	React.useEffect(() => { // sync data states with new renderKeys
 		if( isEmpty( _renderKeys ) ) {
-			!isEqual( {}, data ) && setData( {} );
+			const _default = {};
+			!isEqual( _default, data ) && setData( _default );
 			return;
 		}
 		for( const selectorKey in data ) {
