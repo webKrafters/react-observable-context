@@ -96,6 +96,25 @@ describe( 'setState(...)', () => {
 			expect( onChangeMock ).not.toHaveBeenCalled();
 		} );
 	} );
+	test( 'sequentially processes array of update payloads', () => {
+		const state = createSourceData();
+		setState( state, [
+			{ tags: { [ PUSH_TAG ]: [ '_88_' ] } },
+			{ tags: { [ MOVE_TAG ]: [ 0, 2 ] } },
+			{ tags: { [ DELETE_TAG ]: [ 2 ] } },
+			{ tags: { [ SPLICE_TAG ]: [ 4, 1, '_90_' ] } },
+			{ tags: { 2: 'jiveTest' } }
+		] );
+		expect( state.tags ).toStrictEqual([
+			'nisi',
+			'dolor',
+			'jiveTest',
+			'ullamco',
+			'_90_',
+			'proident',
+			'_88_'
+		]);
+	} );
 	describe( 'array state subtree', () => {
 		test( 'is wholly replaced if new value is neither an array nor an indexed object', () => {
 			const state = createSourceData();

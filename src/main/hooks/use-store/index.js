@@ -26,7 +26,7 @@ export const deps = {
  *
  * @param {Prehooks<T>} prehooks
  * @param {N} name
- * @param {N extends "setState" ? [UpdatePayload<T>] : N extends "resetState" ? [PartialState<T>, {current:T, original:T}] : never } args
+ * @param {N extends "setState" ? [Changes<T>] : N extends "resetState" ? [PartialState<T>, {current:T, original:T}] : never } args
  * @returns {boolean}
  * @template {State} T
  * @template {keyof Prehooks<T>} N
@@ -170,7 +170,7 @@ export default useStore;
  */
 
 /**
- * @typedef {import("../../../types").UpdatePayload<PartialState<T>>} UpdatePayload
+ * @typedef {import("../../../types").Changes<T>} Changes
  * @template {State} T
  */
 

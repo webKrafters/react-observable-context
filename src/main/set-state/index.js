@@ -209,14 +209,19 @@ function setPlainObject( state, changes, rootKey, stats ) {
 
 /**
  * @param {T} state
- * @param {UpdatePayload<PartialState<T>>} changes
+ * @param {Changes<T>} changes
  * @param {Listener<T>} [onStateChange]
  * @template {State} T
  */
 function setState( state, changes, onStateChange ) {
 	const stats = { hasChanges: false };
-	const changeRequest = { state: clonedeep( changes ) };
-	set( { state }, changeRequest, stats );
+	if( !Array.isArray( changes ) ) {
+		set( { state }, { state: clonedeep( changes ) }, stats );
+	} else {
+		for( const _cGroup of changes ) {
+			set( { state }, { state: clonedeep( _cGroup ) }, stats );
+		}
+	}
 	stats.hasChanges && onStateChange?.( changes );
 }
 
@@ -251,13 +256,8 @@ function setState( state, changes, onStateChange ) {
  */
 
 /**
- * @typedef {import("../../types").UpdatePayload<T>} UpdatePayload
+ * @typedef {import("../../types").Changes<T>} Changes
  * @template T
- */
-
-/**
- * @typedef {import("../../types").PartialState<T>} PartialState
- * @template {State} T
  */
 
 /** @typedef {import("../../types").State} State */

@@ -45,7 +45,7 @@ describe( 'useStateManager', () => {
 		const mockCache = {};
 		beforeAll(() => {
 			Cache = require( '../../../model/accessor-cache' ).default;
-			[ 'get', 'unlinkClient', 'watchSource' ].forEach( m => {
+			[ 'atomize', 'get', 'unlinkClient' ].forEach( m => {
 				mockCache[ m ] = jest.spyOn( Cache.prototype, m );
 			} );
 			initialProps = { a: 1 };
@@ -53,17 +53,17 @@ describe( 'useStateManager', () => {
 			stateManager = result.current;
 		} );
 		afterAll(() => { for( const m in mockCache ) { mockCache[ m ].mockRestore() } });
+		test( 'observes the store for state changes via the state cache', () => {
+			mockCache.atomize.mockClear();
+			stateManager.stateWatch();
+			expect( mockCache.atomize ).toHaveBeenCalledTimes( 1 );
+		} );
 		test( 'selects state slice from the state cache', () => {
 			mockCache.get.mockClear();
 			const PROPERTY_PATH = expect.any( String );
 			stateManager.select( PROPERTY_PATH );
 			expect( mockCache.get ).toHaveBeenCalledTimes( 1 );
 			expect( mockCache.get ).toHaveBeenCalledWith( PROPERTY_PATH );
-		} );
-		test( 'observes the store for state changes via the state cache', () => {
-			mockCache.watchSource.mockClear();
-			stateManager.stateWatch();
-			expect( mockCache.watchSource ).toHaveBeenCalledTimes( 1 );
 		} );
 		test( 'unlinks a client component from state cache observation', () => {
 			mockCache.unlinkClient.mockClear();

@@ -31,11 +31,16 @@ export default null;
 /** @typedef {number|string|symbol} KeyType */
 
 /**
- * @typedef {(changes: Changes<T>) => void} Listener
+ * @callback Listener
+ * @param {Changes<T>} changes
+ * @returns {void}
  * @template {State} T
  */
 
-/** @typedef {() => never} NonReactUsageReport  */
+/**
+ * @callback NonReactUsageReport
+ * @returns {never}
+ */
 
 /**
  * @typedef {{[K in keyof T]?: T[K]}} PartialState
@@ -81,11 +86,16 @@ export default null;
  */
 
 /**
- * @typedef {UpdatePayload<PartialState<T>} Changes
+ * @typedef {UpdatePayload<PartialState<T>>|UpdatePayloadArray<PartialState<T>>} Changes
  * @template {State} T
  */
 
 /** @typedef {{hasChanges: boolean}} UpdateStats */
+
+/**
+ * @typedef {Array<UpdatePayload<T>>} UpdatePayloadArray
+ * @template T
+ */
 
 /**
  * @typedef {T|CLEAR_TAG|ClearCommand|DeleteCommand<T>|MoveCommand|PushCommand|ReplaceCommand|SetCommand<T>|SpliceCommand|{[K in keyof T]?: UpdatePayload<T[K]>}} UpdatePayload

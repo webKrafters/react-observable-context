@@ -25,36 +25,39 @@ class AccessorCache {
 	}
 
 	/**
-	 * Add new cache entry
+	 * atomizes state changes
 	 *
-	 * @param {string} cacheKey
-	 * @param {Array<string>} propertyPaths
-	 * @return {Accessor<T>}
+	 * @type {Listener<T>}
 	 */
-	#createAccessor( cacheKey, propertyPaths ) {
+	atomize( originChanges ) {
+		const accessors = this.#accessors;
 		const atoms = this.#atoms;
-		const accessor = new Accessor( this.#origin, propertyPaths );
-		this.#accessors[ cacheKey ] = accessor;
-		for( const path of accessor.paths ) {
-			if( !( path in atoms ) ) {
-				atoms[ path ] = new Atom( this.#getOriginAt( path ).value );
+		const updatedPaths = [];
+		for( const path in atoms ) {
+			const { exists, value: newAtomVal } = this.#getOriginAt( path );
+			if( path !== FULL_STATE_SELECTOR && exists && (
+				newAtomVal === null || newAtomVal === undefined
+			) ) {
+				/* istanbul ignore next */
+				if( !Array.isArray( originChanges ) ) {
+					if( !getProperty( originChanges, path ).trail.length ) { continue }
+				} else {
+					let found = false;
+					for( let i = originChanges.length; i--; ) {
+						if( getProperty( originChanges, `${ i }.${ path }` ).trail.length ) {
+							found = true;
+							break;
+						}
+					}
+					if( !found ) { continue }
+				}
 			}
+			if( isEqual( newAtomVal, atoms[ path ].value ) ) { continue }
+			atoms[ path ].setValue( newAtomVal );
+			updatedPaths.push( path );
 		}
-		return this.#accessors[ cacheKey ];
-	}
-
-	/**
-	 * @param {string} propertyPath
-	 * @returns {{
-	 * 	[x: string]: *,
-	 * 	exists: boolean,
-	 * 	value: *
-	 * }}
-	 */
-	#getOriginAt( propertyPath ) {
-		return propertyPath === FULL_STATE_SELECTOR
-			? { exists: true, value: this.#origin }
-			: getProperty( this.#origin, propertyPath );
+		if( !updatedPaths.length ) { return }
+		for( const k in accessors ) { accessors[ k ].outdatedPaths.push( ...updatedPaths ) }
 	}
 
 	/**
@@ -96,30 +99,36 @@ class AccessorCache {
 	}
 
 	/**
-	 * Observes the origin state bearing ObservableContext store for state changes to update accessors.
+	 * Add new cache entry
 	 *
-	 * @type {Listener<T>}
+	 * @param {string} cacheKey
+	 * @param {Array<string>} propertyPaths
+	 * @return {Accessor<T>}
 	 */
-	watchSource( originChanges ) {
-		const accessors = this.#accessors;
+	#createAccessor( cacheKey, propertyPaths ) {
 		const atoms = this.#atoms;
-		const updatedPaths = [];
-		for( const path in atoms ) {
-			const { exists, value: newAtomVal } = this.#getOriginAt( path );
-			if(( path !== FULL_STATE_SELECTOR &&
-				exists &&
-				( newAtomVal === null || newAtomVal === 'undefined' ) &&
-				!getProperty( originChanges, path ).trail.length
-			) || isEqual( newAtomVal, atoms[ path ].value )) {
-				continue;
+		const accessor = new Accessor( this.#origin, propertyPaths );
+		this.#accessors[ cacheKey ] = accessor;
+		for( const path of accessor.paths ) {
+			if( !( path in atoms ) ) {
+				atoms[ path ] = new Atom( this.#getOriginAt( path ).value );
 			}
-			atoms[ path ].setValue( newAtomVal );
-			updatedPaths.push( path );
 		}
-		if( !updatedPaths.length ) { return }
-		for( const k in accessors ) {
-			accessors[ k ].outdatedPaths.push( ...updatedPaths );
-		}
+		return this.#accessors[ cacheKey ];
+	}
+
+	/**
+	 * @param {string} propertyPath
+	 * @returns {{
+	 * 	[x: string]: *,
+	 * 	exists: boolean,
+	 * 	value: *
+	 * }}
+	 */
+	#getOriginAt( propertyPath ) {
+		return propertyPath === FULL_STATE_SELECTOR
+			? { exists: true, value: this.#origin }
+			: getProperty( this.#origin, propertyPath );
 	}
 }
 

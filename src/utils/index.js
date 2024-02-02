@@ -153,4 +153,11 @@ export function mapPathsToObject( source, propertyPaths, transform = defaultForm
 	return dest;
 }
 
-/** @typedef {(property: import("@webkrafters/get-property").PropertyInfo) => T} Tranform */
+/**
+ * @callback Tranform
+ * @param {PropertyInfo} property
+ * @returns {T}
+ * @template [T]
+ */
+
+/** @typedef {import("@webkrafters/get-property").PropertyInfo} PropertyInfo */
