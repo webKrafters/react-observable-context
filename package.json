@@ -79,7 +79,7 @@
     "dist/constants.js",
     "dist/constants.d.ts"
   ],
-  "homepage": "https://github.com/webKrafters/react-observable-context#readme",
+  "homepage": "https://eagleeye.js.org",
   "jest": {
     "collectCoverageFrom": [
       "src/**/*.js"
