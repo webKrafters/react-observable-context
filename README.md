@@ -46,7 +46,7 @@ npm install --save @webkrafters/react-observable-context
 May also see <b><a href="https://eagleeye.js.org/changes">What's Changed?</a></b>.
 
 ## Please see full documentation here:
-**[eagleeye.js.org](https://eagleeye.js.org)**
+**[eagleeye.js.org](https://eagleeye.js.org)** [This site is currently under construction. Please visit [https://www.npmjs.com/package/@webkrafters/react-observable-context](https://www.npmjs.com/package/@webkrafters/react-observable-context) instead.]
 
 # License
 
