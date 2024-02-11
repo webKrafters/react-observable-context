@@ -1,0 +1,10 @@
+.site-heading,
+.site-heading > :last-child {
+    column-gap: 2rem;
+    display: flex;
+}
+.site-heading > :last-child {
+    column-gap: 0.25rem;
+    justify-content: end;
+    text-align: right;
+}

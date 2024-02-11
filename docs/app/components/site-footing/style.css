@@ -1,0 +1,5 @@
+.site-footing { display: flex }
+.site-footing > :last-child {
+    justify-content: end;
+    text-align: right;
+}

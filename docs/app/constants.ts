@@ -1,0 +1,1 @@
+export const _24HOURS = 8.64e7;

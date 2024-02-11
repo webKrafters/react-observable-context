@@ -1,4 +1,0 @@
-page_excerpts: true
-permalink: /:categories/:year/:month/:day/:title
-theme: jekyll-theme-minimal
-url: https://eagleeye.js.org
