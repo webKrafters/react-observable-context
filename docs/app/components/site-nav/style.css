@@ -1,9 +1,21 @@
-.site-nav { max-width: 18.75rem }
-.site-nav .indent1 { padding: 0.5rem }
-.site-nav .indent2 { padding: 1rem }
-.site-nav .indent3 { padding: 1.5rem }
-.site-nav .group-link {
-    border-color: #888;
-    border-bottom: 2px solid;
-    font-weight: 500;
+.site-nav { width: 376px }
+.site-nav > * {
+    color: var( --gray );
+    display: block;
 }
+.site-nav .indent1 { padding-left: 1rem }
+.site-nav .indent2 { padding-left: 3rem }
+.site-nav .indent3 { padding-left: 5rem }
+.site-nav .group-link {
+    border-bottom: 1px solid;
+    border-color: var( --ash );
+    color: var( --charcoal );
+    font-weight: 500;
+    margin: auto -0.6rem auto -1rem;
+    padding-left: 1rem;
+}
+.site-nav .group-link.indent1 { padding-left: 2rem }
+.site-nav .group-link.indent2 { padding-left: 4rem }
+.site-nav .group-link.indent3 { padding-left: 6rem }
+.site-nav a:hover { color: var( --charcoal ) }
+.site-nav a.group-link:hover { color: var( --blue ) }

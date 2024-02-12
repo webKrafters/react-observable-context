@@ -1,0 +1,22 @@
+.code-block { display: contents }
+.code-block > :first-child { position: relative }
+.code-block .ddobWK,
+.code-block .kEhKfQ {
+    background: transparent;
+    border: none;
+    color: var( --charcoal );
+    cursor: pointer;
+    outline: none;
+    right: 0.5rem;
+    position: absolute;
+    top: 0.5rem;
+}
+.code-block .ddobWK:hover,
+.code-block .kEhKfQ:hover {
+    color: var( --blue );
+    opacity: 1;
+}
+.code-block .linenumber.react-syntax-highlighter-line-number {
+    border-right: 1px solid var( --yellow );
+    margin-right: 1em;
+}

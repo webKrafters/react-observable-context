@@ -1,10 +1,54 @@
-.site-heading,
-.site-heading > :last-child {
-    column-gap: 2rem;
-    display: flex;
+.site-heading {
+    background: var( --skye );
+    border-bottom: 1px solid;
+    border-color: var( --ash );
 }
 .site-heading > :last-child {
-    column-gap: 0.25rem;
     justify-content: end;
+    padding-right: 0.5rem;
     text-align: right;
+}
+.site-heading, .site-heading > :not( .sider-toggle-btn ) {
+    align-items: center;
+    display: flex;
+}
+.site-heading, .site-heading > :last-child { column-gap: 0.5rem }
+.site-heading .sider-toggle-btn {
+    background: var( --charcoal );
+    border: none;
+    border-right: 2px solid var( --blue );
+    color: var( --white );
+    display: block;
+}
+.site-heading .sider-toggle-btn,
+.site-heading .branding,
+.site-heading .logo-link,
+.site-heading .logo { height: 4rem }
+.site-heading .branding { width: 32rem }
+.site-heading .logo { width: 8rem }
+.site-heading .text {
+    align-items: center;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    width: 23rem;
+}
+/* .site-heading .text > * > * { text-decoration: none } */
+.site-heading .text > :first-child {
+    font-size: 1.45rem;
+    font-weight: 800;
+    padding-right: 0.5rem;
+}
+.site-heading .text > :first-child > a { color: var( --yellow ) }
+.site-heading .text > :last-child {
+    border-left: 0.25rem solid var( --blue );
+    font-weight: 300;
+    padding-left: 0.5rem;
+}
+.site-heading .text > :last-child > a { color: var( --blue ) }
+@media ( min-width: 1024px ) { 
+    .site-heading .sider-toggle-btn { display: none }
+}
+@media ( max-width: 835px ) {
+    .site-heading > :last-child { display: none }
 }

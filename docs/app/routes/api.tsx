@@ -12,7 +12,7 @@ export default function Api() {
                     <li>Any client using similar context object and selector map may be passed to this connector.</li>
                     <li>The HOC injects the context <Link to="/concepts/store">store</Link> to the client and handles all of the context usage requirements.</li>
                     <li>The injected <Link to="/concepts/store">store</Link> monitors changes in the underlying state slices referenced by the selector map.</li>
-                    <li>A change in any of the referenced state slices automatically triggers an update of the related <pre>{ `store.data` }</pre> property and a subsequent render of the client.</li>
+                    <li>A change in any of the referenced state slices automatically triggers an update of the related <code>store.data</code> property and a subsequent render of the client.</li>
                     <li>Any prop name conflicts between injected <Link to="/concepts/store">store properties</Link> and the client's own props are resolved in favor of the client's own props.</li>
                 </ul>
             </div>
@@ -21,7 +21,7 @@ export default function Api() {
                 <ul>
                     <li>is a zero-parameter function returning an Eagle Eye context object.</li>
                     <li>The returned object is the store-bearing context.</li>
-                    <li>To access the context's <Link to="/concepts/store">store</Link>, pass the context as a <pre>{ `context` }</pre> parameter to either the <Link to="/api#connect">connect</Link> function or the <Link to="/api#usecontext">useContext</Link> hook.</li>
+                    <li>To access the context's <Link to="/concepts/store">store</Link>, pass the context as a <code>context</code> parameter to either the <Link to="/api#connect">connect</Link> function or the <Link to="/api#usecontext">useContext</Link> hook.</li>
                 </ul>
             </div>
             <div id="usage-error">
@@ -33,10 +33,10 @@ export default function Api() {
                 <ul>
                     <li>is a hook taking an Eagle Eye context object and an optional <Link to="/concepts/selector-map">selector map</Link> parameters; and returning the context <Link to="/concepts/store">store</Link>.</li>
                     <li>The injected <Link to="/concepts/store">store</Link> monitors changes in the underlying state slices referenced by the selector map.</li>
-                    <li>A change in any of the referenced state slices automatically triggers an update of the related <pre>{ `store.data` }</pre> property and a subsequent render of the client.</li>
+                    <li>A change in any of the referenced state slices automatically triggers an update of the related <code>store.data</code> property and a subsequent render of the client.</li>
                     <li>The <Link to="/api#connect">connect</Link> function is axiomatically the more conducive method for consuming this conetxt.</li>
                     <li>In certain user-specific cases, direct access to this hook may be preferrable.</li>
-                    <li>In such cases, it is advisable to wrap the client in a <pre>{ `React.memo()` }</pre>.</li>
+                    <li>In such cases, it is advisable to wrap the client in a <code>React.memo()</code>.</li>
                 </ul>
             </div>
         </article>

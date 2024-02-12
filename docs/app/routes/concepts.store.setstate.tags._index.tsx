@@ -14,11 +14,11 @@ const TagLink : React.FC<LinkProps> = props => (
 export default function ConceptStoreSetStateTags() {
     return (
         <article className="concept-store-setstate-tags">
-            <h1><pre>{ `store.setState` }</pre> Tags Commands</h1>
+            <h1><code>store.setState</code> Tags Commands</h1>
             <div>
                 <h3>About the set-state tag commands</h3>
                 <div>
-                    By default, <pre>{ `store.setState` }</pre> recursively merges new changes into current state.<br />
+                    By default, <code>store.setState</code> recursively merges new changes into current state.<br />
                     To overwrite current state slices with new values, <strong>7</strong> tag commands have been provided:
                     <ol>
                         <li><TagLink to="/concepts/store/setstate/tags/clear-usage">@@CLEAR:</TagLink> sets state slice to its corresponding empty value</li>

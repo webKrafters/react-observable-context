@@ -33,7 +33,7 @@ export default function Index() {
         <li> Only re-renders subscribing components (<Link to="/concepts/client">clients</Link>) on context state changes.</li>
         <li> Subscribing component decides which context state properties' changes to trigger its update.</li>
       </ul>
-      <div>May see features history at <Link to="/history/features">What's Changed?</Link>.</div>
+      <div>May see features history at <Link to="/history/features">What's Changed?</Link></div>
     </article>
   );
 };

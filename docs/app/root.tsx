@@ -2,6 +2,8 @@ import { Links, Meta, Scripts, ScrollRestoration } from '@remix-run/react';
 
 import IndexLayout from './layouts/index';
 
+import './root.css';
+
 export default function App() {
   return (
     <html lang="en">

@@ -1,2 +1,21 @@
-.site-body { display: flex }
-.site-body-sider { max-width: 20rem }
+.site-body {
+    display: flex;
+    padding: 0 0.5rem;
+}
+.site-body main { padding-left: 1rem }
+.site-body-sider {
+    border: none;
+    border-right: 1px solid var( --ash );
+    padding: 0.5rem;
+}
+.site-body .site-tags {
+    justify-content: flex-end;
+    margin-top: 5px;
+    text-align: right;
+}
+@media ( max-width: 320px ) {
+    .site-body-sider { display: none }
+}
+@media ( min-width: 836px ) {
+    .site-body .site-tags { display: none }
+}

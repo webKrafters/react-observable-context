@@ -1,4 +1,12 @@
-.site-footing { display: flex }
+.site-footing {
+    background-color: var( --charcoal );
+    border: none;
+    border-top: 2px solid var( --yellow );
+    color: var( --white );
+    display: flex;
+    padding: 0.5rem;
+}
+.site-footing > :first-child { margin-right: 0.25rem }
 .site-footing > :last-child {
     justify-content: end;
     text-align: right;
