@@ -7,6 +7,8 @@ import { clientOnly$, serverOnly$ } from 'vite-env-only';
 import CloseOutlined from '@ant-design/icons/CloseOutlined';
 import MenuOutlined from '@ant-design/icons/MenuOutlined';
 
+import DarkModeSetting from '../dark-mode-settings';
+
 import SiteTags from '../site-tags';
 
 import { Button } from 'antd';
@@ -27,11 +29,18 @@ serverOnly$((() => {
 })());
 
 interface Props {
+  defaultDarkModeSetting?: boolean,   
   isSiderCollapsed?: boolean,
-  onToggleSider?: VoidFunction
+  onToggleSider?: VoidFunction,
+  onDarkModeChange?: (isDarkMode: boolean) => void
 };
 
-const Component : React.FC<Props> = ({ isSiderCollapsed, onToggleSider }) => {
+const Component : React.FC<Props> = ({
+  defaultDarkModeSetting,
+  isSiderCollapsed,
+  onToggleSider,
+  onDarkModeChange
+}) => {
   const siderSwitchProps = useMemo(() => {
     const props: {
       className: string,
@@ -58,6 +67,10 @@ const Component : React.FC<Props> = ({ isSiderCollapsed, onToggleSider }) => {
         </div>
       </div>
       <SiteTags />
+      <DarkModeSetting
+        defaultValue={ defaultDarkModeSetting }
+        onChange={ onDarkModeChange }
+      />
     </header>
   );
 };

@@ -1,3 +1,5 @@
+:root { --bold-color: var( --charcoal ) }
+.dark { --bold-color: var( --gray ) }
 .site-nav { width: 376px }
 .site-nav > * {
     color: var( --gray );
@@ -8,14 +10,14 @@
 .site-nav .indent3 { padding-left: 5rem }
 .site-nav .group-link {
     border-bottom: 1px solid;
-    border-color: var( --ash );
-    color: var( --charcoal );
+    border-color: var( --border-color );
+    color: var( --bold-color );
     font-weight: 500;
-    margin: auto -0.6rem auto -1rem;
+    margin: auto -0.5rem auto -1rem;
     padding-left: 1rem;
 }
 .site-nav .group-link.indent1 { padding-left: 2rem }
 .site-nav .group-link.indent2 { padding-left: 4rem }
 .site-nav .group-link.indent3 { padding-left: 6rem }
-.site-nav a:hover { color: var( --charcoal ) }
+.site-nav a:hover { color: var( --bold-color ) }
 .site-nav a.group-link:hover { color: var( --blue ) }

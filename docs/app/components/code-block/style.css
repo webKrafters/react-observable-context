@@ -1,7 +1,11 @@
 .code-block { display: contents }
-.code-block > :first-child { position: relative }
-.code-block .ddobWK,
-.code-block .kEhKfQ {
+.code-block > :first-child {
+    border: 1px solid var(--charcoal);
+    border-radius: 0;
+    position: relative;
+}
+.code-block .gZQBcu,
+.code-block .juZzY {
     background: transparent;
     border: none;
     color: var( --charcoal );
@@ -11,8 +15,8 @@
     position: absolute;
     top: 0.5rem;
 }
-.code-block .ddobWK:hover,
-.code-block .kEhKfQ:hover {
+.code-block .kEhKfQ:hover,
+.code-block .juZzY:hover {
     color: var( --blue );
     opacity: 1;
 }

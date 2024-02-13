@@ -18,7 +18,10 @@ const Sider : React.ForwardRefExoticComponent<
     React.PropsWithoutRef<{ isCollapsible?: boolean }> &
     React.RefAttributes<ElementWithCSS>
 > = forwardRef(({ isCollapsible = true }, ref ) => (
-    <section className={ `site-body-sider${ isCollapsible ? '' : ' closed' }` } ref={ ref as React.LegacyRef<HTMLElement> }>
+    <section
+        className={ `site-body-sider${ isCollapsible ? '' : ' closed' }` }
+        ref={ ref as React.LegacyRef<HTMLElement> }
+    >
         <SiteNav />
     </section>
 ));

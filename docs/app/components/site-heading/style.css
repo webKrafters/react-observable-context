@@ -1,8 +1,12 @@
+:root { --shbg: var( --skye ) }
+.dark { --shbg: var( --background-color ) }
+
 .site-heading {
-    background: var( --skye );
+    background: var( --shbg );
     border-bottom: 1px solid;
-    border-color: var( --ash );
+    border-color: var( --border-color );
 }
+
 .site-heading > :last-child {
     justify-content: end;
     padding-right: 0.5rem;
@@ -12,7 +16,7 @@
     align-items: center;
     display: flex;
 }
-.site-heading, .site-heading > :last-child { column-gap: 0.5rem }
+.site-heading, .site-heading > .site-tags { column-gap: 0.5rem }
 .site-heading .sider-toggle-btn {
     background: var( --charcoal );
     border: none;
@@ -50,5 +54,5 @@
     .site-heading .sider-toggle-btn { display: none }
 }
 @media ( max-width: 835px ) {
-    .site-heading > :last-child { display: none }
+    .site-heading > .site-tags { display: none }
 }

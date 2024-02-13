@@ -1,10 +1,28 @@
+import { useState, useCallback } from 'react';
+
 import { Links, Meta, Scripts, ScrollRestoration } from '@remix-run/react';
+
+import { DARKMODE_LOCALSTORAGE_KEY } from './constants';
 
 import IndexLayout from './layouts/index';
 
 import './root.css';
 
 export default function App() {
+  let [ _isDarkMode ] = useState<boolean>();
+  const [ classProps, setClassProps ] = useState(() => {
+    _isDarkMode = typeof window !== 'undefined'
+      ? localStorage?.getItem( DARKMODE_LOCALSTORAGE_KEY ) === 'true'
+      : false;
+    return _isDarkMode ? { className: 'dark' } : {};
+  });
+  const updateDmClass = useCallback(( isDarkMode: boolean ) => {
+    _isDarkMode = isDarkMode;
+    setClassProps( p => isDarkMode
+      ? `className` in p ? p : { className: 'dark' }
+      : `className` in p ? {} : p
+    )
+  }, []);
   return (
     <html lang="en">
       <head>
@@ -17,8 +35,8 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body>
-        <IndexLayout />
+      <body { ...classProps }>
+        <IndexLayout defaultDarkModeSetting={ _isDarkMode } onDarkModeChange={ updateDmClass } />
         <ScrollRestoration />
         <Scripts />
       </body>

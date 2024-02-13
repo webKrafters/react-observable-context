@@ -1,4 +1,4 @@
-import { CodeBlock, CopyBlock } from 'react-code-blocks';
+import { CodeBlock, CopyBlock, railscast } from 'react-code-blocks';
 import { CodeBlockProps } from 'react-code-blocks/dist/components/CodeBlock';
 import { CopyBlockProps } from 'react-code-blocks/dist/components/CopyBlock';
 
@@ -29,6 +29,7 @@ const Component : React.FC<Props<boolean>> = ({
                 codeBlock={ !isInline }
                 language={ language }
                 text={ children }
+                theme={ railscast }
             />
         </section>
     );

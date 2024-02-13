@@ -1,13 +1,17 @@
+:root { --sbsider-bg: #f7f7f7 }
+.dark { --sbsider-bg: var( --background-color ) }
 .site-body {
     display: flex;
     padding: 0 0.5rem;
 }
 .site-body main { padding-left: 1rem }
 .site-body-sider {
+    background: var( --sbsider-bg );
     border: none;
-    border-right: 1px solid var( --ash );
+    border-right: 1px solid var( --border-color );
     padding: 0.5rem;
 }
+.site-body-sider.closed { display: none }
 .site-body .site-tags {
     justify-content: flex-end;
     margin-top: 5px;

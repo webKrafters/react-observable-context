@@ -1,11 +1,21 @@
 :root {
     --ash: #ccc;
+    --blackie: #222;
     --blue: #0090ff;
     --charcoal: #444;
     --gray: #888;
     --skye: #f0faff;
     --white: #fff;
     --yellow: #da4;
+    --background-color: var( --white );
+    --border-color: var( --ash );
+    --color: var( --blackie );
+}
+
+.dark {
+    --background-color: var( --blackie );
+    --border-color: var( --charcoal );
+    --color: var( --white );
 }
 
 a {
@@ -14,11 +24,25 @@ a {
 }
 a:hover { color: #0090ffbb }
 body {
+    background-color: var( --background-color );
+    color: var( --color );
     margin: 0;
     min-width: 532px;
+    overflow-x: hidden;
+}
+body * {
+    background-color: inherit;
+    color: inherit;
 }
 body h1 { font-size: 2.5em }
 body h2 { font-size: 2em }
 body h3 { font-size: 1.5em }
 body h4 { font-size: 1.25em }
 body h4 { font-size: 1.125em }
+body h1, body h2, body h3, body h4, body h5 { margin: 1rem 0 }
+
+.vertical-top { vertical-align: top }
+
+.top-barred {
+    border-top: 1px solid var( --ash );
+}
