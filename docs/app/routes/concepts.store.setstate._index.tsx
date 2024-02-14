@@ -60,8 +60,8 @@ export default function ConceptStoreSetState() {
                     New updates are merged into state by default. 
                     So only supply the exact changes to be merged <strong><i>{ '(' }i.e. do not spread the new state changes into the current state as is commonly done in React development{ ')' }</i></strong>. 
                     And to overwrite a slice of state, use the <Link to="/concepts/store/setstate/tags">tag</Link> command.<br />
-                    <WarningIcon /> <strong><i>Do this:</i></strong> <code>setState(&#10100;stateKey0: changes0&10101;);</code><br />
-                    <WarningIcon /> <strong><i>Not this:</i></strong> <code>setState(&#10100;...state, stateKey0: &10100;...state.stateKey0, ...changes0&10101;&10101;);</code><br />
+                    <WarningIcon /> <strong><i>Do this:</i></strong> <code>setState(&#10100;stateKey0: changes0&#10101;);</code><br />
+                    <WarningIcon /> <strong><i>Not this:</i></strong> <code>setState(&#10100;...state, stateKey0: &#10100;...state.stateKey0, ...changes0&#10101;&#10101;);</code><br />
                 </div>
                 <h3 id="batched-update">Batched Update</h3>
                 <div>

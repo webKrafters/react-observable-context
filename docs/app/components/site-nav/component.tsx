@@ -19,6 +19,7 @@ const Component : React.FC = () => (
 		<NavLinkIndent1 to="/getting-started#provider-usage">Setting up the Provider</NavLinkIndent1>
 		<NavLinkIndent1 to="/getting-started#connect-usage">Consuming context { '(' }hoc method{ ')' }</NavLinkIndent1>
 		<NavLinkIndent1 to="/getting-started#usecontext-usage">Consuming context { '(' }hook with memo method{ ')' }</NavLinkIndent1>
+		<NavLink to="/external-access">External Access</NavLink>
 		<NavLink className="group-link" to="/api">API</NavLink>
 		<NavLinkIndent1 to="/api#connect">Connect HoC</NavLinkIndent1>
 		<NavLinkIndent1 to="/api#create-context">CreateContext Function</NavLinkIndent1>

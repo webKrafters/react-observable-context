@@ -1,0 +1,11 @@
+.site-faqs {
+    margin-left: 1rem;
+    min-width: 10rem;
+    padding: 2rem 1rem;
+}
+.site-faqs > * {
+    color: var( --color );
+    display: block;
+    line-height: 1.5;
+    margin: 0.5rem auto;
+}

@@ -1,8 +1,10 @@
 import { forwardRef, useEffect, useRef } from 'react';
 import { Outlet } from '@remix-run/react';
 
-import SiteTags from '../site-tags';
+
+import SiteFaqs from '../site-faqs';
 import SiteNav from '../site-nav';
+import SiteTags from '../site-tags';
 
 import './style.css';
 
@@ -49,6 +51,7 @@ const Component : React.FC<BodyProps> = ({ isSiderCollapsed = false, onSiderVisi
                 <SiteTags />
                 <Outlet />
             </main>
+            <SiteFaqs />
         </section>
     );
 };
