@@ -1,4 +1,10 @@
 .index-layout {
+    display: flex;
+    flex-direction: column;
     font-family: system-ui, sans-serif;
-    line-height: 1.8
+    line-height: 1.8;
+    min-height: 100vh;
 }
+.index-layout > .site-heading { flex: 0 0 auto }
+.index-layout > .site-body { flex: 1 0 auto }
+.index-layout > .site-footinging { flex: 0 1 auto }

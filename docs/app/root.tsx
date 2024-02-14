@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useRef, useState, useLayoutEffect } from 'react';
 
 import { Links, Meta, Scripts, ScrollRestoration } from '@remix-run/react';
 
@@ -9,20 +9,13 @@ import IndexLayout from './layouts/index';
 import './root.css';
 
 export default function App() {
-  let [ _isDarkMode ] = useState<boolean>();
-  const [ classProps, setClassProps ] = useState(() => {
-    _isDarkMode = typeof window !== 'undefined'
-      ? localStorage?.getItem( DARKMODE_LOCALSTORAGE_KEY ) === 'true'
-      : false;
-    return _isDarkMode ? { className: 'dark' } : {};
-  });
-  const updateDmClass = useCallback(( isDarkMode: boolean ) => {
-    _isDarkMode = isDarkMode;
-    setClassProps( p => isDarkMode
-      ? `className` in p ? p : { className: 'dark' }
-      : `className` in p ? {} : p
+  const bodyRef = useRef<Element>();
+  const [ isDarkMode, setDarkModeFlag ] = useState(() => (
+    typeof window === 'undefined' ? false : (
+      window.localStorage?.getItem( DARKMODE_LOCALSTORAGE_KEY ) === 'true'
     )
-  }, []);
+  ));
+  useLayoutEffect(() => { bodyRef.current?.classList?.[ isDarkMode ? 'add' : 'remove' ]( 'dark' ) }, [ isDarkMode ]);
   return (
     <html lang="en">
       <head>
@@ -35,8 +28,8 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body { ...classProps }>
-        <IndexLayout defaultDarkModeSetting={ _isDarkMode } onDarkModeChange={ updateDmClass } />
+      <body ref={ bodyRef as React.LegacyRef<HTMLBodyElement> }>
+        <IndexLayout defaultDarkModeSetting={ isDarkMode } onDarkModeChange={ setDarkModeFlag } />
         <ScrollRestoration />
         <Scripts />
       </body>

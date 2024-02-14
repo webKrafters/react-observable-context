@@ -50,7 +50,7 @@
     padding-left: 0.5rem;
 }
 .site-heading .text > :last-child > a { color: var( --blue ) }
-@media ( min-width: 1024px ) { 
+@media ( min-width: 992px ) { 
     .site-heading .sider-toggle-btn { display: none }
 }
 @media ( max-width: 835px ) {

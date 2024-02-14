@@ -24,7 +24,7 @@ serverOnly$((() => {
 })());
 
 const selectCurrentIcon = ( isDarkMode: boolean ) => isDarkMode
-    ? ( <MoonFilledIcon style={{ color: '#fff', fontSize: '1.35rem' }} /> )
+    ? ( <MoonFilledIcon style={{ color: '#fff', fontSize: '1.35rem' }} suppressHydrationWarning /> )
     : ( <SunFilledIcon style={{ color: '#fb8', fontSize: '2rem' }} /> );
 
 const Component : React.FC<{
@@ -37,23 +37,14 @@ const Component : React.FC<{
         cursor: 'pointer',
         marginLeft: '2rem'
     }));
+
     const [ isDark, setModeFlag ] = useState(() => {
-        if( typeof defaultValue !== 'undefined' ) {
-            return defaultValue;
-        }
-        if( typeof window === 'undefined' ) {
-            onChange?.( true );
-            return true;
-        }
+        if( typeof defaultValue !== 'undefined' ) { return defaultValue }
+        if( typeof window === 'undefined' ) { return true }
         const mode = window.localStorage.getItem( DARKMODE_LOCALSTORAGE_KEY );
         const flag = mode === 'true';
-        onChange?.( flag );
         return flag;
     });
-
-    const [ currentIcon, setCurrentIcon ] = useState(() => selectCurrentIcon( isDark ));
-    
-    useEffect(() => { setCurrentIcon( selectCurrentIcon( isDark ) ) }, [ isDark ]);
 
     const onClick = useCallback(() => setModeFlag( f => {
         const flag = !f;
@@ -62,9 +53,14 @@ const Component : React.FC<{
             DARKMODE_LOCALSTORAGE_KEY,
             !flag ? 'false' : 'true'
         );
-        onChange?.( flag );
         return flag;
     } ), [ onChange ]);
+
+    const [ currentIcon, setCurrentIcon ] = useState(() => selectCurrentIcon( isDark ));
+    
+    useEffect(() => { setCurrentIcon( selectCurrentIcon( isDark ) ) }, [ isDark ]);
+
+    useEffect(() => onChange?.( isDark ), [ isDark ]);
 
     return (
         <Button

@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useRef } from 'react';
+import { forwardRef, useCallback, useEffect, useRef } from 'react';
 import { Outlet } from '@remix-run/react';
 
 
@@ -8,8 +8,6 @@ import SiteTags from '../site-tags';
 
 import './style.css';
 
-interface ElementWithCSS extends Element { css: { display: string } }
-
 declare interface BodyProps {
     children?: React.ReactNode,
     isSiderCollapsed?: boolean,
@@ -18,7 +16,7 @@ declare interface BodyProps {
 
 const Sider : React.ForwardRefExoticComponent<
     React.PropsWithoutRef<{ isCollapsible?: boolean }> &
-    React.RefAttributes<ElementWithCSS>
+    React.RefAttributes<Element>
 > = forwardRef(({ isCollapsible = true }, ref ) => (
     <section
         className={ `site-body-sider${ isCollapsible ? '' : ' closed' }` }
@@ -31,13 +29,15 @@ const Sider : React.ForwardRefExoticComponent<
 Sider.displayName = 'Site.Body.Sider';
 
 const Component : React.FC<BodyProps> = ({ isSiderCollapsed = false, onSiderVisibilityChange }) => {
-    const siderRef = useRef<ElementWithCSS>( null );
+    const siderRef = useRef<Element>( null );
+    const runToggleAuto = useCallback(() => onSiderVisibilityChange( window.innerWidth <= 991 ), [ onSiderVisibilityChange ]);
+    useEffect( runToggleAuto, [] );
     useEffect(() => {
         let timer : NodeJS.Timeout | void;
         const collapseSider = () => {
             timer && clearTimeout( timer );
             timer = setTimeout(() => {
-                onSiderVisibilityChange?.( siderRef.current?.css?.display === 'none' );
+                runToggleAuto();
                 timer = undefined;
             }, 500 );
         };

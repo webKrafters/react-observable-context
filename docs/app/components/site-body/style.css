@@ -27,9 +27,6 @@
 @media ( max-width: 1399px ) {
     .site-body .site-faqs { display: none }
 }
-@media ( max-width: 991px ) {
-    .site-body-sider { display: none }
-}
 @media ( min-width: 836px ) {
     .site-body .site-tags { display: none }
 }
