@@ -4,6 +4,7 @@
     --blue: #0090ff;
     --charcoal: #444;
     --gray: #888;
+    --midnight: #22222f;
     --skye: #f0faff;
     --white: #fff;
     --yellow: #da4;
@@ -44,5 +45,5 @@ body h1, body h2, body h3, body h4, body h5 { margin: 1rem 0 }
 .vertical-top { vertical-align: top }
 
 .top-barred {
-    border-top: 1px solid var( --ash );
+    border-top: 1px solid var( --border-color );
 }

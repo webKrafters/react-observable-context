@@ -1,5 +1,5 @@
 :root { --shbg: var( --skye ) }
-.dark { --shbg: var( --background-color ) }
+.dark { --shbg: var( --midnight ) }
 
 .site-heading {
     background: var( --shbg );

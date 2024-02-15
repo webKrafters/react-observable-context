@@ -1,21 +1,38 @@
-import { useRef, useState, useLayoutEffect } from 'react';
+import { useState } from 'react';
 
-import { Links, Meta, Scripts, ScrollRestoration } from '@remix-run/react';
+import parseCookies from 'set-cookie-parser';
+
+import { json } from '@remix-run/node';
+
+import type { AppLoadContext, LoaderFunctionArgs, TypedResponse } from '@remix-run/node';
+
+import { Links, Meta, Scripts, ScrollRestoration, useRouteLoaderData } from '@remix-run/react';
 
 import { DARKMODE_LOCALSTORAGE_KEY } from './constants';
+
+import storage from './util/universal-storage';
 
 import IndexLayout from './layouts/index';
 
 import './root.css';
 
+export interface RootContext extends AppLoadContext {
+  cookies: {[key: string]: string}
+};
+
+export const loader = async ({ context, request } : LoaderFunctionArgs ) => {
+  context.cookies = parseCookies( request.headers.get( 'Cookie' ) as string )?.[ 0 ];
+  return json( context ) as TypedResponse<RootContext>;
+}
+
+export const useLoaderData = () => useRouteLoaderData<typeof loader>( 'root' );
+
 export default function App() {
-  const bodyRef = useRef<Element>();
-  const [ isDarkMode, setDarkModeFlag ] = useState(() => (
-    typeof window === 'undefined' ? false : (
-      window.localStorage?.getItem( DARKMODE_LOCALSTORAGE_KEY ) === 'true'
-    )
-  ));
-  useLayoutEffect(() => { bodyRef.current?.classList?.[ isDarkMode ? 'add' : 'remove' ]( 'dark' ) }, [ isDarkMode ]);
+  const context = useLoaderData();
+  const [ isDarkMode, setDarkModeFlag ] = useState(() => {
+    const f = storage.getItem( DARKMODE_LOCALSTORAGE_KEY, context );
+    return typeof f === 'undefined' ? false : f === 'true';
+  });
   return (
     <html lang="en">
       <head>
@@ -28,7 +45,7 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body ref={ bodyRef as React.LegacyRef<HTMLBodyElement> }>
+      <body className={ isDarkMode ? 'dark' : '' }>
         <IndexLayout defaultDarkModeSetting={ isDarkMode } onDarkModeChange={ setDarkModeFlag } />
         <ScrollRestoration />
         <Scripts />

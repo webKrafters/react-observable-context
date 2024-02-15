@@ -6,14 +6,17 @@ import MoonFilled from '@ant-design/icons/MoonFilled';
 import SunFilled from '@ant-design/icons/SunFilled';
 
 import { Button } from 'antd';
+
 import { DARKMODE_LOCALSTORAGE_KEY } from '~/constants';
 
-let localStorage : Storage|undefined;
+import storage from '~/util/universal-storage';
+
+import { useLoaderData as useRootLoaderData } from '~/root';
+
 let MoonFilledIcon : typeof MoonFilled;
 let SunFilledIcon : typeof SunFilled;
 
 clientOnly$((() => {
-    localStorage = window?.localStorage;
     MoonFilledIcon = MoonFilled;
     SunFilledIcon = SunFilled;
 })());
@@ -38,10 +41,12 @@ const Component : React.FC<{
         marginLeft: '2rem'
     }));
 
+    const loadContext = useRootLoaderData();
+
     const [ isDark, setModeFlag ] = useState(() => {
         if( typeof defaultValue !== 'undefined' ) { return defaultValue }
         if( typeof window === 'undefined' ) { return true }
-        const mode = window.localStorage.getItem( DARKMODE_LOCALSTORAGE_KEY );
+        const mode = storage.getItem( DARKMODE_LOCALSTORAGE_KEY, loadContext );
         const flag = mode === 'true';
         return flag;
     });
@@ -49,10 +54,7 @@ const Component : React.FC<{
     const onClick = useCallback(() => setModeFlag( f => {
         const flag = !f;
         typeof window !== 'undefined' &&
-        window.localStorage?.setItem(
-            DARKMODE_LOCALSTORAGE_KEY,
-            !flag ? 'false' : 'true'
-        );
+        storage.setItem( DARKMODE_LOCALSTORAGE_KEY, `${ flag }` );
         return flag;
     } ), [ onChange ]);
 

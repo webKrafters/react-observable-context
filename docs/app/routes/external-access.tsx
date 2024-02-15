@@ -99,7 +99,7 @@ export default function GettingStarted() {
         <article className="external-access">
             <h1>External Access</h1>
             <div>Normally, the context must be rendered within the component tree in order to make its store accessible - any attempt to the contrary leads to a <code>UsageError</code>. However, once rendered, its store becomes accessible both within its context component tree and externally.</div>
-            <h3>How do I access the store externally</h3>
+            <h3>How do I access the store externally?</h3>
             <div>This is done by obtaining a reference to the Provider component. Once obtained, its <code>current</code> property { '(' }i.e. which holds the referenced store object{ ')' } can be passed around to other parts of the application. When the reference is no longer needed, be sure to unsubscribe all observers attached through this store reference during this phase.</div>
             <div>
                 For external access to the context, <strong>4</strong> store methods have been exposed. Namely:
