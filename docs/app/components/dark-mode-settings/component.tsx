@@ -13,6 +13,8 @@ import storage from '~/util/universal-storage';
 
 import { useLoaderData as useRootLoaderData } from '~/root';
 
+import './style.css';
+
 let MoonFilledIcon : typeof MoonFilled;
 let SunFilledIcon : typeof SunFilled;
 
@@ -34,12 +36,6 @@ const Component : React.FC<{
     defaultValue?: boolean,
     onChange?: (isDarkMode: boolean) => void
 }> = ({ defaultValue, onChange }) => {
-    const [ BTN_STYLE ] = useState(() => ({
-        background: 'transparent',
-        border: 'none',
-        cursor: 'pointer',
-        marginLeft: '2rem'
-    }));
 
     const loadContext = useRootLoaderData();
 
@@ -66,9 +62,10 @@ const Component : React.FC<{
 
     return (
         <Button
+            className="dark-mode-settings"
             icon={ currentIcon }
             onClick={ onClick }
-            style={ BTN_STYLE }
+            shape="circle"
         />
     );
   };

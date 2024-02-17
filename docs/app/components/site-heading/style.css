@@ -27,7 +27,7 @@
 .site-heading .sider-toggle-btn,
 .site-heading .branding,
 .site-heading .logo-link,
-.site-heading .logo { height: 4rem }
+.site-heading .logo { height: var( --top-height ) }
 .site-heading .branding { width: 32rem }
 .site-heading .logo { width: 8rem }
 .site-heading .text {

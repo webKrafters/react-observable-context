@@ -7,10 +7,9 @@
 .site-body main {
     flex: 1 1 40rem;
     max-height: 66rem;
-    /* max-width: 40rem; */
     min-width: 20rem;
     overflow-y: auto;
-    padding: 0 1rem;
+    padding: 0 1rem 2rem;
 }
 .site-body-sider {
     background: var( --sbsider-bg );

@@ -7,6 +7,8 @@ import { clientOnly$, serverOnly$ } from 'vite-env-only';
 import CloseOutlined from '@ant-design/icons/CloseOutlined';
 import MenuOutlined from '@ant-design/icons/MenuOutlined';
 
+import Anchor from '../anchor';
+
 import DarkModeSetting from '../dark-mode-settings';
 
 import SiteTags from '../site-tags';
@@ -62,8 +64,26 @@ const Component : React.FC<Props> = ({
           <img alt="Logo" className="logo" src="/img/logo.png" />
         </Link>
         <div className="text">
-          <span className="brand"><a href="https://github.com/webKrafters/eagleeye" target="_blank" rel="noopener noreferrer">Eagle Eye</a></span>
-          <span className="name"><a href="https://www.npmjs.com/package/@webkrafters/react-observable-context" target="_blank" rel="noopener noreferrer">React-Observable-Context</a></span>
+          <span className="brand">
+            <Anchor
+              hideIcon
+              href="https://github.com/webKrafters/eagleeye"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Eagle Eye
+            </Anchor>
+          </span>
+          <span className="name">
+            <Anchor
+              hideIcon
+              href="https://www.npmjs.com/package/@webkrafters/react-observable-context"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              React-Observable-Context
+            </Anchor>
+          </span>
         </div>
       </div>
       <SiteTags />

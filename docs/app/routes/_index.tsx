@@ -1,6 +1,8 @@
 import { Link } from '@remix-run/react';
 import type { MetaFunction } from '@remix-run/node';
 
+import Anchor from '~/components/anchor';
+
 export const meta: MetaFunction = () => [{
   title: 'eagleeyejs'
 }, {
@@ -14,13 +16,29 @@ export default function Index() {
       <h1>Welcome to Eagle Eye JS!</h1>
       <p>An intuitive reactive context based React state manager. </p>
       <div>
-        <label>Official: <a href="https://www.npmjs.com/package/@webkrafters/react-observable-context" rel="noopener noreferrer" target="_blang">React-Observable-Context</a></label>
+        <label>Official:{ ' ' }
+          <Anchor
+            href="https://www.npmjs.com/package/@webkrafters/react-observable-context"
+            rel="noopener noreferrer"
+            target="_blang"
+          >
+            React-Observable-Context
+          </Anchor>
+        </label>
       </div>
       <div>
         <label>NPM Install: <span>npm install --save @webkrafters/react-observable-context</span></label>
       </div>
       <div>
-        <label>Play with a demo app here on: <a href="https://codesandbox.io/s/github/webKrafters/react-observable-context-app" rel="noopener noreferrer" target="_blank">Code Sandbox</a></label>
+        <label>Play with a demo app here on:{ ' ' }
+          <Anchor
+            href="https://codesandbox.io/s/github/webKrafters/react-observable-context-app"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Code Sandbox
+          </Anchor>
+        </label>
       </div>
       <div>
         <label>License: <span>MIT</span></label>

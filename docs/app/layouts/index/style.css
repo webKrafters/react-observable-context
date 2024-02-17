@@ -5,6 +5,14 @@
     line-height: 1.8;
     min-height: 100vh;
 }
-.index-layout > .site-heading { flex: 0 0 auto }
-.index-layout > .site-body { flex: 1 0 auto }
+.index-layout > .site-heading {
+    flex: 0 0 auto;
+    position: fixed;
+    width: 100%;
+    z-index: 10;
+}
+.index-layout > .site-body {
+    flex: 1 0 auto;
+    margin-top: var( --top-height );
+}
 .index-layout > .site-footing { flex: 0 1 auto }

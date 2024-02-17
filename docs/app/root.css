@@ -11,6 +11,7 @@
     --background-color: var( --white );
     --border-color: var( --ash );
     --color: var( --blackie );
+    --top-height: 4rem;
 }
 
 .dark {

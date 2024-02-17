@@ -1,5 +1,5 @@
 :root { --bold-color: var( --charcoal ) }
-.dark { --bold-color: var( --gray ) }
+.dark { --bold-color: var( --ash ) }
 .site-nav { width: 376px }
 .site-nav > * {
     color: var( --gray );

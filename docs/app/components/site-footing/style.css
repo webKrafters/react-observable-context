@@ -2,12 +2,18 @@
     background-color: var( --blackie );
     border: none;
     border-top: 2px solid var( --yellow );
-    color: var( --white );
-    display: flex;
+    color: var( --gray );
     padding: 0.5rem;
 }
-.site-footing > :first-child { margin-right: 0.25rem }
-.site-footing > :last-child {
+.site-footing a { color: var( --gray ) }
+.site-footing > * { display: flex }
+.site-footing > .affiliate-columns {
+    justify-content: flex-end;
+    padding: 1rem 3rem;
+}
+.site-footing > .affiliate-columns > * { width: calc( 100% / 3 ) }
+.site-footing > .ip > :first-child { margin-right: 0.25rem }
+.site-footing > .ip > :last-child {
     justify-content: end;
     text-align: right;
 }

@@ -1,11 +1,11 @@
 import { NavLink } from '@remix-run/react';
 
+import Anchor from '../anchor';
+
 import './style.css';
 
 const Component : React.FC = () => (
     <nav className="site-faqs">
-        <a href="https://www.npmjs.com/package/@webkrafters/react-observable-context" target="_blank" rel="noopener noreferrer">NPM</a>
-        <a href="https://github.com/webKrafters/eagleeye" target="_blank" rel="noopener noreferrer">GitHub</a>
         <NavLink to="/getting-started">Installation</NavLink>
         <NavLink to="/external-access">Can I observe this state externally?</NavLink>
         <NavLink to="/concepts/store/setstate">Is true that the state can never be mutated?</NavLink>
