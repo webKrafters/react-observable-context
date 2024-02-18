@@ -4,8 +4,7 @@
     border-radius: 0;
     position: relative;
 }
-.code-block .gZQBcu,
-.code-block .juZzY {
+.code-block .sc-beySPh {
     background: transparent;
     border: none;
     color: var( --charcoal );
@@ -16,7 +15,7 @@
     top: 0.5rem;
 }
 .code-block .kEhKfQ:hover,
-.code-block .juZzY:hover {
+.code-block .sc-beySPh:hover {
     color: var( --blue );
     opacity: 1;
 }
