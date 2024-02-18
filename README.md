@@ -25,7 +25,7 @@
 <ul>
 	<li> Auto-immutable update-friendly context. See <a href="https://eagleeyejs.org/concepts/store/setstate"><code>store.setState</code></a>.</li>
 	<li> A context bearing an observable consumer <a href="https://eagleeyejs.org/concepts/store">store</a>.</li>
-	<li> Recognizes <b>negative array indexing</b>. Please see <a href="https://eagleeyejs.org/concepts/property-path">Property Path</a> and <code>store.setState</code> <a href="https://eagleeyejs.org/concepts/store/setstate/indexing">Indexing</a>.</li>
+	<li> Recognizes <b>negative array indexing</b>. Please see <a href="https://eagleeyejs.org/concepts/property-path">Property Path</a> and <code>store.setState</code> <a href="https://eagleeyejs.org/concepts/store/setstate#indexing">Indexing</a>.</li>
 	<li> Only re-renders subscribing components (<a href="https://eagleeyejs.org/concepts/client">clients</a>) on context state changes.</li>
 	<li> Subscribing component decides which context state properties' changes to trigger its update.</li>
 </ul>
@@ -43,7 +43,7 @@ If sandbox fails to load app, please refresh dependencies on its lower left.
 npm i -S @webkrafters/react-observable-context\
 npm install --save @webkrafters/react-observable-context
 
-May also see <b><a href="https://eagleeyejs.org//history/features">What's Changed?</a></b>.
+May also see <b><a href="https://eagleeyejs.org/history/features">What's Changed?</a></b>
 
 ## Please see full documentation here:
 **[eagleeyejs.org](https://eagleeyejs.org)**
