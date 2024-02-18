@@ -43,7 +43,7 @@ If sandbox fails to load app, please refresh dependencies on its lower left.
 npm i -S @webkrafters/react-observable-context\
 npm install --save @webkrafters/react-observable-context
 
-May also see <b><a href="https://eagleeyejs.org//history/features">What's Changed?</a></b>.
+May also see <b><a href="https://eagleeyejs.org/history/features">What's Changed?</a></b>.
 
 ## Please see full documentation here:
 **[eagleeyejs.org](https://eagleeyejs.org)**
