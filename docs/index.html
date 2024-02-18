@@ -12,7 +12,7 @@
     <script type="application/javascript">
       let div = getElementById( 'countdown' );
       div.style.display = "block";
-      div = div.querySelector( '#timer' ):
+      div = div.querySelector( ':scope > #timer' ):
       var count = 5;
       setTimeout( function() {
         div.innerText = count;
