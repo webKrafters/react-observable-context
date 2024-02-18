@@ -23,10 +23,10 @@
 # React-Observable-Context [Eagle Eye]
 
 <ul>
-	<li> Auto-immutable update-friendly context. See <a href="https://eagleeye.js.org/concepts/store/setstate"><code>store.setState</code></a>.</li>
-	<li> A context bearing an observable consumer <a href="https://eagleeye.js.org/concepts/store">store</a>.</li>
-	<li> Recognizes <b>negative array indexing</b>. Please see <a href="https://eagleeye.js.org/concepts/property-path">Property Path</a> and <code>store.setState</code> <a href="https://eagleeye.js.org/concepts/store/setstate/indexing">Indexing</a>.</li>
-	<li> Only re-renders subscribing components (<a href="https://eagleeye.js.org/concepts/client">clients</a>) on context state changes.</li>
+	<li> Auto-immutable update-friendly context. See <a href="https://eagleeyejs.org/concepts/store/setstate"><code>store.setState</code></a>.</li>
+	<li> A context bearing an observable consumer <a href="https://eagleeyejs.org/concepts/store">store</a>.</li>
+	<li> Recognizes <b>negative array indexing</b>. Please see <a href="https://eagleeyejs.org/concepts/property-path">Property Path</a> and <code>store.setState</code> <a href="https://eagleeyejs.org/concepts/store/setstate/indexing">Indexing</a>.</li>
+	<li> Only re-renders subscribing components (<a href="https://eagleeyejs.org/concepts/client">clients</a>) on context state changes.</li>
 	<li> Subscribing component decides which context state properties' changes to trigger its update.</li>
 </ul>
 
@@ -34,7 +34,7 @@
 
 **Moniker:** Eagle Eye
 
-**Usage:** Please see <b><a href="https://eagleeye.js.org/getting-started">Getting Started</a></b>.
+**Usage:** Please see <b><a href="https://eagleeyejs.org/getting-started">Getting Started</a></b>.
 
 **Demo:** [Play with the app on codesandbox](https://codesandbox.io/s/github/webKrafters/react-observable-context-app)\
 If sandbox fails to load app, please refresh dependencies on its lower left.
@@ -43,10 +43,10 @@ If sandbox fails to load app, please refresh dependencies on its lower left.
 npm i -S @webkrafters/react-observable-context\
 npm install --save @webkrafters/react-observable-context
 
-May also see <b><a href="https://eagleeye.js.org/changes">What's Changed?</a></b>.
+May also see <b><a href="https://eagleeyejs.org//history/features">What's Changed?</a></b>.
 
 ## Please see full documentation here:
-**[eagleeye.js.org](https://eagleeye.js.org)** [This site is currently under construction. Please visit [https://www.npmjs.com/package/@webkrafters/react-observable-context](https://www.npmjs.com/package/@webkrafters/react-observable-context) instead.]
+**[eagleeyejs.org](https://eagleeyejs.org)**
 
 # License
 
