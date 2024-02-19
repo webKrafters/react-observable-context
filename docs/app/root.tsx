@@ -46,7 +46,10 @@ export default function App() {
         <Links />
       </head>
       <body className={ isDarkMode ? 'dark' : '' }>
-        <IndexLayout defaultDarkModeSetting={ isDarkMode } onDarkModeChange={ setDarkModeFlag } />
+        <IndexLayout
+          defaultDarkModeSetting={ isDarkMode }
+          onDarkModeChange={ setDarkModeFlag }
+        />
         <ScrollRestoration />
         <Scripts />
       </body>

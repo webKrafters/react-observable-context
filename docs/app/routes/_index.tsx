@@ -20,7 +20,7 @@ export default function Index() {
           <Anchor
             href="https://www.npmjs.com/package/@webkrafters/react-observable-context"
             rel="noopener noreferrer"
-            target="_blang"
+            target="_blank"
           >
             React-Observable-Context
           </Anchor>

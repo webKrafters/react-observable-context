@@ -37,7 +37,6 @@
     justify-content: center;
     width: 23rem;
 }
-/* .site-heading .text > * > * { text-decoration: none } */
 .site-heading .text > :first-child {
     font-size: 1.45rem;
     font-weight: 800;
@@ -50,6 +49,7 @@
     padding-left: 0.5rem;
 }
 .site-heading .text > :last-child > a { color: var( --blue ) }
+.site-heading .dark-mode-settings { margin-left: 2rem }
 @media ( min-width: 992px ) { 
     .site-heading .sider-toggle-btn { display: none }
 }

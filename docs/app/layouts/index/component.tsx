@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react';
 
+import type { Props as DKMProps } from '~/components/dark-mode-settings';
+
 import SiteBody from '~/components/site-body';
 import SiteFooting from '~/components/site-footing';
 import SiteHeading from '~/components/site-heading';
@@ -7,8 +9,8 @@ import SiteHeading from '~/components/site-heading';
 import './style.css';
 
 const Layout : React.FC<{
-  defaultDarkModeSetting?: boolean,
-  onDarkModeChange?: (isDarkMode: boolean) => void
+  defaultDarkModeSetting: DKMProps["defaultValue"],
+  onDarkModeChange: DKMProps["onChange"]
 }> = ({ defaultDarkModeSetting, onDarkModeChange }) => {
   const [ isSiderCollapsed, setCollapsedSiderFlag ] = useState( false );
   const toggleSiderSwitch = useCallback(() => setCollapsedSiderFlag( f => !f ), []);
@@ -21,7 +23,10 @@ const Layout : React.FC<{
         onDarkModeChange={ onDarkModeChange }
       />
       <SiteBody { ...{ isSiderCollapsed, onSiderVisibilityChange: setCollapsedSiderFlag  } } />
-      <SiteFooting />
+      <SiteFooting
+        isDarkMode={ defaultDarkModeSetting }
+        onDarkModeChange={ onDarkModeChange }
+      />
     </div>
   );
 };

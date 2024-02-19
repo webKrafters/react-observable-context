@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react';
 
 import { clientOnly$, serverOnly$ } from 'vite-env-only';
 
@@ -15,6 +15,11 @@ import { useLoaderData as useRootLoaderData } from '~/root';
 
 import './style.css';
 
+export interface Props {
+    defaultValue?: boolean;
+    onChange?: (isDarkMode: boolean) => void;
+};
+
 let MoonFilledIcon : typeof MoonFilled;
 let SunFilledIcon : typeof SunFilled;
 
@@ -29,13 +34,10 @@ serverOnly$((() => {
 })());
 
 const selectCurrentIcon = ( isDarkMode: boolean ) => isDarkMode
-    ? ( <MoonFilledIcon style={{ color: '#fff', fontSize: '1.35rem' }} suppressHydrationWarning /> )
-    : ( <SunFilledIcon style={{ color: '#fb8', fontSize: '2rem' }} /> );
+    ? ( <MoonFilledIcon suppressHydrationWarning /> )
+    : ( <SunFilledIcon /> );
 
-const Component : React.FC<{
-    defaultValue?: boolean,
-    onChange?: (isDarkMode: boolean) => void
-}> = ({ defaultValue, onChange }) => {
+const Component = forwardRef<HTMLElement, Props>(({ defaultValue, onChange }, ref ) => {
 
     const loadContext = useRootLoaderData();
 
@@ -56,19 +58,27 @@ const Component : React.FC<{
 
     const [ currentIcon, setCurrentIcon ] = useState(() => selectCurrentIcon( isDark ));
     
-    useEffect(() => { setCurrentIcon( selectCurrentIcon( isDark ) ) }, [ isDark ]);
+    useEffect(() => {
+        setCurrentIcon( selectCurrentIcon( isDark ) );
+        onChange?.( isDark );
+    }, [ isDark ]);
 
-    useEffect(() => onChange?.( isDark ), [ isDark ]);
+    useEffect(() => {
+        defaultValue !== isDark && 
+        typeof defaultValue !== 'undefined' &&
+        setModeFlag( defaultValue );
+    }, [ defaultValue ]);
 
     return (
         <Button
             className="dark-mode-settings"
             icon={ currentIcon }
             onClick={ onClick }
+            ref={ ref }
             shape="circle"
         />
     );
-  };
-  Component.displayName = 'DarkModeSetting';
+} );
+Component.displayName = 'DarkModeSetting';
 
-  export default Component;
+export default Component;

@@ -10,6 +10,7 @@ import MenuOutlined from '@ant-design/icons/MenuOutlined';
 import Anchor from '../anchor';
 
 import DarkModeSetting from '../dark-mode-settings';
+import type { Props as DKMProps } from '../dark-mode-settings';
 
 import SiteTags from '../site-tags';
 
@@ -31,10 +32,10 @@ serverOnly$((() => {
 })());
 
 interface Props {
-  defaultDarkModeSetting?: boolean,   
+  defaultDarkModeSetting?: DKMProps["defaultValue"],   
   isSiderCollapsed?: boolean,
   onToggleSider?: VoidFunction,
-  onDarkModeChange?: (isDarkMode: boolean) => void
+  onDarkModeChange?: DKMProps["onChange"]
 };
 
 const Component : React.FC<Props> = ({
