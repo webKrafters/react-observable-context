@@ -88,7 +88,16 @@ const Component : React.FC<Props> = props => {
             </div>
             <div className="ip">
                 <div>
-                    &copy;2024{ year !== 2024 && `-${ year }` } webKrafters, Incorporated.
+                    &copy;2024{ year !== 2024 && `-${ year }` }
+                    { ' ' }
+                    <img
+                        alt="wk Logo"
+                        height={ 10 }
+                        src="/img/wk-logo.png"
+                        width={ 64 }
+                    />
+                    { ' ' }
+                    webKrafters, Incorporated.
                 </div>
                 <div>All rights reserved.</div>
             </div>
