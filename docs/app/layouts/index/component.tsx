@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react';
 
+import isHandheldWidth from '~/util/is-handheld-portrait';
+
 import type { Props as DKMProps } from '~/components/dark-mode-settings';
 
 import SiteBody from '~/components/site-body';
@@ -12,7 +14,7 @@ const Layout : React.FC<{
   defaultDarkModeSetting: DKMProps["defaultValue"],
   onDarkModeChange: DKMProps["onChange"]
 }> = ({ defaultDarkModeSetting, onDarkModeChange }) => {
-  const [ isSiderCollapsed, setCollapsedSiderFlag ] = useState( false );
+  const [ isSiderCollapsed, setCollapsedSiderFlag ] = useState( isHandheldWidth );
   const toggleSiderSwitch = useCallback(() => setCollapsedSiderFlag( f => !f ), []);
   return (
     <div className="index-layout">
