@@ -1,5 +1,7 @@
-import { forwardRef, useCallback, useEffect, useRef } from 'react';
+import { forwardRef, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Outlet } from '@remix-run/react';
+
+import { clientOnly$, serverOnly$ } from 'vite-env-only';
 
 
 import SiteFaqs from '../site-faqs';
@@ -13,6 +15,11 @@ declare interface BodyProps {
     isSiderCollapsed?: boolean,
     onSiderVisibilityChange: ( isCollapsed: boolean ) => void
 };
+
+interface TargetElement extends EventTarget {
+    tagName: string
+}
+type EventHandler = (this: HTMLElement, ev: MouseEvent) => any
 
 const Sider : React.ForwardRefExoticComponent<
     React.PropsWithoutRef<{ isCollapsible?: boolean }> &
@@ -28,22 +35,39 @@ const Sider : React.ForwardRefExoticComponent<
 
 Sider.displayName = 'Site.Body.Sider';
 
+const BREAKPOINT = 991;
+
 const Component : React.FC<BodyProps> = ({ isSiderCollapsed = false, onSiderVisibilityChange }) => {
     const siderRef = useRef<Element>( null );
-    const runToggleAuto = useCallback(() => onSiderVisibilityChange( window.innerWidth <= 991 ), [ onSiderVisibilityChange ]);
-    useEffect( runToggleAuto, [] );
+    const [ isHandheld, setHandheldFlag ] = (
+        clientOnly$( useState<boolean>( () => window.innerWidth <= BREAKPOINT ) ) ??
+        serverOnly$( useState<boolean>( false ) )
+    ) as [boolean, React.Dispatch<React.SetStateAction<boolean>>];
     useEffect(() => {
         let timer : NodeJS.Timeout | void;
         const collapseSider = () => {
             timer && clearTimeout( timer );
             timer = setTimeout(() => {
-                runToggleAuto();
+                setHandheldFlag( window.innerWidth <= BREAKPOINT );
                 timer = undefined;
             }, 500 );
         };
         window.addEventListener( 'resize', collapseSider );
         return () => window.removeEventListener( 'resize', collapseSider );
-    }, [ onSiderVisibilityChange ]);
+    }, []);
+    useEffect(() => onSiderVisibilityChange( isHandheld ), [ isHandheld ]);
+    clientOnly$(
+        useLayoutEffect(() => {
+            if( !isHandheld ) { return }
+            const notifyOnHandHeldNavigate : EventHandler = e => {
+                ( e.currentTarget as TargetElement ).tagName === 'NAV' &&
+                onSiderVisibilityChange( true )
+            };
+            const siteNav = siderRef.current?.querySelector( ':scope .site-nav' ) as HTMLElement;
+            siteNav.addEventListener( 'click', notifyOnHandHeldNavigate );
+            return () => siteNav.removeEventListener( 'click', notifyOnHandHeldNavigate );
+        }, [ isHandheld, onSiderVisibilityChange ])
+    );
     return (
         <section className="site-body">
             <Sider isCollapsible={ !isSiderCollapsed } ref={ siderRef } />
