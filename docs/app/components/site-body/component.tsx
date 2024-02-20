@@ -24,9 +24,9 @@ const Sider : React.ForwardRefExoticComponent<
     React.PropsWithoutRef<{ isCollapsible?: boolean }> &
     React.RefAttributes<Element>
 > = forwardRef(({ isCollapsible = true }, ref ) => {
-    useLayoutEffect(() => {
+    clientOnly$( useLayoutEffect(() => {
         ( ref as React.RefObject<HTMLElement> ).current?.classList[ isCollapsible ? 'remove' : 'add' ]( 'closed' );
-    }, [ isCollapsible ]);
+    }, [ isCollapsible ]) );
     return (
         <section
             className={ `site-body-sider${ isCollapsible ? '' : ' closed' }` }
@@ -55,18 +55,16 @@ const Component : React.FC<BodyProps> = ({ isSiderCollapsed, onSiderVisibilityCh
         return () => window.removeEventListener( 'resize', collapseSider );
     }, []);
     useEffect(() => onSiderVisibilityChange( isHandheld ), [ isHandheld ]);
-    clientOnly$(
-        useLayoutEffect(() => {
-            if( !isHandheld ) { return }
-            const notifyOnHandHeldNavigate : EventHandler = e => {
-                ( e.currentTarget as TargetElement ).tagName === 'NAV' &&
-                onSiderVisibilityChange( true )
-            };
-            const siteNav = siderRef.current?.querySelector( ':scope .site-nav' ) as HTMLElement;
-            siteNav.addEventListener( 'click', notifyOnHandHeldNavigate );
-            return () => siteNav.removeEventListener( 'click', notifyOnHandHeldNavigate );
-        }, [ isHandheld, onSiderVisibilityChange ])
-    );
+    clientOnly$( useLayoutEffect(() => {
+        if( !isHandheld ) { return }
+        const notifyOnHandHeldNavigate : EventHandler = e => {
+            ( e.currentTarget as TargetElement ).tagName === 'NAV' &&
+            onSiderVisibilityChange( true )
+        };
+        const siteNav = siderRef.current?.querySelector( ':scope .site-nav' ) as HTMLElement;
+        siteNav.addEventListener( 'click', notifyOnHandHeldNavigate );
+        return () => siteNav.removeEventListener( 'click', notifyOnHandHeldNavigate );
+    }, [ isHandheld, onSiderVisibilityChange ]) );
     return (
         <section className="site-body">
             <Sider isCollapsible={ !( isSiderCollapsed ?? isHandheld ) } ref={ siderRef } />
