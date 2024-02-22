@@ -56,3 +56,10 @@
 @media ( max-width: 835px ) {
     .site-heading > .site-tags { display: none }
 }
+@media ( max-width: 524px ) {
+	.site-heading .text {
+    	justify-content: flex-start;
+    	padding-left: 1.5rem;
+	}
+	.site-heading .text > :last-child { display: none }
+}

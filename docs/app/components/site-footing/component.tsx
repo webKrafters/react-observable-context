@@ -29,6 +29,7 @@ const DarkModeLink : React.FC<Props> = ({ isDarkMode, onDarkModeChange }) => {
                 defaultValue={ isDarkMode }
                 onChange={ onDarkModeChange }
                 ref={ dkmRef }
+                reverseIcon
             />
             { ' ' }
             <a onClick={ tripDkmSwitch }>

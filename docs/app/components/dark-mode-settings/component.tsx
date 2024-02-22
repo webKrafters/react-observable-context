@@ -18,6 +18,7 @@ import './style.css';
 export interface Props {
     defaultValue?: boolean;
     onChange?: (isDarkMode: boolean) => void;
+    reverseIcon?: boolean;
 };
 
 let MoonFilledIcon : typeof MoonFilled;
@@ -33,11 +34,13 @@ serverOnly$((() => {
     SunFilledIcon = ( SunFilled as any ).default;
 })());
 
-const selectCurrentIcon = ( isDarkMode: boolean ) => isDarkMode
-    ? ( <MoonFilledIcon suppressHydrationWarning /> )
-    : ( <SunFilledIcon /> );
+const selectCurrentIcon = ( isDarkMode: boolean, reverseIcon: boolean ) => isDarkMode
+    ? reverseIcon ? ( <SunFilledIcon /> ) : ( <MoonFilledIcon suppressHydrationWarning /> )
+    : reverseIcon ? ( <MoonFilledIcon suppressHydrationWarning /> ) : ( <SunFilledIcon /> );
 
-const Component = forwardRef<HTMLElement, Props>(({ defaultValue, onChange }, ref ) => {
+const Component = forwardRef<HTMLElement, Props>(({
+    defaultValue, onChange, reverseIcon = false
+}, ref ) => {
 
     const loadContext = useRootLoaderData();
 
@@ -56,12 +59,12 @@ const Component = forwardRef<HTMLElement, Props>(({ defaultValue, onChange }, re
         return flag;
     } ), [ onChange ]);
 
-    const [ currentIcon, setCurrentIcon ] = useState(() => selectCurrentIcon( isDark ));
+    const [ currentIcon, setCurrentIcon ] = useState(() => selectCurrentIcon( isDark, reverseIcon ));
     
     useEffect(() => {
-        setCurrentIcon( selectCurrentIcon( isDark ) );
+        setCurrentIcon( selectCurrentIcon( isDark, reverseIcon ) );
         onChange?.( isDark );
-    }, [ isDark ]);
+    }, [ isDark, reverseIcon ]);
 
     useEffect(() => {
         defaultValue !== isDark && 
