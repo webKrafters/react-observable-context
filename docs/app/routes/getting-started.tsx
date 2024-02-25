@@ -165,7 +165,9 @@ export default function GettingStarted() {
                 Eagle Eye context and the React.Context API share a similar setup flow. Let us begin by installing the Eagle Eye context package.
             </div>
             <div className="snippet-box">
-                <CodeBlock>{ `npm install @webkrafters/react-observable-context` }</CodeBlock>
+                <CodeBlock isInline>
+                    npm install --save react-eagleeye
+                </CodeBlock>
             </div>
             <div className="snippet-intro" id="create-context-usage">
                 <h3>Creating the context store</h3>
