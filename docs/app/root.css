@@ -54,3 +54,18 @@ body h1, body h2, body h3, body h4, body h5 { margin: 1rem 0 }
         border-color: var( --border-color );
     }
 }
+
+.index-route .installation { margin: 2rem 0 3rem }
+.index-route .installation > * {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+.index-route .installation header {
+    font-variant: small-caps;
+    font-weight: 600;
+    text-decoration: underline;
+}
+.index-route .installation strong {
+    margin-right: 0.5rem;
+    color: var( --blue );
+}

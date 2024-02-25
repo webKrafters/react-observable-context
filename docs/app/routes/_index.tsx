@@ -2,9 +2,10 @@ import { Link } from '@remix-run/react';
 import type { MetaFunction } from '@remix-run/node';
 
 import Anchor from '~/components/anchor';
+import CodeBlock from '~/components/code-block';
 
 export const meta: MetaFunction = () => [{
-  title: 'eagleeyejs'
+  title: 'Eagle Eye JS'
 }, {
   content: 'Welcome to Eagle Eye context!',
   name: 'description'
@@ -12,7 +13,7 @@ export const meta: MetaFunction = () => [{
 
 export default function Index() {
   return (
-    <article>
+    <article className="index-route">
       <h1>Welcome to Eagle Eye JS!</h1>
       <p>An intuitive reactive context based React state manager. </p>
       <div>
@@ -26,8 +27,20 @@ export default function Index() {
           </Anchor>
         </label>
       </div>
-      <div>
-        <label>NPM Install: <span>npm install --save @webkrafters/react-observable-context</span></label>
+      <div className="installation">
+        <header>Installation:</header>
+        <label>
+          <strong>Main:</strong>
+          <CodeBlock isInline>
+            npm install --save react-eagleeye
+          </CodeBlock>
+        </label>
+        <label>
+          <strong>Alternate:</strong>
+          <CodeBlock isInline>
+            npm install --save @webkrafters/react-observable-context
+          </CodeBlock>
+        </label>
       </div>
       <div>
         <label>Play with a demo app here on:{ ' ' }
