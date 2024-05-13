@@ -2,7 +2,7 @@
   "alias": "eagle eye context",
   "author": "Stephen Isienyi <stephen.isienyi@webkrafting.com>",
   "bugs": {
-    "url": "https://github.com/webKrafters/eagleeyejs/issues"
+    "url": "https://github.com/webKrafters/eagleeye.js/issues"
   },
   "contributors": [
     "steveswork <stephen.isienyi@gmail.com> (https://github.com/steveswork)"
@@ -96,7 +96,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/webKrafters/eagleeyejs.git"
+    "url": "git+https://github.com/webKrafters/eagleeye.js.git"
   },
   "scripts": {
     "build": "eslint --fix && rm -rf dist && babel src -d dist --ignore '**/*.test.js' && tsc",
@@ -107,5 +107,5 @@
     "test:watch": "eslint --fix && jest --updateSnapshot --watchAll"
   },
   "types": "dist/main/index.d.ts",
-  "version": "4.7.6"
+  "version": "4.7.7"
 }
