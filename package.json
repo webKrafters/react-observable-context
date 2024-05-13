@@ -2,7 +2,7 @@
   "alias": "eagle eye context",
   "author": "Stephen Isienyi <stephen.isienyi@webkrafting.com>",
   "bugs": {
-    "url": "https://github.com/webKrafters/eagleeye/issues"
+    "url": "https://github.com/webKrafters/eagleeyejs/issues"
   },
   "contributors": [
     "steveswork <stephen.isienyi@gmail.com> (https://github.com/steveswork)"
@@ -48,39 +48,11 @@
     "typescript": "^4.8.2"
   },
   "files": [
-    "package.json",
+    "dist",
     "index.js",
-    "dist/utils/index.js",
-    "dist/utils/index.d.ts",
-    "dist/utils/clonedeep-eligibility-check.js",
-    "dist/utils/clonedeep-eligibility-check.d.ts",
-    "dist/types.d.ts",
-    "dist/model/storage/index.js",
-    "dist/model/storage/index.d.ts",
-    "dist/model/atom/index.js",
-    "dist/model/atom/index.d.ts",
-    "dist/model/accessor-cache/index.js",
-    "dist/model/accessor-cache/index.d.ts",
-    "dist/model/accessor/index.js",
-    "dist/model/accessor/index.d.ts",
-    "dist/main/set-state/tag-functions/index.js",
-    "dist/main/set-state/tag-functions/index.d.ts",
-    "dist/main/set-state/index.js",
-    "dist/main/set-state/index.d.ts",
-    "dist/main/index.js",
-    "dist/main/index.d.ts",
-    "dist/main/hooks/use-store/index.js",
-    "dist/main/hooks/use-store/index.d.ts",
-    "dist/main/hooks/use-state-manager/index.js",
-    "dist/main/hooks/use-state-manager/index.d.ts",
-    "dist/main/hooks/use-render-key-provider/index.js",
-    "dist/main/hooks/use-render-key-provider/index.d.ts",
-    "dist/main/hooks/use-prehooks-ref/index.js",
-    "dist/main/hooks/use-prehooks-ref/index.d.ts",
-    "dist/constants.js",
-    "dist/constants.d.ts"
+    "logo.png"
   ],
-  "homepage": "https://eagleeyejs.org",
+  "homepage": "https://eagleeye.js.org",
   "jest": {
     "collectCoverageFrom": [
       "src/**/*.js"
@@ -124,7 +96,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/webKrafters/eagleeye.git"
+    "url": "git+https://github.com/webKrafters/eagleeyejs.git"
   },
   "scripts": {
     "build": "eslint --fix && rm -rf dist && babel src -d dist --ignore '**/*.test.js' && tsc",
