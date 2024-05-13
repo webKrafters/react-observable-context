@@ -128,7 +128,7 @@
   },
   "scripts": {
     "build": "eslint --fix && rm -rf dist && babel src -d dist --ignore '**/*.test.js' && tsc",
-    "postbuild": "node ./post-builder",
+    "postbuild": "node ./post-builder & node ./procure-logo",
     "test": "eslint --fix && jest --coverage --updateSnapshot",
     "test:clean": "jest --clearCache",
     "test:core": "jest --updateSnapshot",

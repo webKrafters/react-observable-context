@@ -1,15 +1,15 @@
 <p align="center">
-	<img alt="Eagle Eye" height="150px" src="/docs/public/img/logo.png" width="250px" />
+	<img alt="Eagle Eye" height="150px" src="logo.png" width="250px" />
 </p>
 <p align="center">
 	<a href="https://typescriptlang.org">
 		<img alt="TypeScript" src="https://badgen.net/badge/icon/typescript?icon=typescript&label">
 	</a>
-	<a href="https://github.com/webKrafters/react-observable-context/actions">
-		<img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/webKrafters/react-observable-context/test.yml">
+	<a href="https://github.com/webKrafters/eagleeyejs/actions">
+		<img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/webKrafters/eagleeyejs/test.yml">
 	</a>
-	<a href="https://coveralls.io/github/webKrafters/react-observable-context">
-		<img alt="coverage" src="https://img.shields.io/coveralls/github/webKrafters/react-observable-context">
+	<a href="https://coveralls.io/github/webKrafters/eagleeyejs">
+		<img alt="coverage" src="https://img.shields.io/coveralls/github/webKrafters/eagleeyejs">
 	</a>
 	<img alt="NPM" src="https://img.shields.io/npm/l/@webkrafters/react-observable-context">
 	<img alt="Maintenance" src="https://img.shields.io/maintenance/yes/2032">
@@ -17,16 +17,16 @@
 	<a href="https://www.npmjs.com/package/@webKrafters/react-observable-context">
 		<img alt="Downloads" src="https://img.shields.io/npm/dt/@webkrafters/react-observable-context.svg">
 	</a>
-	<img alt="GitHub package.json version" src="https://img.shields.io/github/package-json/v/webKrafters/react-observable-context">
+	<img alt="GitHub package.json version" src="https://img.shields.io/github/package-json/v/webKrafters/eagleeyejs">
 </p>
 
 # React-Observable-Context [Eagle Eye]
 
 <ul>
-	<li> Auto-immutable update-friendly context. See <a href="https://eagleeyejs.org/concepts/store/setstate"><code>store.setState</code></a>.</li>
-	<li> A context bearing an observable consumer <a href="https://eagleeyejs.org/concepts/store">store</a>.</li>
-	<li> Recognizes <b>negative array indexing</b>. Please see <a href="https://eagleeyejs.org/concepts/property-path">Property Path</a> and <code>store.setState</code> <a href="https://eagleeyejs.org/concepts/store/setstate#indexing">Indexing</a>.</li>
-	<li> Only re-renders subscribing components (<a href="https://eagleeyejs.org/concepts/client">clients</a>) on context state changes.</li>
+	<li> Auto-immutable update-friendly context. See <a href="https://eagleeye.js.org/concepts/store/setstate"><code>store.setState</code></a>.</li>
+	<li> A context bearing an observable consumer <a href="https://eagleeye.js.org/concepts/store">store</a>.</li>
+	<li> Recognizes <b>negative array indexing</b>. Please see <a href="https://eagleeye.js.org/concepts/property-path">Property Path</a> and <code>store.setState</code> <a href="https://eagleeye.js.org/concepts/store/setstate#indexing">Indexing</a>.</li>
+	<li> Only re-renders subscribing components (<a href="https://eagleeye.js.org/concepts/client">clients</a>) on context state changes.</li>
 	<li> Subscribing component decides which context state properties' changes to trigger its update.</li>
 </ul>
 
@@ -34,7 +34,7 @@
 
 **Moniker:** Eagle Eye
 
-**Usage:** Please see <b><a href="https://eagleeyejs.org/getting-started">Getting Started</a></b>.
+**Usage:** Please see <b><a href="https://eagleeye.js.org/getting-started">Getting Started</a></b>.
 
 **Demo:** [Play with the app on codesandbox](https://codesandbox.io/s/github/webKrafters/react-observable-context-app)\
 If sandbox fails to load app, please refresh dependencies on its lower left.
@@ -43,10 +43,10 @@ If sandbox fails to load app, please refresh dependencies on its lower left.
 npm i -S react-eagleeye\
 Alternate: npm i -S @webkrafters/react-observable-context
 
-May also see <b><a href="https://eagleeyejs.org/history/features">What's Changed?</a></b>
+May also see <b><a href="https://eagleeye.js.org/history/features">What's Changed?</a></b>
 
 ## Please see full documentation here:
-**[eagleeyejs.org](https://eagleeyejs.org)**
+**[eagleeye.js.org](https://eagleeye.js.org)**
 
 # License
 
