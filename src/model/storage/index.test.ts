@@ -3,7 +3,11 @@ import Storage from '.';
 const data = { name: { first: 'test', last: 'data' }, isTest: true };
 
 describe( 'Storage class', () => {
-	const mockImpls = {};
+	const mockImpls = {} as {
+		getItem: jest.Mock<any, any, any>,
+		removeItem: jest.Mock<any, any, any>,
+		setItem: jest.Mock<any, any, any>
+	};
 	let origWinStorage;
 	beforeAll(() => {
 		if( typeof globalThis.sessionStorage?.setItem !== 'undefined' ) {
@@ -27,8 +31,7 @@ describe( 'Storage class', () => {
 		}
 	});
 	describe( 'in environment with built-in sesssion storage support', () => {
-		/** @type {Storage<typeof data>} */
-		let storage;
+		let storage : Storage<typeof data>;
 		beforeAll(() => {
 			Storage.supportsSession = true;
 			storage = new Storage();
@@ -82,8 +85,7 @@ describe( 'Storage class', () => {
 		} );
 	} );
 	describe( 'in environment with NO sesssion storage support', () => {
-		/** @type {Storage<typeof data>} */
-		let storage;
+		let storage : Storage<typeof data>;
 		beforeAll(() => {
 			Storage.supportsSession = false;
 			storage = new Storage();

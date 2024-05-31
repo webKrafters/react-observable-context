@@ -8,12 +8,12 @@
     "steveswork <stephen.isienyi@gmail.com> (https://github.com/steveswork)"
   ],
   "dependencies": {
+    "-": "^0.0.1",
     "@webkrafters/auto-immutable": "^1.0.0",
     "@webkrafters/clone-total": "0.0.4",
     "@webkrafters/data-distillery": "0.0.3",
     "@webkrafters/get-property": "^1.1.2",
     "@webkrafters/path-dotize": "0.0.2",
-    "lodash.clonedeepwith": "^4.5.0",
     "lodash.isboolean": "^3.0.3",
     "lodash.isempty": "^4.4.0",
     "lodash.isequal": "^4.5.0",
@@ -29,50 +29,68 @@
     "@babel/plugin-transform-runtime": "^7.17.0",
     "@babel/preset-env": "^7.20.2",
     "@babel/preset-react": "^7.18.6",
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/react-hooks": "^8.0.1",
+    "@testing-library/jest-dom": "^6.4.5",
+    "@testing-library/react": "^15.0.7",
     "@testing-library/user-event": "^14.4.3",
     "@types/jest": "^29.5.12",
     "@types/jest-cli": "^24.3.0",
     "@types/node": "^20.11.28",
-    "babel-jest": "^26.6.3",
-    "babel-loader": "^8.2.5",
-    "eslint": "^8.29.0",
-    "eslint-config-standard": "^16.0.2",
+    "babel-loader": "^9.1.3",
+    "eslint": "^8.57.0",
+    "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-jest": "^26.0.0",
+    "eslint-plugin-jest": "^28.5.0",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-react": "^7.31.11",
     "eslint-plugin-standard": "^5.0.0",
     "jest": "^29.7.0",
-    "jest-cli": "^26.6.3",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "jest-cli": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-performance-testing": "^2.0.0",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
-    "typescript": "^4.8.2"
+    "typescript": "^5.4.5"
   },
   "files": [
-    "dist",
-    "logo.png"
+    "package.json",
+    "index.js",
+    "dist/test-artifacts/suppress-render-compat.js",
+    "dist/test-artifacts/suppress-render-compat.d.ts",
+    "dist/test-artifacts/data/create-state-obj.js",
+    "dist/test-artifacts/data/create-state-obj.d.ts",
+    "dist/model/storage/index.test.js",
+    "dist/model/storage/index.test.d.ts",
+    "dist/model/storage/index.js",
+    "dist/model/storage/index.d.ts",
+    "dist/main/test-apps/with-pure-children.js",
+    "dist/main/test-apps/with-pure-children.d.ts",
+    "dist/main/test-apps/with-connected-children.js",
+    "dist/main/test-apps/with-connected-children.d.ts",
+    "dist/main/test-apps/normal.js",
+    "dist/main/test-apps/normal.d.ts",
+    "dist/main/index.test.js",
+    "dist/main/index.test.d.ts",
+    "dist/main/index.js",
+    "dist/main/index.d.ts",
+    "dist/main/hooks/use-store/index.test.js",
+    "dist/main/hooks/use-store/index.test.d.ts",
+    "dist/main/hooks/use-store/index.js",
+    "dist/main/hooks/use-store/index.d.ts",
+    "dist/main/hooks/use-render-key-provider/index.test.js",
+    "dist/main/hooks/use-render-key-provider/index.test.d.ts",
+    "dist/main/hooks/use-render-key-provider/index.js",
+    "dist/main/hooks/use-render-key-provider/index.d.ts",
+    "dist/main/hooks/use-prehooks-ref/index.js",
+    "dist/main/hooks/use-prehooks-ref/index.d.ts",
+    "dist/index.js",
+    "dist/index.d.ts",
+    "dist/constants.js",
+    "dist/constants.d.ts"
   ],
   "homepage": "https://eagleeye.js.org",
-  "jest": {
-    "collectCoverageFrom": [
-      "src/**/*.js"
-    ],
-    "coveragePathIgnorePatterns": [
-      "src/test-artifacts",
-      "src/main/test-apps",
-      "src/types"
-    ],
-    "transform": {
-      "\\.[jt]sx?$": "babel-jest"
-    }
-  },
   "keywords": [
     "connect",
     "context",
@@ -95,8 +113,7 @@
   "main": "dist/index.js",
   "name": "@webkrafters/react-observable-context",
   "peerDependencies": {
-    "@types/react": ">= 16.8.0",
-    "react": ">= 16.8.0"
+    "@types/react": ">= 16.8.0"
   },
   "publishConfig": {
     "access": "public"

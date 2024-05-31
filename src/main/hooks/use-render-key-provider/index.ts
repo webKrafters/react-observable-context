@@ -1,26 +1,31 @@
 import type {
+	ArraySelector,
+	ObjectSelector,
 	SelectorMap,
-	State
- } from '../../..';
+	Text
+} from '../../..';
 
 import { useRef } from 'react';
 
-const getCurrKeys = <
-	T extends State,
-	SELECTOR_MAP extends SelectorMap<T>
->( selectorMap : SELECTOR_MAP ) => {
-	const currKeys = Object.values( selectorMap );
-	return currKeys.length
-		? Array.from( new Set( currKeys ) )
-		: [];
+import isPlainObject from 'lodash.isplainobject';
+
+function getCurrKeys( selectorMap : ArraySelector ) : Array<Text>;
+function getCurrKeys( selectorMap : ObjectSelector ) : Array<Text>;
+function getCurrKeys( selectorMap ) : Array<Text> {
+	if( isPlainObject( selectorMap ) || Array.isArray( selectorMap ) ) {
+		return Array.from( new Set<Text>( Object.values( selectorMap ) ) );
+	}
+	if( typeof selectorMap === 'undefined' || selectorMap === null ) {
+		return [];
+	}
+	throw new TypeError( 'Incompatible Selector Map type provided.' );
 };
 
-
-const useRenderKeyProvider = <
-	T extends State,
-	SELECTOR_MAP extends SelectorMap<T>
->( selectorMap : SELECTOR_MAP ) => {
-	const renderKeys = useRef<Array<string|keyof T>>([]);
+function useRenderKeyProvider( selectorMap : ArraySelector ) : Array<Text>;
+function useRenderKeyProvider( selectorMap : ObjectSelector ) : Array<Text>;
+function useRenderKeyProvider( selectorMap : SelectorMap ) : Array<Text>;
+function useRenderKeyProvider( selectorMap ) : Array<Text> {
+	const renderKeys = useRef<Array<Text>>([]);
 	const currKeys = getCurrKeys( selectorMap );
 	if( ( renderKeys.current.length !== currKeys.length ||
 		renderKeys.current.some(( k, i ) => k !== currKeys[ i ])

@@ -1,10 +1,27 @@
-import React, {	memo, useCallback, useEffect, useState } from 'react';
+import type { FC } from 'react';
+
+import type { Changes, Prehooks } from '../..';
+
+import React, {
+	GetDerivedStateFromError,
+	memo,
+	useCallback,
+	useEffect,
+	useState
+} from 'react';
 
 import isEmpty from 'lodash.isempty';
 
 import {
-	CapitalizedDisplay, CustomerPhoneDisplay, Editor, ObservableContext,
-	PriceSticker, ProductDescription, Reset, useObservableContext
+	CapitalizedDisplay,
+	CustomerPhoneDisplay,
+	Editor,
+	ObservableContext,
+	PriceSticker,
+	ProductDescription,
+	Reset,
+	useObservableContext,
+	TestState
 } from './normal';
 
 export const MemoizedReset = memo( Reset );
@@ -13,8 +30,7 @@ export const MemoizedEditor = memo( Editor );
 export const MemoizedProductDescription = memo( ProductDescription );
 export const MemoizedPriceSticker = memo( PriceSticker );
 
-/** @type {React.FC<void>} */
-const TallyDisplay = () => {
+const TallyDisplay : FC = () => {
 	const { data: { color, name, price, type } } = useObservableContext({
 		color: 'color',
 		name: 'customer.name',
@@ -44,10 +60,10 @@ const TallyDisplay = () => {
 			<table>
 				<tbody>
 					<tr><td><label>Type:</label></td><td>
-						<CapitalizedDisplay text={ type } />
+						<CapitalizedDisplay text={ type as unknown as string } />
 					</td></tr>
 					<tr><td><label>Color:</label></td><td>
-						<CapitalizedDisplay text={ color } />
+						<CapitalizedDisplay text={ color as unknown as string } />
 					</td></tr>
 					<tr><td><label>Price:</label></td><td>{ price.toFixed( 2 ) }</td></tr>
 				</tbody>
@@ -61,15 +77,12 @@ const TallyDisplay = () => {
 TallyDisplay.displayName = 'TallyDisplay';
 export const MemoizedTallyDisplay = memo( TallyDisplay );
 
-/**
- * @type {React.FC<{
- * 		prehooks?: import("..").Prehooks<{[x:string]:*}>,
- * 		type:string
- * }>}
- */
-export const Product = ({ prehooks = undefined, type }) => {
+export const Product : FC<{
+	prehooks? : Prehooks,
+	type : string
+}>= ({ prehooks = undefined, type }) => {
 
-	const [ state, setState ] = useState(() => ({
+	const [ state, setState ] = useState<TestState>(() => ({
 		color: 'Burgundy',
 		customer: {
 			name: { first: null, last: null },
@@ -80,11 +93,13 @@ export const Product = ({ prehooks = undefined, type }) => {
 	}));
 
 	useEffect(() => {
-		setState({ type }); // use this to update only the changed state
+		setState({ type } as TestState ); // use this to update only the changed state
 		// setState({ ...state, type }); // this will override the context internal state for these values
 	}, [ type ]);
 
-	const overridePricing = useCallback( e => setState({ price: Number( e.target.value ) }), [] );
+	const overridePricing = useCallback( e => setState({
+		price: Number( e.target.value )
+	} as TestState ), [] );
 
 	return (
 		<div>
@@ -108,8 +123,7 @@ export const Product = ({ prehooks = undefined, type }) => {
 };
 Product.displayName = 'Product';
 
-/** @type {React.FC<void>} */
-const App = () => {
+const App : FC = () => {
 
 	const [ productType, setProductType ] = useState( 'Calculator' );
 

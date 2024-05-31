@@ -1,3 +1,16 @@
+import type {
+	FC, ReactNode
+} from 'react';
+
+import type {
+	Changes,
+	Prehooks,
+	State,
+	Store
+} from '../..';
+
+import { TestState } from './normal';
+
 import React, {
 	useCallback,
 	useEffect,
@@ -11,11 +24,7 @@ import { connect } from '..';
 
 import { CapitalizedDisplay, ObservableContext } from './normal';
 
-/**
- * @type {FC<{resetState: Store<T>["resetState"]}>}
- * @template {State} T
- */
-const Reset = ({ resetState }) => {
+const Reset : FC<{resetState: (propertyPaths?: string[]) => void}> = ({ resetState }) => {
 	useEffect(() => console.log( 'Reset component rendered.....' ));
 	const reset = useCallback(() => resetState([ '@@STATE' ]), [ resetState ]);
 	return ( <button onClick={ reset }>reset context</button> );
@@ -23,24 +32,20 @@ const Reset = ({ resetState }) => {
 Reset.displayName = 'Reset';
 export const ConnectedReset = connect( ObservableContext )( Reset );
 
-/**
- * @type {FC<{data: Store<T>["data"]}>}
- * @template {State} T
- */
-const CustomerPhoneDisplay = ({ data }) => {
+const CustomerPhoneDisplay : FC<{ data: { phone: string } }> = ({ data }) => {
 	useEffect(() => console.log( 'CustomerPhoneDisplay component rendered.....' ));
 	return `Phone: ${ data.phone ?? 'n.a.' }`;
 };
 CustomerPhoneDisplay.displayName = 'CustomerPhoneDisplay';
 export const ConnectedCustomerPhoneDisplay = connect(
 	ObservableContext, { phone: 'customer.phone' }
-)( CustomerPhoneDisplay );
+)( CustomerPhoneDisplay as unknown as FC<Store<Partial<TestState>, { phone : string }>> );
 
-/**
- * @type {FC<{data: Store<T>["data"]}>}
- * @template {State} T
- */
-const TallyDisplay = ({ data: { color, name, price, type } }) => {
+const TallyDisplay : FC<{
+	data: Pick<TestState, "color" | "price" | "type"> & {
+		name: TestState["customer"]["name"]
+	}
+}> = ({ data: { color, name, price, type } }) => {
 	useEffect(() => console.log( 'TallyDisplay component rendered.....' ));
 	return (
 		<div style={{ margin: '20px 0 10px' }}>
@@ -84,20 +89,18 @@ export const ConnectedTallyDisplay = connect( ObservableContext, {
 	name: 'customer.name',
 	price: 'price',
 	type: 'type'
-})( TallyDisplay );
+})( TallyDisplay as unknown as FC<Pick<Store<TestState, {[ K in "color" | "name" | "price" | "type" ]: string}>, "data">>);
 
-/**
- * @type {FC<{setState: Store<T>["setState"]}>}
- * @template {State} T
- */
-const Editor = ({ setState }) => {
+const Editor : FC<{
+	setState: (changes: Record<any, any>) => void
+}> = ({ setState }) => {
 
-	const fNameInputRef = useRef();
-	const lNameInputRef = useRef();
-	const phoneInputRef = useRef();
-	const priceInputRef = useRef();
-	const colorInputRef = useRef();
-	const typeInputRef = useRef();
+	const fNameInputRef = useRef<HTMLInputElement>();
+	const lNameInputRef = useRef<HTMLInputElement>();
+	const phoneInputRef = useRef<HTMLInputElement>();
+	const priceInputRef = useRef<HTMLInputElement>();
+	const colorInputRef = useRef<HTMLInputElement>();
+	const typeInputRef = useRef<HTMLInputElement>();
 
 	const updateColor = useCallback(() => {
 		setState({ color: colorInputRef.current.value });
@@ -169,11 +172,12 @@ const Editor = ({ setState }) => {
 Editor.displayName = 'Editor';
 export const ConnectedEditor = connect( ObservableContext )( Editor );
 
-/**
- * @type {FC<{data: Store<T>["data"]}>}
- * @template {State} T
- */
-export const ProductDescription = ({ data }) => {
+export const ProductDescription : FC<{
+	data : {
+		c: ReactNode,
+		t: ReactNode
+	}
+}> = ({ data }) => {
 	useEffect(() => console.log( 'ProductDescription component rendered.....' ));
 	return (
 		<div style={{ fontSize: 24 }}>
@@ -184,13 +188,9 @@ export const ProductDescription = ({ data }) => {
 ProductDescription.displayName = 'ProductDescription';
 export const ConnectedProductDescription = connect(
 	ObservableContext, { c: 'color', t: 'type' }
-)( ProductDescription );
+)( ProductDescription as FC<Pick<Store<TestState, { c: string, t: string }>, "data">> );
 
-/**
- * @type {FC<{data: Store<T>["data"]}>}
- * @template {State} T
- */
-export const PriceSticker = ({ data: { p } }) => {
+export const PriceSticker : FC<{data: { p: number }}> = ({ data: { p } }) => {
 	useEffect(() => console.log( 'PriceSticker component rendered.....' ));
 	return (
 		<div style={{ fontSize: 36, fontWeight: 800 }}>
@@ -199,15 +199,14 @@ export const PriceSticker = ({ data: { p } }) => {
 	);
 };
 PriceSticker.displayName = 'PriceSticker';
-export const ConnectedPriceSticker = connect( ObservableContext, { p: 'price' } )( PriceSticker );
+export const ConnectedPriceSticker = connect( ObservableContext, { p: 'price' } )(
+	PriceSticker as unknown as FC<Pick<Store<TestState, { p: string }>, "data">>
+);
 
-/**
- * @type {React.FC<{
- * 		prehooks?: import("..").Prehooks<{[x:string]:*}>,
- * 		type:string
- * }>}
- */
-export const Product = ({ prehooks = undefined, type }) => {
+export const Product : React.FC<{
+	prehooks? : import("../..").Prehooks,
+	type : string
+}> = ({ prehooks = undefined, type }) => {
 
 	const [ state, setState ] = useState(() => ({
 		color: 'Burgundy',
@@ -220,11 +219,13 @@ export const Product = ({ prehooks = undefined, type }) => {
 	}));
 
 	useEffect(() => {
-		setState({ type }); // use this to update only the changed state
+		setState({ type } as typeof state ); // use this to update only the changed state
 		// setState({ ...state, type }); // this will override the context internal state for these values
 	}, [ type ]);
 
-	const overridePricing = useCallback( e => setState({ price: Number( e.target.value ) }), [] );
+	const overridePricing = useCallback( e => setState({
+		price: Number( e.target.value )
+	} as typeof state ), [] );
 
 	return (
 		<div>
@@ -248,8 +249,7 @@ export const Product = ({ prehooks = undefined, type }) => {
 };
 Product.displayName = 'Product';
 
-/** @type {React.FC<void>} */
-const App = () => {
+const App : React.FC = () => {
 
 	const [ productType, setProductType ] = useState( 'Calculator' );
 
@@ -269,15 +269,3 @@ const App = () => {
 App.displayName = 'App';
 
 export default App;
-
-/**
- * @typedef {import("..").Store<T>} Store
- * @template {State} T
- */
-
-/** @typedef {import("..").State} State */
-
-/**
- * @typedef {import("react").FC<P>} FC
- * @template [P={}]
- */

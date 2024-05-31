@@ -1,3 +1,12 @@
+type PropsExtract<C, STATE extends State, SELECTOR_MAP extends SelectorMap> =
+	C extends ComponentType<ConnectProps<infer U, STATE, SELECTOR_MAP>>
+		? U extends OwnProps ? U : IProps
+		: C extends NamedExoticComponent<ConnectProps<infer U, STATE, SELECTOR_MAP>>
+			? U extends OwnProps ? U : IProps
+			: IProps;
+
+type InjectedProps<P extends IProps = IProps> = {[K in keyof P]: P[K]};
+
 import type {
 	ComponentType,
 	Context,
@@ -10,11 +19,12 @@ import type {
 
 import type {
 	ConnectedComponent,
-	ConnectedComponentProps,
+	ConnectProps,
 	Data,
 	IObservableContext,
 	IStore,
 	NonReactUsageReport,
+	IProps,
 	ObservableContext,
 	ObservableProvider,
 	OwnProps,
@@ -53,12 +63,13 @@ import * as constants from '../constants';
 import useRenderKeyProvider from './hooks/use-render-key-provider';
 
 import useStore from './hooks/use-store';
+import Immutable from '@webkrafters/auto-immutable';
 
 const reportNonReactUsage : NonReactUsageReport  = () => {
 	throw new UsageError( 'Detected usage outside of this context\'s Provider component tree. Please apply the exported Provider component' );
 };
 
-export function createContext  <T extends State>() : ObservableContext<T> {
+export function createContext  <T extends State = State>() : ObservableContext<T> {
 	const Context = _createContext({
 		getState: reportNonReactUsage,
 		resetState: reportNonReactUsage,
@@ -98,13 +109,13 @@ export function createContext  <T extends State>() : ObservableContext<T> {
  * {myX: 'd.e.f[1].x'} or {myX: 'd.e.f.1.x'} => {myX: 7} // same applies to {myY: 'd.e.f[1].y'} = {myY: 8}; {myZ: 'd.e.f[1].z'} = {myZ: 9}
  * {myData: '@@STATE'} => {myData: state}
  */
-export const useContext = <
+export function useContext <
 	STATE extends State,
-	SELECTOR_MAP extends SelectorMap<STATE> = SelectorMap<STATE>,
+	SELECTOR_MAP extends SelectorMap
 >(
-	context : ObservableContext<STATE, SELECTOR_MAP>,
-	selectorMap : SELECTOR_MAP = {} as SELECTOR_MAP
-) : Store<STATE, SELECTOR_MAP> => {
+	context : ObservableContext<STATE>,
+	selectorMap? : SELECTOR_MAP
+) : Store<STATE, SELECTOR_MAP> {
 
 	const {
 		cache,
@@ -115,9 +126,14 @@ export const useContext = <
 		context as unknown as Context<PartialState<STATE>>
 	) as unknown as StoreInternal<STATE>;
 
-	const [ connection, refreshConnection ] = React.useState(() => cache.connect());
+	const [ connection, refreshConnection ] = React.useState(() => {
+		if( cache instanceof Immutable ) {
+			return cache.connect();
+		}
+		reportNonReactUsage();
+	});
 
-	const _renderKeys = useRenderKeyProvider( selectorMap ) as Array<string>;
+	const _renderKeys = useRenderKeyProvider( selectorMap );
 
 	/* Reverses selectorMap i.e. {selectorKey: propertyPath} => {propertyPath: selectorKey} */
 	const selectorMapInverse = useMemo(() => {
@@ -208,42 +224,97 @@ export const useContext = <
  * @param [selectorMap] - Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
  * @see {useContext} for selectorMap sample
  */
-export function connect <
+export function connect<
 	STATE extends State = State,
-	OWNPROPS extends OwnProps<State> = OwnProps<State>,
-	SELECTOR_MAP extends SelectorMap<STATE> = SelectorMap<STATE>
->(
-	context : ObservableContext<STATE, SELECTOR_MAP>,
-	selectorMap? : SELECTOR_MAP
-) {
+	SELECTOR_MAP extends SelectorMap = SelectorMap
+>( context : ObservableContext<STATE>, selectorMap? : SELECTOR_MAP ) {
 
-	function wrap( WrappedComponent : ComponentType<ConnectedComponentProps<OWNPROPS, Store<STATE, SELECTOR_MAP>>> ) : ConnectedComponent<OWNPROPS, Store<STATE, SELECTOR_MAP>>;
-	function wrap( WrappedComponent : NamedExoticComponent<ConnectedComponentProps<OWNPROPS, Store<STATE, SELECTOR_MAP>>> ) : ConnectedComponent<OWNPROPS, Store<STATE, SELECTOR_MAP>>;
-	function wrap( WrappedComponent ) : ConnectedComponent<OWNPROPS, Store<STATE, SELECTOR_MAP>> 
-	{
+	function connector<
+		C extends
+			| ComponentType<ConnectProps<P, STATE, SELECTOR_MAP>>
+			| NamedExoticComponent<ConnectProps<P, STATE, SELECTOR_MAP>>,
+		P extends InjectedProps<PropsExtract<C, STATE, SELECTOR_MAP>> = InjectedProps<PropsExtract<C, STATE, SELECTOR_MAP>>
+	>( WrappedComponent : C ) {
 
-		if( !( isPlainObject( WrappedComponent ) && 'compare' in WrappedComponent ) ) {
-			WrappedComponent = memo( WrappedComponent );
-		}
+		const Wrapped = (
+			!( isPlainObject( WrappedComponent ) && 'compare' in WrappedComponent )
+				? memo( WrappedComponent )
+				: WrappedComponent
+		) as NamedExoticComponent<ConnectProps<P, STATE, SELECTOR_MAP>>;
 
-		const ConnectedComponent : ConnectedComponent<
-			OWNPROPS, Store<STATE, SELECTOR_MAP>
-		> = memo( forwardRef(( ownProps, ref ) => {
+		const ConnectedComponent = memo( forwardRef<
+			P extends IProps ? P["ref"] : never,
+			Omit<P, "ref">
+		>(( ownProps, ref ) => {
 			const store = useContext( context, selectorMap );
-			return( <WrappedComponent { ...store } { ...ownProps } ref={ ref } /> );
+			return ( <Wrapped { ...store } { ...ownProps } ref={ ref } /> );
 		}) );
 		ConnectedComponent.displayName = 'ObservableContext.Connected';
 		
-		return ConnectedComponent;
-	};
+		return ConnectedComponent as ConnectedComponent<P>;
 
-	return wrap;
+	}
+
+	return connector;
 
 }
 
-export class UsageError extends Error {}
+// @debug
+type MyState = { test: number };
+type SMap = { val: string };
+const Ctx = createContext<MyState>();
+const CCC : React.FC = () => ( <Ctx.Provider value={{ test: 234 }}/> );
+const getConnected = connect( Ctx, { val: 'test' } );
+interface PP {
+	b?: boolean,
+	n?: number,
+	ref?: HTMLDivElement,
+	t?: string
+}
+// @debug
+// const T : ForwardRefExoticComponent<PP & {
+// 	data: Data<SMap>;
+//     resetState: (propertyPaths?: string[]) => void;
+//     setState: (changes: import("../").Changes<MyState>) => void;
+// }> = forwardRef(
+const T : React.ForwardRefExoticComponent<ConnectProps<
+	PP, MyState, SMap
+>> = forwardRef(
+	({ data: { val } }, ref ) => (
+		<div ref={ ref }>{ val as ReactNode }</div>
+	)
+);
+const Connected = getConnected( T );
+const Connected2 = getConnected(() => (<div></div>));
+interface PP2 {
+	b0?: boolean,
+	n0?: number,
+	s0?: string
+};
+const T2 : FC<ConnectProps<PP2, MyState, SMap>> = ({ b0, data, n0, s0 }) => (
+	<div>{ JSON.stringify({ b0, data, n0, s0 }, null, 2 ) as React.ReactNode }</div>
+);
+const Connected3 = getConnected( T2 );
+const V = () => {
+	const c = ( <Connected n={ 33 } ref={ useRef() } /> );
+	const c2 = ( <Connected2 /> );
+	const c3 = ( <Connected3 n0={ 33 } /> );
+	return (
+		<>
+			{ c }
+			{ c2 }
+			{ c3 }
+		</>
+	);
+}
 
-const ChildMemo : FC<{child: ReactNode}> = (() => {
+const F : FC<{age:number}> = props => ( <div>{ props.age }</div> );
+const f = ( <F age={ 33 } /> )
+// -----
+
+export class UsageError extends Error {};
+
+const ChildMemo : FC<{ child: ReactNode }> = (() => {
 
 	const useNodeMemo = ( node : ReactNode ) : ReactNode => {
 		const nodeRef = useRef( node );

@@ -15,6 +15,7 @@
     // Types should go into this directory.
     // Removing this would place the .d.ts files
     // next to the .js files
+    "esModuleInterop": true,
     "jsx": "react",
     "moduleResolution": "NodeNext",
     "module": "NodeNext",

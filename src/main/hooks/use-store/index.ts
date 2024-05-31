@@ -8,7 +8,6 @@ import type {
 	PartialState,
 	Prehooks,
 	State,
-	Store,
 	StoreInternal
 } from '../../..';
 
@@ -17,7 +16,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import isBoolean from 'lodash.isboolean';
 import isEmpty from 'lodash.isempty';
 
-import clonedeep from '@webkrafters/clone-total';
 import mapPathsToObject from '@webkrafters/data-distillery';
 import stringToDotPath from '@webkrafters/path-dotize';
 import AutoImmutable from '@webkrafters/auto-immutable';
@@ -143,7 +141,7 @@ const useStore = <T extends State>(
 	}, []);
 
 	function transformPayload ( payload : UpdatePayload<T> ) {
-		if( !( FULL_STATE_SELECTOR in payload ) ) { return payload }
+		if( isEmpty( payload ) || !( FULL_STATE_SELECTOR in payload ) ) { return payload }
 		payload = { ...payload, [ GLOBAL_SELECTOR ]: payload[ FULL_STATE_SELECTOR ] };
 		delete payload[ FULL_STATE_SELECTOR ];
 		return payload;
