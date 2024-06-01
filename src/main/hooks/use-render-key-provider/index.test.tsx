@@ -61,14 +61,14 @@ describe( 'useRenderKeyProvider', () => {
 		[ 'Uint8Array', new Uint8Array() ]
 	])( 'incompatible selectorMap type = %s', ( label, value ) => {
 		test( 'throws Type error', () => {
-			renderHook(() => {
-				try {
-					useRenderKeyProvider( value as unknown as ObjectSelector );
-				} catch( e ) {
-					expect( e.constructor.name ).toEqual( 'TypeError' );
-					expect( e.message ).toEqual( 'Incompatible Selector Map type provided.' );
-				}
-			});
+			try {
+				renderHook( useRenderKeyProvider, {
+					initialProps: value as unknown
+				} );
+			} catch( e ) {
+				expect( e.constructor.name ).toEqual( 'TypeError' );
+				expect( e.message ).toEqual( 'Incompatible Selector Map type provided.' );
+			}
 		} );
 	} );
 } );
