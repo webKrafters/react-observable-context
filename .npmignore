@@ -1,0 +1,5 @@
+# .npmignore
+dist/**/*.test.d.ts
+dist/**/*.test.js
+dist/**/test-apps
+dist/test0-artifacts
