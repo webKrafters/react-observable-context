@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react';
 
 import '../../../test-artifacts/suppress-render-compat';
 
@@ -7,7 +7,9 @@ import usePrehooksRef from '.';
 describe( 'usePrehooksRef', () => {
 	test( 'retains prehooks prop in a `react-ref` object', () => {
 		const PREHOOK = 'PREHOOK_STUB'
-		const { result, rerender } = renderHook( usePrehooksRef, { initialProps: PREHOOK } );
+		const { result, rerender } = renderHook( usePrehooksRef, {
+			initialProps: PREHOOK as unknown
+		} );
 		expect( result.current ).toEqual({ current: PREHOOK });
 		const PREHOOK2 = 'PREHOOK2_STUB';
 		rerender( PREHOOK2 );

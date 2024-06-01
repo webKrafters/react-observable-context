@@ -1,12 +1,27 @@
-import { renderHook } from '@testing-library/react-hooks';
+import { Connection } from '@webkrafters/auto-immutable';
+
+import Immutable from '@webkrafters/auto-immutable';
+
+import { renderHook } from '@testing-library/react';
+
+import { Prehooks } from '../../..';
 
 import '../../../test-artifacts/suppress-render-compat';
 
-import { CLEAR_TAG, DELETE_TAG, FULL_STATE_SELECTOR, REPLACE_TAG } from '../../../constants';
+import {
+	CLEAR_TAG,
+	DELETE_TAG,
+	FULL_STATE_SELECTOR,
+	GLOBAL_SELECTOR,
+	REPLACE_TAG
+} from '../../../constants';
 
 import useStore, { deps } from '.';
+import exp from 'constants';
 
-beforeAll(() => { jest.spyOn( deps, 'uuid' ).mockReturnValue( expect.any( String ) ) });
+const noop = () => {};
+
+beforeAll(() => { jest.spyOn( deps, 'createStorageKey' ).mockReturnValue( expect.any( String ) ) });
 afterAll( jest.restoreAllMocks );
 
 describe( 'useStore', () => {
@@ -23,23 +38,22 @@ describe( 'useStore', () => {
 				}
 			);
 			expect( result.current ).toEqual( expect.objectContaining({
-				getState: expect.any( Function ),
+				cache: expect.any( Immutable ),
 				resetState: expect.any( Function ),
 				setState: expect.any( Function ),
-				subscribe: expect.any( Function ),
-				unlinkCache: expect.any( Function )
+				subscribe: expect.any( Function )
 			}) );
 		} );
 		test( 'retains a clone of the initial state in storage', () => {
 			const clone = jest.fn().mockReturnValue( initialState );
-			const removeItem = () => {};
+			const removeItem = noop;
 			const setItem = jest.fn();
 			renderHook(
 				({ prehooks: p, value: v, storage: s }) => useStore( p, v, s ), {
 					initialProps: {
 						prehooks: {},
 						value: initialState,
-						storage: { clone, removeItem, setItem }
+						storage: { clone, getItem:()=>{}, removeItem, setItem }
 					}
 				}
 			);
@@ -50,14 +64,14 @@ describe( 'useStore', () => {
 		} );
 		test( 'cleans up retained state from storage on store unmount if storage supported', () => {
 			const clone = v => v;
-			const setItem = () => {};
+			const setItem = noop;
 			const removeItem = jest.fn();
 			const { unmount } = renderHook(
 				({ prehooks: p, value: v, storage: s }) => useStore( p, v, s ), {
 					initialProps: {
 						prehooks: {},
 						value: initialState,
-						storage: { clone, removeItem, setItem }
+						storage: { clone, getItem: ()=>{}, removeItem, setItem }
 					}
 				}
 			);
@@ -66,7 +80,14 @@ describe( 'useStore', () => {
 			expect( removeItem ).toHaveBeenCalledTimes( 1 );
 		} );
 		test( 'merges copies of subsequent value prop updates to state', async () => {
-			const setStateSpy = jest.spyOn( deps, 'setState' );
+			const setStateSpy = jest.fn();
+			const ConnectionMock = {
+				disconnect: noop,
+				set: setStateSpy
+			} as unknown as Connection<{}>;
+			const ImmutableConnectSpy = jest
+				.spyOn( Immutable.prototype, 'connect' )
+				.mockReturnValue( ConnectionMock );
 			const { rerender } = renderHook(
 				({ prehooks: p, value: v }) => useStore( p, v ), {
 					initialProps: {
@@ -79,9 +100,8 @@ describe( 'useStore', () => {
 			const updateState = { v: 3 };
 			rerender({ prehooks: {}, value: updateState });
 			expect( setStateSpy ).toHaveBeenCalledTimes( 1 );
-			expect( setStateSpy.mock.calls[ 0 ][ 1 ] ).toStrictEqual( updateState );
-			expect( setStateSpy.mock.calls[ 0 ][ 1 ] ).not.toBe( updateState );
-			setStateSpy.mockRestore();
+			expect( setStateSpy.mock.calls[ 0 ][ 0 ] ).toBe( updateState );
+			ImmutableConnectSpy.mockRestore();
 		} );
 	} );
 	describe( 'store', () => {
@@ -95,10 +115,18 @@ describe( 'useStore', () => {
 			};
 		});
 		describe( 'normal flow', () => {
-			let initialProps, prehooks, setAddSpy, setDeleteSpy, setStateSpy, store;
+			let ConnectionMock, ImmutableConnectSpy, initialProps, prehooks, setAddSpy, setDeleteSpy, setStateSpy, store;
 			beforeAll(() => {
 				jest.clearAllMocks();
-				setStateSpy = jest.spyOn( deps, 'setState' );
+				setStateSpy = jest.fn();
+				ConnectionMock = {
+					disconnect: noop,
+					get: expect.anything,
+					set: setStateSpy
+				};
+				ImmutableConnectSpy = jest
+					.spyOn( Immutable.prototype, 'connect' )
+					.mockReturnValue( ConnectionMock );
 				setAddSpy = jest.spyOn( Set.prototype, 'add' );
 				setDeleteSpy = jest.spyOn( Set.prototype, 'delete' );
 				prehooks = {
@@ -115,20 +143,14 @@ describe( 'useStore', () => {
 			afterAll(() => {
 				setAddSpy.mockRestore();
 				setDeleteSpy.mockRestore();
-				setStateSpy.mockRestore();
+				ImmutableConnectSpy.mockRestore();
 			});
-			describe( 'getState', () => {
-				test( 'returns state slice at property path', () => {
-					const PROPERTY_PATH = 'a';
-					expect( store.getState( 'TEST_CLIENT', PROPERTY_PATH ) ).toEqual( initialState );
-				} );
-			} );
 			describe( 'resetState', () => {
 				beforeAll(() => {
 					prehooks.resetState.mockClear();
 					setStateSpy.mockClear();
 					storage.getItem.mockClear();
-					store.resetState();
+					store.resetState( ConnectionMock );
 				});
 				test( 'obtains initial state from storage', () => {
 					expect( storage.getItem ).toHaveBeenCalled();
@@ -146,7 +168,7 @@ describe( 'useStore', () => {
 						expect( prehooks.resetState.mock.calls[ 0 ][ 0 ] ).toEqual({});
 					} );
 					test( 'attempts to update current state with an empty update data', () => {
-						expect(setStateSpy.mock.calls[ 0 ][ 1 ] ).toEqual({});
+						expect( setStateSpy.mock.calls[ 0 ][ 0 ] ).toEqual({});
 					} );
 				} );
 				describe( 'with arguments', () => {
@@ -156,13 +178,13 @@ describe( 'useStore', () => {
 						setStateSpy.mockClear();
 						stateKey0 = Object.keys( initialState )[ 0 ];
 						resetData = { [ stateKey0 ]: { [ REPLACE_TAG ]: initialState[ stateKey0 ] } };
-						store.resetState([ stateKey0 ]);
+						store.resetState( ConnectionMock, [ stateKey0 ]);
 					} );
 					test( 'runs the available prehook with update data corresponding to resetState argument', () => {
 						expect( prehooks.resetState.mock.calls[ 0 ][ 0 ] ).toEqual( resetData );
 					} );
 					test( 'merges the update data into current state', () => {
-						expect( setStateSpy.mock.calls[ 0 ][ 1 ] ).toEqual( resetData );
+						expect( setStateSpy.mock.calls[ 0 ][ 0 ] ).toEqual( resetData );
 					} );
 					describe( 'containing the `' + FULL_STATE_SELECTOR + '` path', () => {
 						let initialState, storageCloneMockImpl, storageGetItemMockImpl;
@@ -179,17 +201,19 @@ describe( 'useStore', () => {
 								{ initialProps: { prehooks, storage, value: initialState } }
 							);
 							const store = result.current;
-							store.resetState([ 'a', FULL_STATE_SELECTOR, 'b.z' ]);
+							store.resetState( ConnectionMock, [ 'a', FULL_STATE_SELECTOR, 'b.z' ]);
 						});
 						afterAll(() => {
 							storage.clone.mockReset().mockImplementation( storageCloneMockImpl );
 							storage.getItem.mockReset().mockImplementation( storageGetItemMockImpl );
 						});
 						test( 'runs the available prehook with update data equaling the initial state', () => {
-							expect( prehooks.resetState.mock.calls[ 0 ][ 0 ] ).toEqual({ [ REPLACE_TAG ]: initialState });
+							expect( prehooks.resetState.mock.calls[ 0 ][ 0 ] )
+								.toEqual({ [ REPLACE_TAG ]: initialState });
 						} );
 						test( 'merges the initial state into current state', () => {
-							expect( setStateSpy.mock.calls[ 0 ][ 1 ] ).toEqual({ [ REPLACE_TAG ]: initialState });
+							expect( setStateSpy.mock.calls[ 0 ][ 0 ] )
+								.toEqual({ [ REPLACE_TAG ]: initialState });
 						} );
 					} );
 				} );
@@ -207,10 +231,10 @@ describe( 'useStore', () => {
 							a: { [ REPLACE_TAG ]: initialState.a },
 							dsdfd: { [ DELETE_TAG ]: [ 'adfsdff', 'sfgrwfg' ] }
 						};
-						store.resetState( nonInitStatePaths );
+						store.resetState( ConnectionMock, nonInitStatePaths );
 					});
 					test( 'are deleted from current state', () => {
-						expect( setStateSpy.mock.calls[ 0 ][ 1 ] ).toEqual( resetData );
+						expect( setStateSpy.mock.calls[ 0 ][ 0 ] ).toEqual( resetData );
 					} );
 				} );
 				describe( 'with paths containing the `' + FULL_STATE_SELECTOR + '` path where initial state is empty', () => {
@@ -227,30 +251,125 @@ describe( 'useStore', () => {
 							{ initialProps: { prehooks, storage } }
 						);
 						const store = result.current;
-						store.resetState([ 'a', FULL_STATE_SELECTOR, 'b.z' ]);
+						store.resetState( ConnectionMock, [ 'a', FULL_STATE_SELECTOR, 'b.z' ]);
 					});
 					afterAll(() => {
 						storage.clone.mockReset().mockImplementation( storageCloneMockImpl );
 						storage.getItem.mockReset().mockImplementation( storageGetItemMockImpl );
 					});
 					test( 'empties the current state', () => {
-						expect( setStateSpy.mock.calls[ 0 ][ 1 ] ).toEqual( CLEAR_TAG );
+						expect( setStateSpy.mock.calls[ 0 ][ 0 ] ).toEqual( CLEAR_TAG );
 					} );
 				} );
 			} );
 			describe( 'setState', () => {
-				beforeAll(() => {
-					prehooks.setState.mockClear();
-					setStateSpy.mockClear();
-					store.setState();
-				});
-				test( 'runs the avaiable prehook', () => {
-					expect( prehooks.setState ).toHaveBeenCalled();
+				describe( 'normal operations', () => {
+					beforeAll(() => {
+						prehooks.setState.mockClear();
+						setStateSpy.mockClear();
+						store.setState( ConnectionMock );
+					});
+					test( 'runs the avaiable prehook', () => {
+						expect( prehooks.setState ).toHaveBeenCalled();
+					} );
+					test( 'sets the state if prehook evaluates to true', () => {
+						// prehook.setState had been mocked to return true
+						// please see 'prehooks effects' describe block for alternate scenario
+						expect( setStateSpy ).toHaveBeenCalled();
+					} );
 				} );
-				test( 'sets the state if prehook evaluates to true', () => {
-					// prehook.setState had been mocked to return true
-					// please see 'prehooks effects' describe block for alternate scenario
-					expect( setStateSpy ).toHaveBeenCalled();
+				describe( 'payload', () => {
+					beforeEach(() => { setStateSpy.mockClear() });
+					test( 'can be a single change object', () => {
+						const payload = { a: expect.anything() };
+						store.setState( ConnectionMock, payload );
+						expect( setStateSpy.mock.calls[ 0 ][ 0 ] ).toEqual( payload );
+					
+					} );
+					test( 'can be an array of change objects', () => {
+						const payload = [
+							{ a: expect.anything() },
+							{ x: expect.anything() }
+						];
+						store.setState( ConnectionMock, payload );
+						expect( setStateSpy.mock.calls[ 0 ][ 0 ] ).toEqual( payload );
+					} );
+				});
+				describe( 'payload translation for compatibility with the cache', () => {
+					beforeEach(() => { setStateSpy.mockClear() })
+					test( 'returns empty payload as-is', () => {
+						store.setState( ConnectionMock );
+						expect( setStateSpy.mock.calls[ 0 ][ 0 ] ).toEqual( undefined );
+						setStateSpy.mockClear();
+						store.setState( ConnectionMock, null );
+						expect( setStateSpy.mock.calls[ 0 ][ 0 ] ).toEqual( null );
+					} );
+					test( 'returns non top-level ' + FULL_STATE_SELECTOR + ' key bearing payload as-is', () => {
+						const payload = {
+							a: expect.anything(),
+							b: {
+								[ FULL_STATE_SELECTOR ]: expect.anything()
+							}
+						};
+						store.setState( ConnectionMock, payload );
+						expect( setStateSpy.mock.calls[ 0 ][ 0 ] ).toEqual( payload );
+					} );
+					test( 'converts all top-level' + FULL_STATE_SELECTOR + ' payload keys only', () => {
+						const asIsPayload = {
+							a: expect.anything(),
+							q: {
+								[ FULL_STATE_SELECTOR ]: expect.anything()
+							}
+						};
+						store.setState( ConnectionMock, {
+							[ FULL_STATE_SELECTOR ]: expect.anything(),
+							...asIsPayload
+						});
+						expect( setStateSpy.mock.calls[ 0 ][ 0 ] ).toEqual({
+							[ GLOBAL_SELECTOR ]: expect.anything(),
+							...asIsPayload
+						});
+					} );
+					test( 'converts any payload bearing top-level ' + FULL_STATE_SELECTOR + ' keys amongst a payload list', () => {
+						store.setState( ConnectionMock, [{
+							[ FULL_STATE_SELECTOR ]: expect.anything(),
+							a: expect.anything()
+						}, {
+							a: expect.anything()
+						}, {
+							z: expect.anything(),
+							k: expect.anything(),
+							[ FULL_STATE_SELECTOR ]: expect.anything(),
+							a: expect.anything()
+						}, {
+							s: expect.anything(),
+							t: {
+								[ FULL_STATE_SELECTOR ]: expect.anything()
+							}
+						}, {
+							l: [ [ FULL_STATE_SELECTOR ] ],
+							p: expect.anything()
+						}] );
+						expect( setStateSpy.mock.calls[ 0 ][ 0 ] ).toEqual([{
+							[ GLOBAL_SELECTOR ]: expect.anything(),
+							a: expect.anything()
+						}, {
+							a: expect.anything()
+						}, {
+							z: expect.anything(),
+							k: expect.anything(),
+							[ GLOBAL_SELECTOR ]: expect.anything(),
+							a: expect.anything()
+						}, {
+							s: expect.anything(),
+							t: {
+								[ FULL_STATE_SELECTOR ]: expect.anything()
+							}
+						}, {
+							l: [[ FULL_STATE_SELECTOR ]],
+							p: expect.anything()
+						}]);
+					} );
 				} );
 			} );
 			describe( 'subscribe', () => {
@@ -274,10 +393,18 @@ describe( 'useStore', () => {
 			} );
 		} );
 		describe( 'prehooks effects', () => {
-			let setStateSpy, store;
+			let ConnectionMock, ImmutableConnectSpy, setStateSpy, store;
 			beforeAll(() => {
 				jest.clearAllMocks();
-				setStateSpy = jest.spyOn( deps, 'setState' );
+				setStateSpy = jest.fn();
+				ConnectionMock = {
+					disconnect: noop,
+					get: expect.anything,
+					set: setStateSpy
+				};
+				ImmutableConnectSpy = jest
+					.spyOn( Immutable.prototype, 'connect' )
+					.mockReturnValue( ConnectionMock );
 				store = renderHook(
 					({ prehooks: p, storage: s, value: v }) => useStore( p, v, s ),
 					{
@@ -292,11 +419,11 @@ describe( 'useStore', () => {
 					}
 				).result.current;
 			});
-			afterAll(() => { setStateSpy.mockRestore() });
+			afterAll(() => { ImmutableConnectSpy.mockRestore() });
 			describe( 'resetState #2', () => {
 				test( 'will not reset the state if prehook evaluates to false', () => {
 					// prehooks.resetState had been mocked to return false
-					store.resetState();
+					store.resetState( ConnectionMock );
 					expect( setStateSpy ).not.toHaveBeenCalled();
 				} );
 				test( 'throws if return type is not boolean', () => {
@@ -304,13 +431,16 @@ describe( 'useStore', () => {
 						({ prehooks: p, storage: s, value: v }) => useStore( p, v, s ),
 						{
 							initialProps: {
-								prehooks: { resetState: () => {}, setState: () => true },
+								prehooks: {
+									resetState: noop,
+									setState: () => true
+								} as unknown as Prehooks<any>,
 								storage,
 								value: initialState
 							}
 						}
 					);
-					expect(() => result.current.resetState( expect.anything() ))
+					expect(() => result.current.resetState( ConnectionMock, expect.anything() ))
 						.toThrow( '`resetState` prehook must return a boolean value.' );
 				} );
 			} );
@@ -325,13 +455,16 @@ describe( 'useStore', () => {
 						({ prehooks: p, storage: s, value: v }) => useStore( p, v, s ),
 						{
 							initialProps: {
-								prehooks: { resetState: () => true, setState: () => {} },
+								prehooks: {
+									resetState: () => true,
+									setState: noop
+								} as unknown as Prehooks<any>,
 								storage,
 								value: initialState
 							}
 						}
 					);
-					expect(() => result.current.setState( expect.anything() ))
+					expect(() => result.current.setState( ConnectionMock, expect.anything() ))
 						.toThrow( '`setState` prehook must return a boolean value.' );
 				} );
 			} );

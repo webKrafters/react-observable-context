@@ -8,13 +8,26 @@ import React, {
 import isEmpty from 'lodash.isempty';
 
 import { createContext, useContext } from '..';
+import { SelectorMap } from '../../index';
 
-export const ObservableContext = createContext();
+export type TestState = {
+	color: string,
+	customer: {
+		name: {
+			first: string,
+			last: string
+		}
+		phone: string
+	},
+	price: number,
+	type: string
+};
 
-export const useObservableContext = selectorMap => useContext( ObservableContext, selectorMap );
+export const ObservableContext = createContext<Partial<TestState>>();
 
-/** @type {React.FC<void>} */
-export const Reset = () => {
+export const useObservableContext = <S extends SelectorMap>( selectorMap?: S ) => useContext( ObservableContext, selectorMap );
+
+export const Reset : React.FC = () => {
 	const { resetState } = useObservableContext();
 	useEffect(() => console.log( 'Reset component rendered.....' ));
 	const reset = useCallback(() => resetState([ '@@STATE' ]), [ resetState ]);
@@ -22,23 +35,29 @@ export const Reset = () => {
 };
 Reset.displayName = 'Reset';
 
-/** @type {React.FC<{text: string}>} */
-export const CapitalizedDisplay = ({ text }) => {
+export const CapitalizedDisplay : React.FC<{text: string}> = ({ text }) => {
 	useEffect(() => console.log( `CapitalizedDisplay( ${ text } ) component rendered.....` ));
-	return text && `${ text[ 0 ].toUpperCase() }${ text.length > 1 ? text.slice( 1 ) : '' }`;
+	return text && (
+		<>
+			{ `${ text[ 0 ].toUpperCase() }${ text.length > 1 ? text.slice( 1 ) : '' }` }
+		</>
+	);
 };
 CapitalizedDisplay.displayName = 'CapitalizedDisplay';
 
-/** @type {React.FC<void>} */
-export const CustomerPhoneDisplay = () => {
+export const CustomerPhoneDisplay : React.FC = () => {
 	const { data } = useObservableContext({ phone: 'customer.phone' });
 	useEffect(() => console.log( 'CustomerPhoneDisplay component rendered.....' ));
-	return `Phone: ${ data.phone ?? 'n.a.' }`;
+	return ( <>{ `Phone: ${ data.phone ?? 'n.a.' }` }</> );
 };
+
+export type Data<SELECTOR_MAP extends SelectorMap = SelectorMap> = {
+    [selectorKey in keyof SELECTOR_MAP] : Readonly<unknown>
+};
+
 CustomerPhoneDisplay.displayName = 'CustomerPhoneDisplay';
 
-/** @type {React.FC<void>} */
-export const TallyDisplay = () => {
+export const TallyDisplay : React.FC = () => {
 	const { data: { color, name, price, type } } = useObservableContext({
 		color: 'color',
 		name: 'customer.name',
@@ -68,10 +87,10 @@ export const TallyDisplay = () => {
 			<table>
 				<tbody>
 					<tr><td><label>Type:</label></td><td>
-						<CapitalizedDisplay text={ type } />
+						<CapitalizedDisplay text={ type as unknown as string } />
 					</td></tr>
 					<tr><td><label>Color:</label></td><td>
-						<CapitalizedDisplay text={ color } />
+						<CapitalizedDisplay text={ color as unknown as string } />
 					</td></tr>
 					<tr><td><label>Price:</label></td><td>{ price.toFixed( 2 ) }</td></tr>
 				</tbody>
@@ -84,17 +103,16 @@ export const TallyDisplay = () => {
 };
 TallyDisplay.displayName = 'TallyDisplay';
 
-/** @type {React.FC<void>} */
-export const Editor = () => {
+export const Editor : React.FC = () => {
 	const { setState } = useObservableContext();
-	const fNameInputRef = useRef();
-	const lNameInputRef = useRef();
-	const phoneInputRef = useRef();
-	const priceInputRef = useRef();
-	const colorInputRef = useRef();
-	const typeInputRef = useRef();
+	const fNameInputRef = useRef( null );
+	const lNameInputRef = useRef( null );
+	const phoneInputRef = useRef( null );
+	const priceInputRef = useRef( null );
+	const colorInputRef = useRef( null );
+	const typeInputRef = useRef( null );
 	const updateColor = useCallback(() => {
-		setState({ color: colorInputRef.current.value });
+		setState({ color: colorInputRef?.current?.value }); // as unknown as string
 	}, []);
 	const updateName = useCallback(() => {
 		setState({
@@ -112,7 +130,7 @@ export const Editor = () => {
 		setState({ customer: { phone } });
 	}, []);
 	const updatePrice = useCallback(() => {
-		setState({ price: Number( priceInputRef.current.value ) });
+		setState({ price: Number( priceInputRef.current.value ) } );
 	}, []);
 	const updateType = useCallback(() => {
 		setState({ type: typeInputRef.current.value });
@@ -160,9 +178,12 @@ export const Editor = () => {
 };
 Editor.displayName = 'Editor';
 
-/** @type {React.FC<void>} */
-export const ProductDescription = () => {
-	const { data } = useObservableContext({ c: 'color', t: 'type' });
+export const ProductDescription : React.FC = () => {
+	const { data } = useObservableContext({
+		c: 'color', t: 'type'
+	}) as unknown as {
+		data: {[K in 'c'|'t']: React.ReactNode}
+	};
 	useEffect(() => console.log( 'ProductDescription component rendered.....' ));
 	return (
 		<div style={{ fontSize: 24 }}>
@@ -172,8 +193,7 @@ export const ProductDescription = () => {
 };
 ProductDescription.displayName = 'ProductDescription';
 
-/** @type {React.FC<void>} */
-export const PriceSticker = () => {
+export const PriceSticker : React.FC = () => {
 	const { data: { p } } = useObservableContext({ p: 'price' });
 	useEffect(() => console.log( 'PriceSticker component rendered.....' ));
 	return (
@@ -184,13 +204,11 @@ export const PriceSticker = () => {
 };
 PriceSticker.displayName = 'PriceSticker';
 
-/**
- * @type {React.FC<{
- * 		prehooks?: import("..").Prehooks<{[x:string]:*}>,
- * 		type:string
- * }>}
- */
-export const Product = ({ prehooks = undefined, type }) => {
+
+export const Product : React.FC<{
+	prehooks? : import("../../index").Prehooks<{[x:string]:*}>,
+	type : string
+}> = ({ prehooks = undefined, type }) => {
 	const [ state, setState ] = useState(() => ({
 		color: 'Burgundy',
 		customer: {
@@ -201,10 +219,12 @@ export const Product = ({ prehooks = undefined, type }) => {
 		type
 	}));
 	useEffect(() => {
-		setState({ type }); // use this to update only the changed state
+		setState({ type } as typeof state ); // use this to update only the changed state
 		// setState({ ...state, type }); // this will override the context internal state for these values
 	}, [ type ]);
-	const overridePricing = useCallback( e => setState({ price: Number( e.target.value ) }), [] );
+	const overridePricing = useCallback( e => setState({
+		price: Number( e.target.value )
+	} as typeof state ), [] );
 	return (
 		<div>
 			<div style={{ marginBottom: 10 }}>
@@ -227,8 +247,7 @@ export const Product = ({ prehooks = undefined, type }) => {
 };
 Product.displayName = 'Product';
 
-/** @type {React.FC<void>} */
-const App = () => {
+const App : React.FC = () => {
 	const [ productType, setProductType ] = useState( 'Calculator' );
 	const updateType = useCallback( e => setProductType( e.target.value ), [] );
 	return (
