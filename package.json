@@ -8,7 +8,6 @@
     "steveswork <stephen.isienyi@gmail.com> (https://github.com/steveswork)"
   ],
   "dependencies": {
-    "-": "^0.0.1",
     "@webkrafters/auto-immutable": "^1.0.0",
     "@webkrafters/clone-total": "0.0.4",
     "@webkrafters/data-distillery": "0.0.3",
@@ -99,5 +98,5 @@
     "test:watch": "eslint --fix && jest --updateSnapshot --watchAll"
   },
   "types": "dist/index.d.ts",
-  "version": "5.0.0-rc.0"
+  "version": "5.0.0-rc.1"
 }
