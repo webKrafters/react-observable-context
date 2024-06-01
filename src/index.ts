@@ -1,8 +1,11 @@
 import type {
+    ComponentType,
     Context,
-    ForwardRefExoticComponent,
+    ForwardRefExoticComponent, 
     MemoExoticComponent,
+    NamedExoticComponent,
     ReactNode,
+    PropsWithoutRef,
     RefAttributes
 } from 'react';
 
@@ -10,7 +13,7 @@ import type {
     Changes as BaseChanges,
     Connection,
     Immutable,
-    Value as State,
+    Value,
 } from '@webkrafters/auto-immutable';
 
 import { FULL_STATE_SELECTOR } from './constants';
@@ -27,10 +30,11 @@ export type {
     TagCommand,
     TagType,
     UpdateStats,
-    Value as State,
     UpdatePayload,
     UpdatePayloadArray
 } from '@webkrafters/auto-immutable';
+
+export type State = Value;
 
 export type ObservableContext<T extends State> = IObservableContext<T> | PublicObservableContext<T>;
 
@@ -61,14 +65,23 @@ export type ConnectProps<
     SELECTOR_MAP extends SelectorMap = SelectorMap
 > = { [K in keyof Store<STATE, SELECTOR_MAP>]: Store<STATE, SELECTOR_MAP>[K] }
     & Omit<OWNPROPS, "ref">
-    & React.RefAttributes<OWNPROPS["ref"]>;
+    & RefAttributes<OWNPROPS["ref"]>;
 
 export type ConnectedComponent<P extends OwnProps = IProps> = MemoExoticComponent<
-    React.ForwardRefExoticComponent<
-            React.PropsWithoutRef<Omit<P, "ref">>
-            & React.RefAttributes<P["ref"]>
+    ForwardRefExoticComponent<
+            PropsWithoutRef<Omit<P, "ref">>
+            & RefAttributes<P["ref"]>
     >
 >;
+
+export type PropsExtract<C, STATE extends State, SELECTOR_MAP extends SelectorMap> =
+	C extends ComponentType<ConnectProps<infer U, STATE, SELECTOR_MAP>>
+		? U extends OwnProps ? U : IProps
+		: C extends NamedExoticComponent<ConnectProps<infer U, STATE, SELECTOR_MAP>>
+			? U extends OwnProps ? U : IProps
+			: IProps;
+
+export type InjectedProps<P extends IProps = IProps> = {[K in keyof P]: P[K]};
 
 export interface IProps { ref?: unknown }
 

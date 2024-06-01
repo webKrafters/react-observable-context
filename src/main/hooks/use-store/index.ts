@@ -1,5 +1,12 @@
-import type { PropertyInfo, Transform } from '@webkrafters/data-distillery';
-import type { Connection, UpdatePayload } from '@webkrafters/auto-immutable';
+import type {
+	PropertyInfo,
+	Transform
+} from '@webkrafters/data-distillery';
+
+import type {
+	Connection,
+	UpdatePayload
+} from '@webkrafters/auto-immutable';
 
 import type {
 	Changes,
@@ -11,7 +18,12 @@ import type {
 	StoreInternal
 } from '../../..';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+	useCallback,
+	useEffect,
+	useRef,
+	useState
+} from 'react';
 
 import isBoolean from 'lodash.isboolean';
 import isEmpty from 'lodash.isempty';

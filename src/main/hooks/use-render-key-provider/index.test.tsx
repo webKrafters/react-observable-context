@@ -7,6 +7,7 @@ import useRenderKeyProvider from '.';
 import { renderHook } from '@testing-library/react';
 
 import '../../../test-artifacts/suppress-render-compat';
+
 import { ObjectSelector } from '../../..';
 
 describe( 'useRenderKeyProvider', () => {

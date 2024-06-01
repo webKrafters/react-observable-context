@@ -1,12 +1,3 @@
-type PropsExtract<C, STATE extends State, SELECTOR_MAP extends SelectorMap> =
-	C extends ComponentType<ConnectProps<infer U, STATE, SELECTOR_MAP>>
-		? U extends OwnProps ? U : IProps
-		: C extends NamedExoticComponent<ConnectProps<infer U, STATE, SELECTOR_MAP>>
-			? U extends OwnProps ? U : IProps
-			: IProps;
-
-type InjectedProps<P extends IProps = IProps> = {[K in keyof P]: P[K]};
-
 import type {
 	ComponentType,
 	Context,
@@ -21,15 +12,16 @@ import type {
 	ConnectedComponent,
 	ConnectProps,
 	Data,
+	InjectedProps,
 	IObservableContext,
 	IStore,
 	NonReactUsageReport,
 	IProps,
 	ObservableContext,
 	ObservableProvider,
-	OwnProps,
 	PartialState,
 	Prehooks,
+	PropsExtract,
 	ProviderProps,
 	SelectorMap,
 	State,

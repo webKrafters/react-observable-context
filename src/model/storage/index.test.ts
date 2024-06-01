@@ -1,13 +1,15 @@
 import Storage from '.';
 
-const data = { name: { first: 'test', last: 'data' }, isTest: true };
+const data = {
+	isTest: true,
+	name: {
+		first: 'test',
+		last: 'data'
+	}
+};
 
 describe( 'Storage class', () => {
-	const mockImpls = {} as {
-		getItem: jest.Mock<any, any, any>,
-		removeItem: jest.Mock<any, any, any>,
-		setItem: jest.Mock<any, any, any>
-	};
+	const mockImpls = {} as {[K in "getItem" | "removeItem" | "setItem"]: jest.Mock<any, any, any>};
 	let origWinStorage;
 	beforeAll(() => {
 		if( typeof globalThis.sessionStorage?.setItem !== 'undefined' ) {
