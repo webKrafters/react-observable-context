@@ -1,16 +1,16 @@
 var fs = require( 'fs' );
 var path = require( 'path' );
-const { promisify } = require( 'util' );
+var promisify = require( 'util' ).promisify;
 
-const copyFile = promisify( fs.copyFile );
-const read = promisify( fs.readFile );
-const write = promisify( fs.writeFile );
+var pkgJson = require( './package.json' );
 
-const LOGO_FILENAME = 'logo.png';
+var copyFile = promisify( fs.copyFile );
+var read = promisify( fs.readFile );
+var write = promisify( fs.writeFile );
 
-const LOGO_SOURCEPATH = path.join( 'docs-dev', 'src', 'images', LOGO_FILENAME );
-
-const fOpts = { encoding: 'utf8' };
+var LOGO_FILENAME = 'logo.png';
+var LOGO_SOURCEPATH = path.join( 'docs-dev', 'src', 'images', LOGO_FILENAME );
+var fOpts = { encoding: 'utf8' };
 
 Promise
     .allSettled([
@@ -22,9 +22,26 @@ Promise
             throw new Error( officialLogo.reason );
         }
         if( appLogo.reason ) { appLogo.value = '' }
-        if( appLogo.value === officialLogo.value ) { return }
-        return copyFile( LOGO_SOURCEPATH, LOGO_FILENAME );
+        appLogo.value !== officialLogo.value &&
+        copyFile( LOGO_SOURCEPATH, LOGO_FILENAME );
+        updateNpmWhitelist();
     })
     .catch( e => {
-        console.log( 'FAILED TO PROCESS LOGO TRANSFER\n', e );
+        console.log( 'FAILED TO COMPLETE BUILD -- SORRY!', e );
     } );
+
+function updateNpmWhitelist() {
+    var npmWhitelist = [ 'logo.png' ];
+    var entries = fs.readdirSync( 'dist', {
+        ...fOpts, recursive: true, withFileTypes: true
+    } );
+    for( let e = entries.length; e --; ) {
+        let t = entries[ e ];
+        if( !t.isFile() ) { continue }
+        let ePath = path.join( t.path, t.name );
+        ePath.indexOf( 'test' ) === -1 &&
+        npmWhitelist.push( ePath );
+    }
+    pkgJson.files = npmWhitelist;
+    write( 'package.json', JSON.stringify( pkgJson, null, 2 ), fOpts );
+}
