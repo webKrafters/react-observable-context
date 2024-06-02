@@ -50,12 +50,13 @@ import isEqual from 'lodash.isequal';
 import isPlainObject from 'lodash.isplainobject';
 import omit from 'lodash.omit';
 
+import Immutable from '@webkrafters/auto-immutable';
+
 import * as constants from '../constants';
 
 import useRenderKeyProvider from './hooks/use-render-key-provider';
 
 import useStore from './hooks/use-store';
-import Immutable from '@webkrafters/auto-immutable';
 
 const reportNonReactUsage : NonReactUsageReport  = () => {
 	throw new UsageError( 'Detected usage outside of this context\'s Provider component tree. Please apply the exported Provider component' );

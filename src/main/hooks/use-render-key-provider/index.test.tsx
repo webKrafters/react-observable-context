@@ -1,5 +1,3 @@
-import React from 'react';
-
 import clonedeep from '@webkrafters/clone-total';
 
 import useRenderKeyProvider from '.';

@@ -9,7 +9,7 @@ var read = promisify( fs.readFile );
 var write = promisify( fs.writeFile );
 
 var LOGO_FILENAME = 'logo.png';
-var LOGO_SOURCEPATH = path.join( 'docs-dev', 'src', 'images', LOGO_FILENAME );
+var LOGO_SOURCEPATH = path.join( 'docs-dev', 'src', 'images', LOGO_FILENAME.replace( /([.])/, '_compressed$1' ) );
 var fOpts = { encoding: 'utf8' };
 
 Promise
