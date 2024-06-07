@@ -1641,7 +1641,7 @@ describe( 'ReactObservableContext', () => {
 				let Client : React.FC<{
 					selectorMap? : Record<string, string>;
 					resetPaths? : Array<string>
-				}> ;
+				}>;
 				beforeAll(() => {
 					Client = props => {
 						const { resetState } = useContext(
@@ -1739,16 +1739,13 @@ describe( 'ReactObservableContext', () => {
 							const autoImmutable = new AutoImmutable( sourceData );
 							const connection = autoImmutable.connect();
 							const setSpy = jest.spyOn( connection, 'set' );
-							jest.spyOn( autoImmutable, 'connect' )
+							jest
+								.spyOn( autoImmutable, 'connect' )
 								.mockReturnValue( connection );
 							const connectSpy = jest
 								.spyOn( AutoImmutableModule, 'default' )
-								.mockReturnValue( autoImmutable )
-							render(
-								<Wrapper>
-									<Client resetPaths={ args } />
-								</Wrapper>
-							);
+								.mockReturnValue( autoImmutable );
+							render( <Wrapper><Client resetPaths={ args } /></Wrapper> );
 							await wait(() => {});
 							setSpy.mockClear();
 							fireEvent.click( screen.getByRole( 'button' ) );
