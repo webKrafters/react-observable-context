@@ -50,7 +50,10 @@ import isEqual from 'lodash.isequal';
 import isPlainObject from 'lodash.isplainobject';
 import omit from 'lodash.omit';
 
-import Immutable from '@webkrafters/auto-immutable';
+import type {
+	Connection,
+	Immutable
+} from '@webkrafters/auto-immutable';
 
 import * as constants from '../constants';
 
@@ -62,7 +65,7 @@ const reportNonReactUsage : NonReactUsageReport  = () => {
 	throw new UsageError( 'Detected usage outside of this context\'s Provider component tree. Please apply the exported Provider component' );
 };
 
-export function createContext  <T extends State = State>() : ObservableContext<T> {
+export function createContext<T extends State = State>() : ObservableContext<T> {
 	const Context = _createContext({
 		getState: reportNonReactUsage,
 		resetState: reportNonReactUsage,
@@ -73,6 +76,24 @@ export function createContext  <T extends State = State>() : ObservableContext<T
 	Context.Provider = makeObservable( provider ) as unknown as Provider<StorePlaceholder>;
 	return Context as unknown as IObservableContext<T>;
 };
+
+const connRegister : Record<string, Connection<State>> = {};
+
+function getConnectionFrom<T extends State>(
+	connKey : MutableRefObject<string>,
+	cache : Immutable<T>
+) : Connection<T> {
+	if( connKey.current === undefined ) {
+		try {
+			const connection = cache.connect();
+			connKey.current = connection.instanceId;
+			connRegister[ connKey.current ] = connection;
+		} catch( e ) {
+			reportNonReactUsage();
+		}
+	}
+	return connRegister[ connKey.current ];
+}
 
 /** 
  * Actively monitors the store and triggers component re-render if any of the watched keys in the state objects changes
@@ -114,28 +135,37 @@ export function useContext <
 		cache,
 		resetState: _resetState,
 		setState: _setState,
-		subscribe,
+		subscribe
 	} = React.useContext(
 		context as unknown as Context<PartialState<STATE>>
 	) as unknown as StoreInternal<STATE>;
 
-	const [ connection, refreshConnection ] = React.useState(() => {
-		if( cache instanceof Immutable ) {
-			return cache.connect();
-		}
-		reportNonReactUsage();
-	});
+	const connKey = useRef<string>();
+
+	let [ connection ] = React.useState(
+		() => getConnectionFrom( connKey, cache )
+	);
 
 	const _renderKeys = useRenderKeyProvider( selectorMap );
 
+	const refineKeys = () => {
+		const rKeys = _renderKeys.slice();
+		if( fullStateSelectorIndex !== -1 ) {
+			rKeys[ fullStateSelectorIndex ] = constants.GLOBAL_SELECTOR;
+		}
+		return rKeys;
+	}
+
 	/* Reverses selectorMap i.e. {selectorKey: propertyPath} => {propertyPath: selectorKey} */
-	const selectorMapInverse = useMemo(() => {
+	const [ selectorMapInverse, fullStateSelectorIndex ] = useMemo(() => {
 		const map = {} as {[propertyPath: string]: string};
-		if( isEmpty( _renderKeys ) ) { return map };
+		if( isEmpty( _renderKeys ) ) {
+			return [ map, _renderKeys.indexOf( constants.FULL_STATE_SELECTOR ) ];
+		}
 		for( const selectorKey in selectorMap ) {
 			map[ selectorMap[ selectorKey as string ] ] = selectorKey;
 		}
-		return map;
+		return [ map, _renderKeys.indexOf( constants.FULL_STATE_SELECTOR ) ];
 	}, [ _renderKeys ]);
 
 	const [ data, setData ] = React.useState(() => {
@@ -143,7 +173,7 @@ export function useContext <
 		if( isEmpty( _renderKeys ) ) { 
 			return data as Data<SELECTOR_MAP>;
 		}
-		const state = connection.get( ..._renderKeys as string[] );
+		const state = connection.get( ...refineKeys() as string[] );
 		for( const propertyPath of _renderKeys ) {
 			data[ selectorMapInverse[ propertyPath ] ] = state[
 				propertyPath === constants.FULL_STATE_SELECTOR
@@ -156,7 +186,7 @@ export function useContext <
 
 	const updateData = () => {
 		let hasChanges = false;
-		const state = connection.get( ..._renderKeys as string[] );
+		const state = connection.get( ...refineKeys() as string[] );
 		const d = data as object;
 		for( const propertyPath of _renderKeys ) {
 			const selectorKey = selectorMapInverse[ propertyPath ];
@@ -185,7 +215,7 @@ export function useContext <
 
 	React.useEffect(() => { // sync data states with new renderKeys
 		if( cache.closed ) { return }
-		refreshConnection( cache.connect() )
+		connection = getConnectionFrom( connKey, cache );
 		if( isEmpty( _renderKeys ) ) {
 			const _default = {} as Data<SELECTOR_MAP>;
 			!isEqual( _default, data ) && setData( _default );
@@ -202,10 +232,15 @@ export function useContext <
 			if( cache.closed ) { return }
 			unsubscribe();
 			connection.disconnect();
+			delete connRegister[ connKey.current ];
+			connKey.current = undefined;
 		};
 	}, [ _renderKeys, cache ]);
 
-	return useMemo<Store<STATE, SELECTOR_MAP>>(() => ({ data, resetState, setState }), [ data ]);
+	return useMemo<Store<STATE, SELECTOR_MAP>>(
+		() => ({ data, resetState, setState }),
+		[ data ]
+	);
 };
 
 /**
@@ -252,59 +287,6 @@ export function connect<
 
 }
 
-// @debug
-type MyState = { test: number };
-type SMap = { val: string };
-const Ctx = createContext<MyState>();
-const CCC : React.FC = () => ( <Ctx.Provider value={{ test: 234 }}/> );
-const getConnected = connect( Ctx, { val: 'test' } );
-interface PP {
-	b?: boolean,
-	n?: number,
-	ref?: HTMLDivElement,
-	t?: string
-}
-// @debug
-// const T : ForwardRefExoticComponent<PP & {
-// 	data: Data<SMap>;
-//     resetState: (propertyPaths?: string[]) => void;
-//     setState: (changes: import("../").Changes<MyState>) => void;
-// }> = forwardRef(
-const T : React.ForwardRefExoticComponent<ConnectProps<
-	PP, MyState, SMap
->> = forwardRef(
-	({ data: { val } }, ref ) => (
-		<div ref={ ref }>{ val as ReactNode }</div>
-	)
-);
-const Connected = getConnected( T );
-const Connected2 = getConnected(() => (<div></div>));
-interface PP2 {
-	b0?: boolean,
-	n0?: number,
-	s0?: string
-};
-const T2 : FC<ConnectProps<PP2, MyState, SMap>> = ({ b0, data, n0, s0 }) => (
-	<div>{ JSON.stringify({ b0, data, n0, s0 }, null, 2 ) as React.ReactNode }</div>
-);
-const Connected3 = getConnected( T2 );
-const V = () => {
-	const c = ( <Connected n={ 33 } ref={ useRef() } /> );
-	const c2 = ( <Connected2 /> );
-	const c3 = ( <Connected3 n0={ 33 } /> );
-	return (
-		<>
-			{ c }
-			{ c2 }
-			{ c3 }
-		</>
-	);
-}
-
-const F : FC<{age:number}> = props => ( <div>{ props.age }</div> );
-const f = ( <F age={ 33 } /> )
-// -----
-
 export class UsageError extends Error {};
 
 const ChildMemo : FC<{ child: ReactNode }> = (() => {
@@ -341,8 +323,9 @@ function makeObservable<T extends State = State>( Provider : Provider<IStore> ) 
 		storage = null,
 		value
 	}, storeRef ) => {
+		const connKey = useRef<string>();
 		const store = useStore( prehooks, value, storage );
-		const [ connection ] = useState(() => store.cache.connect());
+		const [ connection ] = useState(() => getConnectionFrom( connKey, store.cache ));
 		useImperativeHandle( storeRef, () => ({
 			...( storeRef as MutableRefObject<StoreRef<T>> )?.current ?? {},
 			getState: () => connection.get( constants.GLOBAL_SELECTOR )[ constants.GLOBAL_SELECTOR ] as T,
@@ -350,7 +333,11 @@ function makeObservable<T extends State = State>( Provider : Provider<IStore> ) 
 			setState: changes => store.setState( connection, changes ),
 			subscribe: store.subscribe
 		}), [ ( storeRef as MutableRefObject<StoreRef<T>> )?.current ] );
-		useEffect(() => () => connection.disconnect(), []);
+		useEffect(() => () => {
+			connection.disconnect();
+			delete connRegister[ connKey.current ];
+			connKey.current = undefined;
+		}, []);
 		return (
 			<Provider value={ store }>
 				{ memoizeImmediateChildTree( children ) }

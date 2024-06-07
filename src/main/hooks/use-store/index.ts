@@ -5,17 +5,18 @@ import type {
 
 import type {
 	Connection,
+	Immutable,
 	UpdatePayload
 } from '@webkrafters/auto-immutable';
 
 import type {
 	Changes,
 	IStorage,
+	StoreInternal,
 	Listener,
 	PartialState,
 	Prehooks,
-	State,
-	StoreInternal
+	State
 } from '../../..';
 
 import {
@@ -67,12 +68,26 @@ function runPrehook <T extends State>( prehooks, name, args ) : boolean {
 	return res;
 }
 
+const consumer : Record<string, {
+	cache: Immutable,
+	self: Connection<State>
+}> = {};
+
+function transformPayload<T extends State>( payload : UpdatePayload<T> ) {
+	if( isEmpty( payload ) || !( FULL_STATE_SELECTOR in payload ) ) { return payload }
+	payload = { ...payload, [ GLOBAL_SELECTOR ]: payload[ FULL_STATE_SELECTOR ] };
+	delete payload[ FULL_STATE_SELECTOR ];
+	return payload;
+}
+
 /** @param storage - is Closed to modification post-initialization */
 const useStore = <T extends State>(
 	prehooks : Prehooks<T>,
 	value : PartialState<T>,
 	storage? : CurrentStorage<T>
 ) => {
+
+	const connKey = useRef<string>();
 
 	const mounted = useRef( false );
 
@@ -84,8 +99,16 @@ const useStore = <T extends State>(
 		AutoImmutable<Partial<T>>,
 		Connection<T>
 	]>(() => {
-		const cache = new AutoImmutable( value );
-		return [ cache, cache.connect() ];
+		if( connKey.current === undefined ) {
+			const cache = new AutoImmutable( value );
+			const self = cache.connect();
+			connKey.current = self.instanceId;
+			consumer[ connKey.current ] = { cache, self };
+		}
+		return [
+			consumer[ connKey.current ].cache,
+			consumer[ connKey.current ].self
+		];
 	});
 
 	const [ listeners ] = useState<Set<Listener>>(() => new Set());
@@ -152,13 +175,6 @@ const useStore = <T extends State>(
 		] ) && connection.set( resetData, onChange );
 	}, []);
 
-	function transformPayload ( payload : UpdatePayload<T> ) {
-		if( isEmpty( payload ) || !( FULL_STATE_SELECTOR in payload ) ) { return payload }
-		payload = { ...payload, [ GLOBAL_SELECTOR ]: payload[ FULL_STATE_SELECTOR ] };
-		delete payload[ FULL_STATE_SELECTOR ];
-		return payload;
-	}
-
 	const setState = useCallback<StoreInternal<T>["setState"]>((
 		connection : Connection<T>,
 		changes : Changes<T>
@@ -182,7 +198,14 @@ const useStore = <T extends State>(
 	useEffect(() => {
 		const sKey = storageKey.current;
 		_storage.setItem( sKey, _storage.clone( value as T ) );
-		return () => _storage.removeItem( sKey );
+		return () => {
+			_storage.removeItem( sKey );
+			ownConnection.disconnect();
+			delete consumer[ connKey.current ];
+			connKey.current = undefined;
+			cache.close();
+			listeners.clear();
+		};
 	}, []);
 
 	useEffect(() => {
@@ -193,13 +216,9 @@ const useStore = <T extends State>(
 		setState( ownConnection, value as T );
 	}, [ value ]);
 
-	useEffect(() => () => {
-		ownConnection.disconnect();
-		cache.close();
-		listeners.clear();
-	}, []);
-
-	return useState<StoreInternal<T>>(() => ({ cache, resetState, setState, subscribe }))[ 0 ];
+	return useState<StoreInternal<T>>(
+		() => ({ cache, resetState, setState, subscribe })
+	)[ 0 ];
 };
 
 export default useStore;

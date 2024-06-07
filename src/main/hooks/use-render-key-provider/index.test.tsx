@@ -6,8 +6,6 @@ import { renderHook } from '@testing-library/react';
 
 import '../../../test-artifacts/suppress-render-compat';
 
-import { ObjectSelector } from '../../..';
-
 describe( 'useRenderKeyProvider', () => {
 	let selectorMap;
 	beforeAll(() => { selectorMap = { _a: 'a', _b: 'b', _c: 'c' } });

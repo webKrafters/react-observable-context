@@ -14,6 +14,9 @@ module.exports = {
             diagnostics: false,
         },
     },
+    setupFiles: [
+        '<rootDir>/setupTests.js'
+    ],
     testEnvironment: 'jsdom',
     testEnvironmentOptions: {
         url: 'http://localhost/'

@@ -1,3 +1,5 @@
+export type SourceData = typeof sourceData;
+
 import clonedeep from '@webkrafters/clone-total';
 
 const sourceData = {
@@ -86,9 +88,6 @@ const sourceData = {
 	]
 };
 
-/** @returns {SourceData} */
-const createSourceData = () => clonedeep( sourceData );
+const createSourceData = () : SourceData => clonedeep( sourceData );
 
 export default createSourceData;
-
-/** @typedef {typeof sourceData} SourceData */
