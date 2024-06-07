@@ -8,9 +8,10 @@
     "steveswork <stephen.isienyi@gmail.com> (https://github.com/steveswork)"
   ],
   "dependencies": {
-    "@webkrafters/auto-immutable": "^1.0.1",
+    "@webkrafters/auto-immutable": "^1.0.2-rc.0",
     "@webkrafters/data-distillery": "^0.0.3",
-    "@webkrafters/path-dotize": "^0.0.2"
+    "@webkrafters/path-dotize": "^0.0.2",
+    "auto-immutable-docs": "github:webkrafters/auto-immutable"
   },
   "description": "Observable react context - Update-friendly context. Prevents automatic total component tree tear-down and re-rendering during context updates.",
   "devDependencies": {
@@ -117,5 +118,5 @@
     "test:watch": "eslint --fix && jest --updateSnapshot --watchAll"
   },
   "types": "dist/index.d.ts",
-  "version": "5.0.0"
+  "version": "5.0.1-alpha.0"
 }
