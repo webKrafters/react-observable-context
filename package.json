@@ -10,8 +10,7 @@
   "dependencies": {
     "@webkrafters/auto-immutable": "^1.0.2",
     "@webkrafters/data-distillery": "^0.0.3",
-    "@webkrafters/path-dotize": "^0.0.2",
-    "auto-immutable-docs": "github:webkrafters/auto-immutable"
+    "@webkrafters/path-dotize": "^0.0.2"
   },
   "description": "Observable react context - Update-friendly context. Prevents automatic total component tree tear-down and re-rendering during context updates.",
   "devDependencies": {
@@ -118,5 +117,5 @@
     "test:watch": "eslint --fix && jest --updateSnapshot --watchAll"
   },
   "types": "dist/index.d.ts",
-  "version": "5.0.1"
+  "version": "5.0.2"
 }
