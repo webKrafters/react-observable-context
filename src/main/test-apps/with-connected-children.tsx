@@ -1,13 +1,10 @@
 import type {
-	FC, ReactNode
+	FC,
+	ReactElement,
+	ReactNode
 } from 'react';
 
-import type {
-	Changes,
-	Prehooks,
-	State,
-	Store
-} from '../..';
+import type { Store } from '../..';
 
 import { TestState } from './normal';
 
@@ -34,7 +31,7 @@ export const ConnectedReset = connect( ObservableContext )( Reset );
 
 const CustomerPhoneDisplay : FC<{ data: { phone: string } }> = ({ data }) => {
 	useEffect(() => console.log( 'CustomerPhoneDisplay component rendered.....' ));
-	return `Phone: ${ data.phone ?? 'n.a.' }`;
+	return `Phone: ${ data.phone ?? 'n.a.' }` as unknown as ReactElement;
 };
 CustomerPhoneDisplay.displayName = 'CustomerPhoneDisplay';
 export const ConnectedCustomerPhoneDisplay = connect(
