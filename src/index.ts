@@ -1,6 +1,5 @@
 import type {
     ComponentType,
-    Context,
     ForwardRefExoticComponent, 
     MemoExoticComponent,
     NamedExoticComponent,
@@ -13,7 +12,8 @@ import type {
     Changes as BaseChanges,
     Connection,
     Immutable,
-    Value,
+    KeyType,
+    Value
 } from '@webkrafters/auto-immutable';
 
 import { FULL_STATE_SELECTOR } from './constants';
@@ -36,16 +36,12 @@ export type {
 
 export type State = Value;
 
-export type ObservableContext<T extends State> = IObservableContext<T> | PublicObservableContext<T>;
-
-export type PublicObservableContext<T extends State> = WithObservableProvider<Context<Store<T>>, T>;
-
-export type IObservableContext<T extends State> = WithObservableProvider<Context<IStore>, T>;
-
-export type WithObservableProvider<
-    LOCAL_DATA extends Record<any, any> = {},
-    T extends State = State
-> = LOCAL_DATA & { Provider: ObservableProvider<T> };
+export type Listener<T extends State = {}> = (
+    changes : Readonly<T>,
+    hasChangedPath : (
+        pathTokens : Array<string>
+    ) => boolean
+) => void;
 
 export type ObservableProvider<T extends State> = ForwardRefExoticComponent<
     ProviderProps<T> &
@@ -81,7 +77,12 @@ export type PropsExtract<C, STATE extends State, SELECTOR_MAP extends SelectorMa
 			? U extends OwnProps ? U : IProps
 			: IProps;
 
-export type InjectedProps<P extends IProps = IProps> = {[K in keyof P]: P[K]};
+export type ExtractInjectedProps<
+    STATE extends State = State,
+    SELECTOR_MAP extends SelectorMap = SelectorMap,
+    ALL_PROPS extends OwnProps = OwnProps
+> = Omit<ALL_PROPS, keyof Store<STATE>|keyof SELECTOR_MAP>
+
 
 export interface IProps { ref?: unknown }
 
@@ -97,12 +98,51 @@ export type ArraySelector = Array<Text | FullStateSelector>;
 
 export type SelectorMap = ObjectSelector | ArraySelector | void;
 
-export type Data<SELECTOR_MAP extends SelectorMap> = (
+type ReplacePathSeps<
+    P extends Text,
+    T extends string,
+> = P extends `${infer U}${T}${infer V}`
+    ? ReplacePathSeps<`${U}.${V}`, T>
+    : P;
+
+type TrimPathSep<P extends Text> = P extends `${infer U}]${never}` ? U : P;
+
+type NormalizePath<P extends Text> = TrimPathSep<
+    ReplacePathSeps<
+        ReplacePathSeps<
+            ReplacePathSeps<
+                P,
+                ']['
+            >,
+            '].'
+        >,
+        '['
+    >
+>;
+
+type Datum<
+    P extends Text,
+    S extends Record<Text, any> = State
+> = P extends `${infer K}.${infer P_1}`
+    ? Datum<P_1, S[K]>
+    : P extends ''
+    ? S
+    : any;
+
+type DataPoint<
+    P extends Text,
+    S extends State
+> = P extends FullStateSelector ? S : Datum<NormalizePath<P>, S>;
+
+export type Data<
+    SELECTOR_MAP extends SelectorMap,
+    STATE extends State = State
+> = (
     SELECTOR_MAP extends ObjectSelector
-    ? { [selectorKey in keyof SELECTOR_MAP]: Readonly<any> }
+    ? {[ S_KEY in keyof SELECTOR_MAP ] : DataPoint<SELECTOR_MAP[S_KEY], STATE> }
     : SELECTOR_MAP extends ArraySelector
-    ? { [selectorKey: number]: Readonly<any> }
-    : never
+    ? {[ S_NUM : number ] : DataPoint<SELECTOR_MAP[number], STATE>}
+    : Array<any>
 );
 
 export type Changes<T extends State = State> = BaseChanges<T>;
@@ -116,8 +156,6 @@ export interface IStorage<T extends State = State> {
 
 export type NonReactUsageReport = (...args: Array<unknown>) => void;
 
-export type Listener = <T extends State>(changes: Changes<T>) => void;
-
 export type PartialState<T extends State> = Partial<T>;
 
 export interface Prehooks<T extends State = State> {
@@ -130,6 +168,8 @@ export interface Prehooks<T extends State = State> {
     ) => boolean;
     setState?: (newChanges: Changes<T>) => boolean;
 };
+
+export type Subscribe = <T extends State>( listener : Listener<T> ) => Unsubscribe;
 
 export type Unsubscribe = (...args: Array<unknown>) => void;
 
@@ -152,10 +192,10 @@ export interface Store<
 };
 
 export interface StoreInternal<T extends State> extends IStoreInternal {
-    cache: Immutable<T>,
+    cache: Immutable<Partial<T>>,
     resetState: (connection: Connection<T>, propertyPaths?: Array<string>) => void;
     setState: (connection: Connection<T>, changes: Changes<T>) => void;
-    subscribe: (listener: Listener) => Unsubscribe;
+    subscribe: Subscribe;
 };
 
 export interface StorePlaceholder extends IStoreInternal {
@@ -169,7 +209,7 @@ export interface StoreRef<T extends State = State> extends StorePlaceholder {
     getState: () => T,
     resetState: (propertyPaths?: string[]) => void;
     setState: (changes: Changes<T>) => void;
-    subscribe: (listener: Listener) => Unsubscribe;
+    subscribe: Subscribe;
 }
 
 export {
@@ -188,6 +228,7 @@ export {
 export {
     connect,
     createContext,
+    ObservableContext,
     UsageError,
     useContext
 } from './main';

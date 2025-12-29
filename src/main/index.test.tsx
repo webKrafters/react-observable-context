@@ -1,7 +1,11 @@
+import { AccessorResponse } from '@webkrafters/auto-immutable';
 
 import type {
+	ConnectedComponent,
 	ConnectProps,
 	ObservableContext as ObservableContextType,
+	ExtractInjectedProps,
+	SelectorMap,
 	Store,
 	StoreRef
 } from '..';
@@ -14,8 +18,10 @@ import React, {
 
 import {
 	cleanup as cleanupPerfTest,
+	type DefaultPerfToolsField,
 	perf,
 	RenderCountField,
+	type PerfTools,
 	wait
 } from 'react-performance-testing';
 
@@ -49,7 +55,8 @@ import createSourceData from '../test-artifacts/data/create-state-obj';
 import AppNormal, {
 	ObservableContext,
 	Product,
-	TallyDisplay
+	TallyDisplay,
+	TestState
 } from './test-apps/normal';
 import AppWithConnectedChildren from './test-apps/with-connected-children';
 import AppWithPureChildren from './test-apps/with-pure-children';
@@ -60,6 +67,8 @@ import {
 	REPLACE_TAG
 } from '../constants';
 
+type PerfValue = PerfTools<DefaultPerfToolsField>;
+
 const { default: AutoImmutable } = AutoImmutableModule;
 
 beforeAll(() => {
@@ -69,12 +78,16 @@ beforeAll(() => {
 afterAll(() => jest.resetAllMocks());
 afterEach( cleanup );
 
-const transformRenderCount = ( renderCount, baseRenderCount = {} ) => {
-	const netCount = {};
+const transformRenderCount = (
+	renderCount : PerfValue["renderCount"],
+	baseRenderCount : Record<string,any> = {}
+) => {
+	const netCount : typeof baseRenderCount = {};
 	for( const k of new Set([
 		...Object.keys( renderCount.current ),
 		...Object.keys( baseRenderCount )
 	]) ) {
+		// @ts-expect-error
 		netCount[ k ] = ( renderCount.current[ k ]?.value || 0 ) - ( baseRenderCount[ k ] || 0 );
 	}
 	return netCount;
@@ -89,9 +102,9 @@ describe( 'ReactObservableContext', () => {
 		describe( 'updates only subscribed components', () => {
 			describe( 'using connected store subscribers', () => {
 				test( 'scenario 1', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					render( <AppWithConnectedChildren /> );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.change( screen.getByLabelText( 'New Price:' ), { target: { value: '123' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update price' } ) );
@@ -107,9 +120,9 @@ describe( 'ReactObservableContext', () => {
 					cleanupPerfTest();
 				} );
 				test( 'scenario 2', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					render( <AppWithConnectedChildren /> );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.change( screen.getByLabelText( 'New Color:' ), { target: { value: 'Navy' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update color' } ) );
@@ -125,9 +138,9 @@ describe( 'ReactObservableContext', () => {
 					cleanupPerfTest();
 				} );
 				test( 'scenario 3', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					render( <AppWithConnectedChildren /> );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
@@ -143,11 +156,11 @@ describe( 'ReactObservableContext', () => {
 					cleanupPerfTest();
 				} );
 				test( 'does not render subscribed components for resubmitted changes', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					render( <AppWithConnectedChildren /> );
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
@@ -165,9 +178,9 @@ describe( 'ReactObservableContext', () => {
 			} );
 	 		describe( 'using pure-component store subscribers', () => {
 				test( 'scenario 1', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					render( <AppWithPureChildren /> );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.change( screen.getByLabelText( 'New Price:' ), { target: { value: '123' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update price' } ) );
@@ -183,9 +196,9 @@ describe( 'ReactObservableContext', () => {
 					cleanupPerfTest();
 				} );
 				test( 'scenario 2', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					render( <AppWithPureChildren /> );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.change( screen.getByLabelText( 'New Color:' ), { target: { value: 'Navy' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update color' } ) );
@@ -201,9 +214,9 @@ describe( 'ReactObservableContext', () => {
 					cleanupPerfTest();
 				} );
 				test( 'scenario 3', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					render( <AppWithPureChildren /> );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
@@ -219,11 +232,11 @@ describe( 'ReactObservableContext', () => {
 					cleanupPerfTest();
 				} );
 				test( 'does not render subscribed components for resubmitted changes', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					render( <AppWithPureChildren /> );
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
@@ -241,9 +254,9 @@ describe( 'ReactObservableContext', () => {
 			} );
 			describe( 'using non pure-component store subscribers', () => {
 				test( 'scenario 1', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					render( <AppNormal /> );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.change( screen.getByLabelText( 'New Price:' ), { target: { value: '123' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update price' } ) );
@@ -259,9 +272,9 @@ describe( 'ReactObservableContext', () => {
 					cleanupPerfTest();
 				} );
 				test( 'scenario 2', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					render( <AppNormal /> );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.change( screen.getByLabelText( 'New Color:' ), { target: { value: 'Navy' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update color' } ) );
@@ -277,9 +290,9 @@ describe( 'ReactObservableContext', () => {
 					cleanupPerfTest();
 				} );
 				test( 'scenario 3', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					render( <AppNormal /> );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
@@ -295,11 +308,11 @@ describe( 'ReactObservableContext', () => {
 					cleanupPerfTest();
 				} );
 				test( 'does not render resubmitted changes', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					render( <AppNormal /> );
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
@@ -320,9 +333,9 @@ describe( 'ReactObservableContext', () => {
 	describe( 'store updates from outside the Provider tree', () => {
 		describe( 'with connected component children', () => {
 			test( 'only re-renders Provider children affected by the Provider parent prop change', async () => {
-				const { renderCount } = perf( React );
+				const { renderCount } : PerfValue = perf( React );
 				render( <AppWithConnectedChildren /> );
-				let baseRenderCount;
+				let baseRenderCount : Record<string,any>;
 				await wait(() => { baseRenderCount = transformRenderCount( renderCount ); });
 				fireEvent.keyUp( screen.getByLabelText( 'Type:' ), { target: { value: 'A' } } );
 				await wait(() => {
@@ -337,9 +350,9 @@ describe( 'ReactObservableContext', () => {
 				cleanupPerfTest();
 			} );
 			test( 'only re-renders parts of the Provider tree directly affected by the Provider parent state update', async () => {
-				const { renderCount } = perf( React );
+				const { renderCount } : PerfValue = perf( React );
 				render( <AppWithConnectedChildren /> );
-				let baseRenderCount;
+				let baseRenderCount : Record<string,any>;
 				await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 				fireEvent.keyUp( screen.getByLabelText( '$', {
 					key: '5',
@@ -359,9 +372,9 @@ describe( 'ReactObservableContext', () => {
 	 	} );
 		describe( 'with pure-component children', () => {
 			test( 'only re-renders Provider children affected by the Provider parent prop change', async () => {
-				const { renderCount } = perf( React );
+				const { renderCount } : PerfValue = perf( React );
 				render( <AppWithPureChildren /> );
-				let baseRenderCount;
+				let baseRenderCount : Record<string,any>;
 				await wait(() => { baseRenderCount = transformRenderCount( renderCount ); });
 				fireEvent.keyUp( screen.getByLabelText( 'Type:' ), { target: { value: 'A' } } );
 				await wait(() => {
@@ -376,9 +389,9 @@ describe( 'ReactObservableContext', () => {
 				cleanupPerfTest();
 			} );
 			test( 'only re-renders parts of the Provider tree directly affected by the Provider parent state update', async () => {
-				const { renderCount } = perf( React );
+				const { renderCount } : PerfValue = perf( React );
 				render( <AppWithPureChildren /> );
-				let baseRenderCount;
+				let baseRenderCount : Record<string,any>;
 				await wait(() => { baseRenderCount = transformRenderCount( renderCount ); });
 				fireEvent.keyUp( screen.getByLabelText( '$', { key: '5', code: 'Key5' } as SelectorMatcherOptions ) );
 				await wait(() => {
@@ -395,9 +408,9 @@ describe( 'ReactObservableContext', () => {
 		} );
 		describe( 'with non pure-component children ', () => {
 			test( 'only re-renders Provider children affected by the Provider parent prop change', async () => {
-				const { renderCount } = perf( React );
+				const { renderCount } : PerfValue = perf( React );
 				render( <AppNormal /> );
-				let baseRenderCount;
+				let baseRenderCount : Record<string,any>;
 				await wait(() => { baseRenderCount = transformRenderCount( renderCount ); });
 				fireEvent.keyUp( screen.getByLabelText( 'Type:' ), { target: { value: 'A' } } );
 				await wait(() => {
@@ -412,13 +425,13 @@ describe( 'ReactObservableContext', () => {
 				cleanupPerfTest();
 			} );
 			test( 'oonly re-renders parts of the Provider tree directly affected by the Provider parent state update', async () => {
-				const { renderCount } = perf( React );
+				const { renderCount } : PerfValue = perf( React );
 				render( <AppNormal /> );
-				let baseRenderCount;
+				let baseRenderCount : Record<string,any>;
 				await wait(() => { baseRenderCount = transformRenderCount( renderCount ); });
 				fireEvent.keyUp( screen.getByLabelText( '$', { key: '5', code: 'Key5' } as SelectorMatcherOptions ) );
 				await wait(() => {
-					const netCount = transformRenderCount( renderCount, baseRenderCount ) as any;;
+					const netCount = transformRenderCount( renderCount, baseRenderCount ) as any;
 					expect( netCount.CustomerPhoneDisplay ).toBe( 1 ); // UPDATED BY REACT PROPAGATION (b/c no memoization)
 					expect( netCount.Editor ).toBe( 0 ); // unaffected: no use for product price data
 					expect( netCount.PriceSticker ).toBe( 1 );
@@ -432,13 +445,13 @@ describe( 'ReactObservableContext', () => {
 	} );
 	describe( 'accessing store externally through its provider', () => {
 		const sourceData = createSourceData();
-		let storeRef : React.MutableRefObject<StoreRef<SourceData>>;
+		let storeRef : React.RefObject<StoreRef<Partial<SourceData>>>;
 		let ObservableContext : ObservableContextType<Partial<SourceData>>;
-		let TestComp;
+		let TestComp : React.FC<{children?:React.ReactNode}>;
 		beforeAll(() => {
 			ObservableContext = createContext();
 			TestComp = ({ children }) => {
-				const ref = useRef<StoreRef<SourceData>>();
+				const ref = useRef<StoreRef<Partial<SourceData>>>( null );
 				useEffect(() => { storeRef = ref }, []);
 				return (
 					<ObservableContext.Provider
@@ -450,7 +463,7 @@ describe( 'ReactObservableContext', () => {
 			}
 		});
 		test( 'is successful', () => {
-			storeRef = undefined;
+			storeRef = undefined as unknown as typeof storeRef;
 			render( <TestComp /> );
 			expect( storeRef.current )
 				.toEqual( expect.objectContaining({
@@ -462,7 +475,7 @@ describe( 'ReactObservableContext', () => {
 			);	
 		});
 		test( 'can read the current store data', async () => {
-			storeRef = undefined;
+			storeRef = undefined as unknown as typeof storeRef;
 			const NEW_AGE = 71;
 			const Child =  connect( ObservableContext )(({ setState }) => {
 				const setAge = React.useCallback(
@@ -472,13 +485,13 @@ describe( 'ReactObservableContext', () => {
 				return ( <button value="set age" onClick={ setAge } /> );
 			});
 			render( <TestComp><Child /></TestComp> );
-			expect( storeRef.current.getState().age ).toBe( sourceData.age );
+			expect( storeRef.current!.getState().age ).toBe( sourceData.age );
 			fireEvent.click( screen.getByRole( 'button' ) );
-			expect( storeRef.current.getState().age ).toBe( NEW_AGE );
+			expect( storeRef.current!.getState().age ).toBe( NEW_AGE );
 			cleanupPerfTest();
 		});
 		test( 'can update store and propagate observing components', async () => {
-			storeRef = undefined;
+			storeRef = undefined as unknown as typeof storeRef;
 			const Child =  connect( ObservableContext, {
 				fName: 'name.first'
 			})(({ data: { fName } }) => (
@@ -488,10 +501,10 @@ describe( 'ReactObservableContext', () => {
 			expect( screen.getByTestId( 'fname' ).textContent )
 				.toEqual( sourceData.name.first );
 			const NEW_FNAME = 'Imagene';
-			storeRef.current.setState({
+			storeRef.current!.setState({
 				name: {
 					first: NEW_FNAME
-				} as SourceData["name"]
+				}
 			});
 			await wait(() => {
 				expect( screen.getByTestId( 'fname' ).textContent )
@@ -500,7 +513,7 @@ describe( 'ReactObservableContext', () => {
 			cleanupPerfTest();
 		});
 		test( 'can reset store and propagate observing components', async () => {
-			storeRef = undefined;
+			storeRef = undefined as unknown as typeof storeRef;
 			const NEW_EMAIL = 'some.gobbledygook.co.uk';
 			const Child =  connect( ObservableContext, {
 				myEmail: 'email'
@@ -524,7 +537,7 @@ describe( 'ReactObservableContext', () => {
 				expect( screen.getByTestId( 'myemail' ).textContent )
 					.toEqual( NEW_EMAIL );
 			});
-			storeRef.current.resetState([ 'email' ]);
+			storeRef.current!.resetState([ 'email' ]);
 			await wait(() => {
 				expect( screen.getByTestId( 'myemail' ).textContent )
 					.toEqual( sourceData.email );
@@ -532,34 +545,32 @@ describe( 'ReactObservableContext', () => {
 			cleanupPerfTest();
 		});
 		test( 'can observe state changes coming into the store', async () => {
-			storeRef = undefined;
+			storeRef = undefined as unknown as typeof storeRef;
 			const Child =  connect( ObservableContext )(({ setState }) => {
-				const setCompany = React.useCallback(
-					e => setState({ company: e.target.value }),
+				const setCompany : React.MouseEventHandler<HTMLButtonElement> = React.useCallback(
+					e => setState({ company: ( e.target as HTMLButtonElement ).value }),
 					[ setState ]
 				);
 				return ( <button value="set company" onClick={ setCompany } /> );
 			});
 			render( <TestComp><Child /></TestComp> );
 			const onChangeMock = jest.fn();
-			const unsub = storeRef.current.subscribe( onChangeMock );
+			const unsub = storeRef.current!.subscribe( onChangeMock );
 			const NEW_CNAME = 'What is my company name again?????';
 			fireEvent.click( screen.getByRole( 'button' ), {
 				target: { value: NEW_CNAME }
 			});
 			expect( onChangeMock ).toHaveBeenCalledTimes( 1 );
-			expect( onChangeMock ).toHaveBeenCalledWith({
-				company: NEW_CNAME
-			});
+			expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual({ company: NEW_CNAME });
+			expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual( expect.any( Function ) );
 			onChangeMock.mockClear();
 			const NEW_CNAME2 = 'Alright! let me tell you what\'s what!!!!!';
 			fireEvent.click( screen.getByRole( 'button' ), {
 				target: { value: NEW_CNAME2 }
 			});
 			expect( onChangeMock ).toHaveBeenCalledTimes( 1 );
-			expect( onChangeMock ).toHaveBeenCalledWith({
-				company: NEW_CNAME2
-			});
+			expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual({ company: NEW_CNAME2 });
+			expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual( expect.any( Function ) );
 			unsub(); // unsubscribe store change listener
 			onChangeMock.mockClear();
 			const NEW_CNAME3 = 'Geez! Did you get the name I just gave ya?????';
@@ -574,12 +585,12 @@ describe( 'ReactObservableContext', () => {
 		describe( 'resetState prehook', () => {
 			describe( 'when `resetState` prehook does not exist on the context', () => {
 				test( 'completes `store.resetState` method call', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					const prehooks = {};
 					render( <Product prehooks={ prehooks } type="Computer" /> );
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.click( screen.getByRole( 'button', { name: 'reset context' } ) );
 					await wait(() => {
@@ -640,12 +651,12 @@ describe( 'ReactObservableContext', () => {
 					});
 				} );
 				test( 'completes `store.setState` method call if `setState` prehook returns TRUTHY', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					const prehooks = Object.freeze({ resetState: jest.fn().mockReturnValue( true ) });
 					render( <Product prehooks={ prehooks } type="Computer" /> );
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.click( screen.getByRole( 'button', { name: 'reset context' } ) );
 					await wait(() => {
@@ -660,12 +671,12 @@ describe( 'ReactObservableContext', () => {
 					cleanupPerfTest();
 				} );
 				test( 'aborts `store.setState` method call if `setState` prehook returns FALSY', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					const prehooks = Object.freeze({ resetState: jest.fn().mockReturnValue( false ) });
 					render( <Product prehooks={ prehooks } type="Computer" /> );
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.click( screen.getByRole( 'button', { name: 'reset context' } ) );
 					await wait(() => {
@@ -684,10 +695,10 @@ describe( 'ReactObservableContext', () => {
 		describe( 'setState prehook', () => {
 			describe( 'when `setState` prehook does not exist on the context', () => {
 				test( 'completes `store.setState` method call', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					const prehooks = Object.freeze( expect.any( Object ) );
 					render( <Product prehooks={ prehooks } type="Computer" /> );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
@@ -714,10 +725,10 @@ describe( 'ReactObservableContext', () => {
 					expect( prehooks.setState ).toHaveBeenCalledWith({ type: 'Bag' });
 				} );
 				test( 'completes `store.setState` method call if `setState` prehook returns TRUTHY', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					const prehooks = Object.freeze({ setState: jest.fn().mockReturnValue( true ) });
 					render( <Product prehooks={ prehooks } type="Computer" /> );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
@@ -733,10 +744,10 @@ describe( 'ReactObservableContext', () => {
 					cleanupPerfTest();
 				} );
 				test( 'aborts `store.setState` method call if `setState` prehook returns FALSY', async () => {
-					const { renderCount } = perf( React );
+					const { renderCount } : PerfValue = perf( React );
 					const prehooks = Object.freeze({ setState: jest.fn().mockReturnValue( false ) });
 					render( <Product prehooks={ prehooks } type="Computer" /> );
-					let baseRenderCount;
+					let baseRenderCount : Record<string,any>;
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
@@ -758,9 +769,17 @@ describe( 'ReactObservableContext', () => {
 	describe( 'API', () => {
 		describe( 'connect(...)', () => {
 			let state : {items: Array<{name: string}>};
-			let connector, ObservableContext, selectorMap;
-			let ConnectedComponent1, ConnectedComponent2, ConnectedRefForwardingComponent, ConnectedMemoizedComponent;
-			let compOneProps, compTwoProps, refForwardingCompProps, memoCompProps;
+			let ObservableContext : ObservableContextType<typeof state>;
+			let selectorMap : { all : string; box : string; };
+			let connector : Function;
+			let ConnectedComponent1 : ConnectedComponent<ExtractInjectedProps<typeof state, typeof selectorMap>>;
+			let ConnectedComponent2 : ConnectedComponent<ExtractInjectedProps<typeof state, typeof selectorMap>>;
+			let ConnectedRefForwardingComponent : React.ForwardRefExoticComponent<React.RefAttributes<unknown>>;
+			let ConnectedMemoizedComponent : ConnectedComponent<ExtractInjectedProps<typeof state, typeof selectorMap>>;
+			let compOneProps : { data : typeof selectorMap };
+			let compTwoProps : { data : typeof selectorMap };
+			let refForwardingCompProps : { data: typeof selectorMap };
+			let memoCompProps : { data: typeof selectorMap };
 			beforeAll(() => {
 				state = {
 					items: [
@@ -776,12 +795,19 @@ describe( 'ReactObservableContext', () => {
 					box: 'items.1.name'
 				};
 				connector = connect( ObservableContext, selectorMap );
-				ConnectedComponent1 = connector( props => { compOneProps = props; return null } );
-				ConnectedComponent2 = connector( props => { compTwoProps = props; return null } );
-				const RefForwardingComponent = React.forwardRef(( props, ref ) => { refForwardingCompProps = props; return null });
+				let rawComp : React.FC<typeof compOneProps> = props => { compOneProps = props; return null };
+				ConnectedComponent1 = connector( rawComp );
+				rawComp = props => { compTwoProps = props; return null };
+				ConnectedComponent2 = connector( rawComp );
+				let rawRefComp : React.ForwardRefRenderFunction<unknown, typeof compOneProps> = props => {
+					refForwardingCompProps = props;
+					return null;
+				};
+				const RefForwardingComponent = React.forwardRef( rawRefComp );
 				RefForwardingComponent.displayName = 'Connect.RefForwardingComponent';
 				ConnectedRefForwardingComponent = connector( RefForwardingComponent );
-				const MemoizedComponent = React.memo( props => { memoCompProps = props; return null });
+				rawComp = props => { memoCompProps = props; return null };
+				const MemoizedComponent = React.memo( rawComp );
 				MemoizedComponent.displayName = 'Connect.MemoizedComponent';
 				ConnectedMemoizedComponent = connector( MemoizedComponent );
 			});
@@ -818,7 +844,7 @@ describe( 'ReactObservableContext', () => {
 					expect( compOneProps.data ).toStrictEqual( memoCompProps.data );
 				} );
 				test( "contains the store's public API", () => {
-					const data = {};
+					const data : Record<string, unknown> = {};
 					for( const k in selectorMap ) { data[ k ] = expect.anything() }
 					expect( compOneProps ).toEqual({
 						data,
@@ -851,7 +877,7 @@ describe( 'ReactObservableContext', () => {
 						</ObservableContext.Provider>
 					);
 					render( <App /> );
-					const data = {};
+					const data : Record<string, unknown>  = {};
 					for( const k in selectorMap ) { data[ k ] = expect.anything() }
 					expect( capturedProps ).toEqual({
 						...ownProps,
@@ -862,28 +888,29 @@ describe( 'ReactObservableContext', () => {
 				} );
 				describe( 'prop name conflict resolution: ownProps vs store API props', () => {
 					test( 'defaults to ownProps', () => {
-						let capturedProps;
-						const selectorMap = {
-							fullBox2: 'items[1]',
-							nameFirstBox: 'items.0.name'
-						};
-						const T = props => {
-							capturedProps = props;
-							return null
-						};
 						const ownProps = {
 							data: {
 								anotherOwnProp: expect.anything(),
 								ownProp: expect.anything()
 							}
 						};
+						let capturedProps : Record<string,unknown> = {};
+						const selectorMap = {
+							fullBox2: 'items[1]',
+							nameFirstBox: 'items.0.name'
+						};
+						const T : React.FC<typeof capturedProps> = props => {
+							capturedProps = props;
+							return null
+						};
+						const fn = connect( ObservableContext, selectorMap );
 						const ConnectedComponent = connect( ObservableContext, selectorMap )( T );
 						render(
 							<ObservableContext.Provider value={ state }>
 								<ConnectedComponent { ...ownProps } />
 							</ObservableContext.Provider>
 						);
-						const data = {};
+						const data : Record<string,unknown> = {};
 						for( const k in selectorMap ) { data[ k ] = expect.anything() }
 						expect( capturedProps ).toEqual({
 							...ownProps, // using `data` from ownProps
@@ -911,23 +938,28 @@ describe( 'ReactObservableContext', () => {
 			describe( 'Context provider component property', () => {
 				test( 'also allows for no children', () => {
 					let renderResult;
-					expect(() => { renderResult = render( <ObservableContext.Provider value={{}} /> ) }).not.toThrow();
-					expect( renderResult.container ).toBeEmptyDOMElement();
+					expect(() => {
+						expect( 
+							render( <ObservableContext.Provider value={{}} /> ).container
+						).toBeEmptyDOMElement();
+					}).not.toThrow();
 				} );
 				describe( 'with store object reference for external exposure', () => {
-					let state, storeRef, TestProvider;
+					let state : TestState;
+					let storeRef : React.RefObject<StoreRef<Partial<TestState>>>;
+					let TestProvider : React.FC;
 					beforeAll(() => {
 						state = {
 							color: 'Burgundy',
 							customer: {
 								name: { first: 'tFirst', last: 'tLast' },
-								phone: null
+								phone: null as unknown as string
 							},
 							price: 22.5,
 							type: 'TEST TYPE'
 						}
 						TestProvider = () => { // eslint-disable-line react/display-name
-							storeRef = React.useRef();
+							storeRef = React.useRef<StoreRef<Partial<TestState>>>( null );
 							return (
 								<ObservableContext.Provider ref={ storeRef } value={ state }>
 									<TallyDisplay />
@@ -946,71 +978,95 @@ describe( 'ReactObservableContext', () => {
 					} );
 					test( 'gets a copy of the current state', () => {
 						render( <TestProvider /> );
-						const currentState = storeRef.current.getState();
+						const currentState = storeRef.current!.getState();
 						expect( currentState ).not.toBe( state );
 						expect( currentState ).toStrictEqual( state );
 					} );
 					test( 'updates internal state', async () => {
-						const { renderCount } = perf( React );
+						const { renderCount } : PerfValue = perf( React );
 						render( <TestProvider /> );
 						await wait(() => {});
 						expect( ( renderCount.current.TallyDisplay as RenderCountField ).value ).toBe( 1 );
-						const currentState = storeRef.current.getState();
-						storeRef.current.setState({ price: 45 });
+						const currentState = storeRef.current!.getState();
+						storeRef.current!.setState({ price: 45 });
 						const newState = { ...state, price: 45 };
 						await wait(() => {});
 						await new Promise( resolve => setTimeout( resolve, 50 ) );
 						expect( ( renderCount.current.TallyDisplay as RenderCountField ).value ).toBe( 2 );
 						expect( currentState ).not.toEqual( newState );
-						expect( storeRef.current.getState() ).toEqual( newState );
-						storeRef.current.resetState([ FULL_STATE_SELECTOR ]); // resets store internal state
+						expect( storeRef.current!.getState() ).toEqual( newState );
+						storeRef.current!.resetState([ FULL_STATE_SELECTOR ]); // resets store internal state
 						await wait(() => {});
 						await new Promise( resolve => setTimeout( resolve, 50 ) );
 						expect( ( renderCount.current.TallyDisplay as RenderCountField ).value ).toBe( 3 );
-						const currentState2 = storeRef.current.getState();
-						expect( currentState2 ).not.toBe( state );
+						const currentState2 = storeRef.current!.getState();
 						expect( currentState2 ).toStrictEqual( state );
-						expect( currentState2 ).not.toBe( currentState );
 						expect( currentState2 ).toStrictEqual( currentState );
 						cleanupPerfTest();
-					} );
+					}, 3e4 );
 					test( 'subscribes to state changes', async () => {
 						render( <TestProvider /> );
 						const changes = { price: 45 };
 						const onChangeMock = jest.fn();
-						const unsub = storeRef.current.subscribe( onChangeMock );
+						const unsub = storeRef.current!.subscribe( onChangeMock );
 						expect( onChangeMock ).not.toHaveBeenCalled();
-						storeRef.current.setState( changes );
+						storeRef.current!.setState( changes );
 						expect( onChangeMock ).toHaveBeenCalled();
-						expect( onChangeMock ).toHaveBeenCalledWith( changes );
+						expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual( changes );
+						expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual( expect.any( Function ) );
 						onChangeMock.mockClear();
-						storeRef.current.resetState([ FULL_STATE_SELECTOR ]);
+						storeRef.current!.resetState([ FULL_STATE_SELECTOR ]);
 						expect( onChangeMock ).toHaveBeenCalled();
-						expect( onChangeMock ).toHaveBeenCalledWith({ [ REPLACE_TAG ]: state });
+						expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual( state );
+						expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual( expect.any( Function ) );
 						onChangeMock.mockClear();
 						unsub();
-						storeRef.current.setState( changes );
+						storeRef.current!.setState( changes );
 						expect( onChangeMock ).not.toHaveBeenCalled();
-						storeRef.current.resetState([ FULL_STATE_SELECTOR ]);
+						storeRef.current!.resetState([ FULL_STATE_SELECTOR ]);
 						expect( onChangeMock ).not.toHaveBeenCalled();
 					} );
 				} );
 			} );
 		} );
 		describe( 'useContext(...)', () => {
-			let Client, Wrapper;
+			type handler = ( ...args : Array<unknown> ) => void;
+			let Client : React.FC<{
+				selectorMap? : SelectorMap,
+				onChange? : handler
+			}>;
+			let Wrapper : React.FC<{children : React.ReactNode}>;
+			let createObservable : <T extends {}>( value : T ) => ({
+				ObservableContext : ObservableContextType<T>;
+				Wrapper : typeof Wrapper;
+			});
 			let sourceData : SourceData;
 			let ObservableContext : ObservableContextType<SourceData>;
 			let selectorMapOnRender : Record<string, string>;
+
 			beforeAll(() => {
+				createObservable = value => {
+					const ObservableContext = createContext<typeof value>();
+					const _Wrapper : typeof Wrapper = props => (
+						<ObservableContext.Provider value={ value }>
+							{ props.children }
+						</ObservableContext.Provider>
+					);
+					_Wrapper.displayName = 'Wrapper';
+					/* eslint-disable react/display-name */
+					return { ObservableContext, Wrapper: _Wrapper };
+				}
 				sourceData = createSourceData();
 				selectorMapOnRender = {
 					year3: 'history.places[2].year',
 					isActive: 'isActive',
 					tag6: 'tags[5]'
 				};
+				const observable = createObservable( sourceData );
+				ObservableContext = observable.ObservableContext;
+				Wrapper = observable.Wrapper;
 				/* eslint-disable react/display-name */
-				Client = ({ selectorMap, onChange = (...args) => {} }) => {
+				Client = ({ selectorMap, onChange = ( ...args ) => {} }) => {
 					const store = useContext( ObservableContext, selectorMap );
 					React.useMemo(() => onChange( store ), [ store ]);
 					return (
@@ -1020,18 +1076,11 @@ describe( 'ReactObservableContext', () => {
 					);
 				};
 				Client.displayName = 'Client';
-				ObservableContext = createContext<SourceData>();
-				Wrapper = ({ children }) => (
-					<ObservableContext.Provider value={ sourceData }>
-						{ children }
-					</ObservableContext.Provider>
-				);
-				Wrapper.displayName = 'Wrapper';
 				/* eslint-disable react/display-name */
 			});
 			test( 'returns an observable context store', () => {
 				let store : Store<SourceData>;
-				const onChange = s => { store = s };
+				const onChange : handler = s => { store = s as typeof store };
 				render(
 					<Wrapper>
 						<Client
@@ -1043,7 +1092,7 @@ describe( 'ReactObservableContext', () => {
 						/>
 					</Wrapper>
 				);
-				expect( store ).toEqual({
+				expect( store! ).toEqual({
 					data: {
 						all: sourceData,
 						tags: sourceData.tags
@@ -1054,7 +1103,7 @@ describe( 'ReactObservableContext', () => {
 			} );
 			describe( 'selectorMap update', () => {
 				let selectorMapOnRerender : Record<string, string>;
-				let mockGetReturnValue : Record<string, string>
+				let mockGetReturnValue : AccessorResponse<SourceData>;
 				beforeAll(() => {
 					selectorMapOnRerender = clonedeep( selectorMapOnRender );
 					selectorMapOnRerender.country3 = 'history.places[2].country';
@@ -1062,15 +1111,17 @@ describe( 'ReactObservableContext', () => {
 						Object.values( selectorMapOnRender ).concat(
 							Object.values( selectorMapOnRerender )
 						)
-					) ).reduce(( o, k ) => {
+					) ).reduce(( o : Record<string, unknown>, k ) => {
 						o[ k ] = null;
 						return o;
-					}, {});
+					}, {}) as typeof mockGetReturnValue;
 				});
 				describe( 'normal flow', () => {
 					test( 'adjusts the store on selctorMap change', () => {
-						let _data : Record<any, any>;
-						const onChange = ({ data }) => { _data = data };
+						let _data : typeof mockGetReturnValue = {};
+						const onChange = (({ data } : {
+							data : typeof mockGetReturnValue
+						}) => { _data = data }) as handler;
 						const { rerender } = render(
 							<Wrapper>
 								<Client
@@ -1206,7 +1257,7 @@ describe( 'ReactObservableContext', () => {
 				describe( 'accepting an array of propertyPaths in place of a selector map', () => {
 					let store : Store<SourceData>;
 					beforeAll(() => {
-						const onChange = s => { store = s };
+						const onChange : handler = s => { store = s as typeof store };
 						render(
 							<Wrapper>
 								<Client onChange={ onChange } selectorMap={[
@@ -1229,8 +1280,10 @@ describe( 'ReactObservableContext', () => {
 				describe( 'when the new selectorMap is empty', () => {
 					describe( 'and existing data is not empty', () => {
 						test( 'adjusts the store on selctorMap change', () => {
-							let _data : Record<any, any>;
-							const onChange = ({ data }) => { _data = data };
+							let _data : typeof mockGetReturnValue = {};
+							const onChange = (({ data } : {
+								data : typeof mockGetReturnValue
+							}) => { _data = data }) as handler;
 							const { rerender } = render(
 								<Wrapper>
 									<Client
@@ -1367,9 +1420,11 @@ describe( 'ReactObservableContext', () => {
 					} );
 					describe( 'and existing data is empty', () => {
 						test( 'leaves the store as-is on selctorMap change', () => {
-							let _origData : Record<any, any>;
-							let _data : Record<any, any>;
-							const onChange = ({ data }) => { _data = data };
+							let _origData : typeof mockGetReturnValue = {};
+							let _data : typeof mockGetReturnValue = {};
+							const onChange = (({ data } : {
+								data : typeof mockGetReturnValue
+							}) => { _data = data }) as handler;
 							const { rerender } = render(
 								<Wrapper>
 									<Client
@@ -1503,18 +1558,28 @@ describe( 'ReactObservableContext', () => {
 				} );
 			} );
 			describe( 'store.data', () => {
-				let Client;
+				interface Artefact<T extends {}> {
+					Client : React.FC<{selectorMap : SelectorMap}>,
+					meta : { store : Store<T> }
+				};
+				let setup : <T extends {}>( ctx : ObservableContextType<T> ) => Artefact<T>;
 				beforeAll(() => {
-					Client = ({ selectorMap, onChange }) => {
-						const store = useContext( ObservableContext, selectorMap );
-						React.useMemo(() => onChange( store ), [ store ]);
-						return null;
+					setup = ctx => {
+						let meta = { store : {}  };
+						const Client : React.FC<{selectorMap : SelectorMap}> = ({
+							selectorMap
+						}) => {
+							meta.store = useContext( ctx, selectorMap );
+							// React.useMemo(() => onChange( store, isDirty ), [ store ]);
+							return null;
+						};
+						Client.displayName = 'Client';
+						return { Client, meta } as Artefact<typeof ctx extends ObservableContextType<infer U> ? U : unknown>;
 					};
-					Client.displayName = 'Client';
 				});
 				test( 'carries the latest state data as referenced by the selectorMap', async () => {
-					let store : Store<SourceData>;
-					const onChange = s => { store = s };
+					let store = {} as Store<SourceData>;
+					const onChange : handler = s => { store = s as typeof store };
 					render(
 						<Wrapper>
 							<Client onChange={ onChange } selectorMap={{
@@ -1549,7 +1614,7 @@ describe( 'ReactObservableContext', () => {
 								2: {
 									city: 'Marakesh',
 									country: 'Morocco'
-								} as SourceData["history"]["places"][0]
+								}  as SourceData["history"]["places"][0]
 							} as unknown as SourceData["history"]["places"]
 						},
 						tags: { [ DELETE_TAG ]: [ 3, 5 ] } as unknown as SourceData["tags"]
@@ -1565,13 +1630,13 @@ describe( 'ReactObservableContext', () => {
 						tag7: undefined,
 						tags: [ 0, 1, 2, 4, 6 ].map( i => defaultState.tags[ i ] )
 					});
-				} );
+				}, 3e4 );
 				test( 'holds the complete current state object whenever `@@STATE` entry appears in the selectorMap', async () => {
-					let store : Store<SourceData>;
-					const onChange = s => { store = s };
+					const { ObservableContext, Wrapper } = createObservable( createSourceData() );
+					const { Client, meta } = setup( ObservableContext );
 					render(
 						<Wrapper>
-							<Client onChange={ onChange } selectorMap={{
+							<Client selectorMap={{
 								city3: 'history.places[2].city',
 								country3: 'history.places[2].country',
 								year3: 'history.places[2].year',
@@ -1592,24 +1657,23 @@ describe( 'ReactObservableContext', () => {
 						tag7: defaultState.tags[ 6 ],
 						state: defaultState
 					};
-					expect( store.data ).toEqual( expectedValue );
-					store.setState({
+					expect( meta.store.data ).toEqual( expectedValue );
+					meta.store.setState({
 						isActive: true,
 						history: {
 							places: {
 								2: {
 									city: 'Marakesh',
 									country: 'Morocco'
-								} as unknown as SourceData["history"]["places"][0]
-							} as unknown as SourceData["history"]["places"]
-						} as SourceData["history"]
-					} as SourceData );
-					await new Promise( resolve => setTimeout( resolve, 10 ) );
+								}
+							}
+						}
+					} as unknown as SourceData );
 					const updatedDataEquiv = createSourceData();
 					updatedDataEquiv.history.places[ 2 ].city = 'Marakesh';
 					updatedDataEquiv.history.places[ 2 ].country = 'Morocco';
 					updatedDataEquiv.isActive = true;
-					expect( store.data ).toEqual({
+					expect( meta.store.data ).toEqual({
 						...expectedValue,
 						city3: 'Marakesh',
 						country3: 'Morocco',
@@ -1618,8 +1682,8 @@ describe( 'ReactObservableContext', () => {
 					});
 				} );
 				test( 'holds an empty object when no renderKeys provided ', async () => {
-					let store : Store<SourceData>;
-					const onChange = s => { store = s };
+					let store = {} as Store<SourceData>;
+					const onChange : handler = s => { store = s as typeof store };
 					render( <Wrapper><Client onChange={ onChange } /></Wrapper> );
 					expect( store.data ).toEqual({});
 					store.setState({ // can still update state

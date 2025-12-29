@@ -37,9 +37,9 @@ Reset.displayName = 'Reset';
 
 export const CapitalizedDisplay : React.FC<{text: string}> = ({ text }) => {
 	useEffect(() => console.log( `CapitalizedDisplay( ${ text } ) component rendered.....` ));
-	return text && (
+	return (
 		<>
-			{ `${ text[ 0 ].toUpperCase() }${ text.length > 1 ? text.slice( 1 ) : '' }` }
+			{ `${ text } && ${ text[ 0 ].toUpperCase() }${ text.length > 1 ? text.slice( 1 ) : '' }` }
 		</>
 	);
 };

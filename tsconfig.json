@@ -28,7 +28,9 @@
   "exclude": [
 	  "src/**/test",
 		"src/**/test-apps",
-		"src/**/test-artifacts",
+		"src/test-artifacts",
+		"src/**/*.test.ts",
+		"src/**/*.test.tsx",
 		"src/**/*.test.js"
   ],
   "include": [ "src/**/*" ]

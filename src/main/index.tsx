@@ -1,6 +1,5 @@
 import type {
-	ComponentType,
-	Context,
+	ElementType,
 	FC,
 	MutableRefObject,
 	NamedExoticComponent,
@@ -12,22 +11,21 @@ import type {
 	ConnectedComponent,
 	ConnectProps,
 	Data,
-	InjectedProps,
-	IObservableContext,
+	ExtractInjectedProps,
 	IStore,
+	IStoreInternal,
+	Listener,
 	NonReactUsageReport,
 	IProps,
-	ObservableContext,
 	ObservableProvider,
-	PartialState,
 	Prehooks,
 	PropsExtract,
 	ProviderProps,
 	SelectorMap,
 	State,
 	Store,
-	StoreInternal,
 	StoreRef,
+	StoreInternal,
 	StorePlaceholder
 } from '..';
 
@@ -50,6 +48,9 @@ import isEqual from 'lodash.isequal';
 import isPlainObject from 'lodash.isplainobject';
 import omit from 'lodash.omit';
 
+import get from '@webKrafters/get-property';
+import stringToDotPath from '@webkrafters/path-dotize';
+
 import type {
 	Connection,
 	Immutable
@@ -61,27 +62,39 @@ import useRenderKeyProvider from './hooks/use-render-key-provider';
 
 import useStore from './hooks/use-store';
 
+const __CTX_SYM__ = Symbol( 'Context Symbol' );
+
 const reportNonReactUsage : NonReactUsageReport  = () => {
 	throw new UsageError( 'Detected usage outside of this context\'s Provider component tree. Please apply the exported Provider component' );
 };
 
-export function createContext<T extends State = State>() : ObservableContext<T> {
-	const Context = _createContext({
-		getState: reportNonReactUsage,
-		resetState: reportNonReactUsage,
-		setState: reportNonReactUsage,
-		subscribe: reportNonReactUsage
-	});
-	const provider = Context.Provider;
-	Context.Provider = makeObservable( provider ) as unknown as Provider<StorePlaceholder>;
-	return Context as unknown as IObservableContext<T>;
+export class ObservableContext<T extends State> {
+	private cxt : React.Context<IStoreInternal>;
+	private provider : ObservableProvider<T>;
+	constructor() {
+		this.cxt = _createContext({
+			getState: reportNonReactUsage,
+			resetState: reportNonReactUsage,
+			setState: reportNonReactUsage,
+			subscribe: reportNonReactUsage
+		} as StorePlaceholder );
+		this.provider = makeObservable( this.cxt.Provider );
+	}
+	get [ __CTX_SYM__ ] () { return this.cxt }
+	get Consumer() { return this.cxt.Consumer }
+	get displayName() { return this.cxt.displayName }
+	get Provider() { return this.provider }
+}
+
+export function createContext<T extends State = State>() {
+	return new ObservableContext<T>();
 };
 
 const connRegister : Record<string, Connection<State>> = {};
 
 function getConnectionFrom<T extends State>(
 	connKey : MutableRefObject<string>,
-	cache : Immutable<T>
+	cache : Immutable<Partial<T>>
 ) : Connection<T> {
 	if( connKey.current === undefined ) {
 		try {
@@ -92,7 +105,7 @@ function getConnectionFrom<T extends State>(
 			reportNonReactUsage();
 		}
 	}
-	return connRegister[ connKey.current ];
+	return connRegister[ connKey.current ] as Connection<T>;
 }
 
 /** 
@@ -100,7 +113,7 @@ function getConnectionFrom<T extends State>(
  * 
  * @param context - Refers to the PublicObservableContext<T> type of the ObservableContext<T>
  * @param [selectorMap = {}] - Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
- * @see {ObservableContext<STATE,SELECTOR_MAP>}
+ * @see {ObservableContext<STATE>}
  * 
  * @example
  * a valid property path follows the `lodash` object property path convention.
@@ -123,7 +136,7 @@ function getConnectionFrom<T extends State>(
  * {myX: 'd.e.f[1].x'} or {myX: 'd.e.f.1.x'} => {myX: 7} // same applies to {myY: 'd.e.f[1].y'} = {myY: 8}; {myZ: 'd.e.f[1].z'} = {myZ: 9}
  * {myData: '@@STATE'} => {myData: state}
  */
-export function useContext <
+export function useContext<
 	STATE extends State,
 	SELECTOR_MAP extends SelectorMap
 >(
@@ -137,8 +150,8 @@ export function useContext <
 		setState: _setState,
 		subscribe
 	} = React.useContext(
-		context as unknown as Context<PartialState<STATE>>
-	) as unknown as StoreInternal<STATE>;
+		context[ __CTX_SYM__ ]
+	) as StoreInternal<STATE>;
 
 	const connKey = useRef<string>();
 
@@ -169,10 +182,8 @@ export function useContext <
 	}, [ _renderKeys ]);
 
 	const [ data, setData ] = React.useState(() => {
-		const data = {};
-		if( isEmpty( _renderKeys ) ) { 
-			return data as Data<SELECTOR_MAP>;
-		}
+		const data = {} as Data<SELECTOR_MAP, STATE>;
+		if( isEmpty( _renderKeys ) ) { return data }
 		const state = connection.get( ...refineKeys() as string[] );
 		for( const propertyPath of _renderKeys ) {
 			data[ selectorMapInverse[ propertyPath ] ] = state[
@@ -181,13 +192,22 @@ export function useContext <
 					: propertyPath
 			];
 		}
-		return data as Data<SELECTOR_MAP>;
+		return data;
 	});
+
+	const dataSourceListener : Listener = ( changes, hasChangedPath ) => {
+		for( let _Len = _renderKeys.length, _ = 0; _ < _Len; _++ ) {
+			if( _renderKeys[ _ ] !== constants.FULL_STATE_SELECTOR && !hasChangedPath(
+				stringToDotPath( _renderKeys[ _ ] as string ).split( '.' )
+			) ) { continue }
+			return updateData();
+		}
+	};
 
 	const updateData = () => {
 		let hasChanges = false;
-		const state = connection.get( ...refineKeys() as string[] );
-		const d = data as object;
+		const state = connection.get( ...refineKeys() as Array<string> );
+		const d = data;
 		for( const propertyPath of _renderKeys ) {
 			const selectorKey = selectorMapInverse[ propertyPath ];
 			if( propertyPath === constants.FULL_STATE_SELECTOR ) {
@@ -217,7 +237,7 @@ export function useContext <
 		if( cache.closed ) { return }
 		connection = getConnectionFrom( connKey, cache );
 		if( isEmpty( _renderKeys ) ) {
-			const _default = {} as Data<SELECTOR_MAP>;
+			const _default = {} as typeof data;
 			!isEqual( _default, data ) && setData( _default );
 			return;
 		}
@@ -226,7 +246,7 @@ export function useContext <
 				delete data[ selectorKey ];
 			}
 		}
-		const unsubscribe = subscribe( updateData );
+		const unsubscribe = subscribe( dataSourceListener );
 		updateData();
 		return () => {
 			if( cache.closed ) { return }
@@ -255,20 +275,29 @@ export function useContext <
 export function connect<
 	STATE extends State = State,
 	SELECTOR_MAP extends SelectorMap = SelectorMap
->( context : ObservableContext<STATE>, selectorMap? : SELECTOR_MAP ) {
-
+>(
+	context : ObservableContext<STATE>,
+	selectorMap? : SELECTOR_MAP
+) {
 	function connector<
-		C extends
-			| ComponentType<ConnectProps<P, STATE, SELECTOR_MAP>>
-			| NamedExoticComponent<ConnectProps<P, STATE, SELECTOR_MAP>>,
-		P extends InjectedProps<PropsExtract<C, STATE, SELECTOR_MAP>> = InjectedProps<PropsExtract<C, STATE, SELECTOR_MAP>>
-	>( WrappedComponent : C ) {
+		P extends ExtractInjectedProps<STATE, SELECTOR_MAP>
+	>(
+		WrappedComponent : ElementType<ConnectProps<P, STATE, SELECTOR_MAP>>
+	) : ConnectedComponent<P>;
+	function connector<
+		P extends ExtractInjectedProps<STATE, SELECTOR_MAP>	
+	>(
+		WrappedComponent : NamedExoticComponent<ConnectProps<P, STATE, SELECTOR_MAP>>
+	) : ConnectedComponent<P>;
+	function connector<
+		P extends ExtractInjectedProps<STATE, SELECTOR_MAP>
+	>( WrappedComponent ) : ConnectedComponent<P> {
 
 		const Wrapped = (
-			!( isPlainObject( WrappedComponent ) && 'compare' in WrappedComponent )
+			!( isPlainObject( WrappedComponent ) && 'compare' in WrappedComponent as {} )
 				? memo( WrappedComponent )
 				: WrappedComponent
-		) as NamedExoticComponent<ConnectProps<P, STATE, SELECTOR_MAP>>;
+		);
 
 		const ConnectedComponent = memo( forwardRef<
 			P extends IProps ? P["ref"] : never,
@@ -349,8 +378,8 @@ function makeObservable<T extends State = State>( Provider : Provider<IStore> ) 
 }
 
 function memoizeImmediateChildTree( children : ReactNode ) : ReactNode {
-	return Children.map( children, child => {
-		child = child as JSX.Element;
+	return Children.map( children, _child => {
+		let child = _child as JSX.Element;
 		if( !( child?.type ) || ( // skip memoized or non element(s)
 			typeof child.type === 'object' &&
 			'compare' in ( child.type ?? {} )

@@ -12,4 +12,3 @@ export {
 } from '@webkrafters/auto-immutable';
 
 export const FULL_STATE_SELECTOR = '@@STATE';
-
