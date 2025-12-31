@@ -10,7 +10,7 @@ import isEmpty from 'lodash.isempty';
 import { createContext, useContext } from '..';
 import { SelectorMap } from '../../index';
 
-export type TestState = {
+export interface TestState {
 	color: string,
 	customer: {
 		name: {
@@ -105,35 +105,35 @@ TallyDisplay.displayName = 'TallyDisplay';
 
 export const Editor : React.FC = () => {
 	const { setState } = useObservableContext();
-	const fNameInputRef = useRef( null );
-	const lNameInputRef = useRef( null );
-	const phoneInputRef = useRef( null );
-	const priceInputRef = useRef( null );
-	const colorInputRef = useRef( null );
-	const typeInputRef = useRef( null );
+	const fNameInputRef = useRef<HTMLInputElement>( null );
+	const lNameInputRef = useRef<HTMLInputElement>( null );
+	const phoneInputRef = useRef<HTMLInputElement>( null );
+	const priceInputRef = useRef<HTMLInputElement>( null );
+	const colorInputRef = useRef<HTMLInputElement>( null );
+	const typeInputRef = useRef<HTMLInputElement>( null );
 	const updateColor = useCallback(() => {
-		setState({ color: colorInputRef?.current?.value }); // as unknown as string
+		setState({ color: colorInputRef.current!.value }); // as unknown as string
 	}, []);
 	const updateName = useCallback(() => {
 		setState({
 			customer: {
 				name: {
-					first: fNameInputRef.current.value,
-					last: lNameInputRef.current.value
+					first: fNameInputRef.current!.value,
+					last: lNameInputRef.current!.value
 				}
 			}
 		});
 	}, []);
 	const updatePhone = useCallback(() => {
-		const phone = phoneInputRef.current.value;
+		const phone = phoneInputRef.current!.value;
 		if( phone.length && !/[0-9]{10}/.test( phone ) ) { return }
 		setState({ customer: { phone } });
 	}, []);
 	const updatePrice = useCallback(() => {
-		setState({ price: Number( priceInputRef.current.value ) } );
+		setState({ price: Number( priceInputRef.current!.value ) } );
 	}, []);
 	const updateType = useCallback(() => {
-		setState({ type: typeInputRef.current.value });
+		setState({ type: typeInputRef.current!.value });
 	}, []);
 	useEffect(() => console.log( 'Editor component rendered.....' ));
 	return (
@@ -209,11 +209,14 @@ export const Product : React.FC<{
 	prehooks? : import("../../index").Prehooks<{[x:string]:*}>,
 	type : string
 }> = ({ prehooks = undefined, type }) => {
-	const [ state, setState ] = useState(() => ({
+	const [ state, setState ] = useState<Partial<TestState>>(() => ({
 		color: 'Burgundy',
 		customer: {
-			name: { first: null, last: null },
-			phone: null
+			name: {
+				first: null as unknown as string,
+				last: null as unknown as string
+			},
+			phone: null as unknown as string
 		},
 		price: 22.5,
 		type

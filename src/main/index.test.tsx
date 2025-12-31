@@ -3,7 +3,6 @@ import { AccessorResponse } from '@webkrafters/auto-immutable';
 import type {
 	ConnectedComponent,
 	ConnectProps,
-	ObservableContext as ObservableContextType,
 	ExtractInjectedProps,
 	SelectorMap,
 	Store,
@@ -44,6 +43,7 @@ import { FULL_STATE_SELECTOR } from '../constants';
 import {
 	connect,
 	createContext,
+	ObservableContext as ObservableContextType,
 	UsageError,
 	useContext
 } from '.';
@@ -765,7 +765,6 @@ describe( 'ReactObservableContext', () => {
 			} );
 		} );
 	} );
-
 	describe( 'API', () => {
 		describe( 'connect(...)', () => {
 			let state : {items: Array<{name: string}>};
@@ -923,9 +922,9 @@ describe( 'ReactObservableContext', () => {
 		} );
 		describe( 'createContext(...)', () => {
 			test( 'returns observable context', () => {
+				expect( ObservableContext ).toBeInstanceOf( ObservableContextType );
 				expect( ObservableContext ).toEqual(
 					expect.objectContaining({
-						"$$typeof": expect.any( Symbol ),
 						Consumer: expect.any( Object ),
 						Provider: expect.any( Object )
 					})
@@ -1036,8 +1035,8 @@ describe( 'ReactObservableContext', () => {
 				onChange? : handler
 			}>;
 			let Wrapper : React.FC<{children : React.ReactNode}>;
-			let createObservable : <T extends {}>( value : T ) => ({
-				ObservableContext : ObservableContextType<T>;
+			let createObservable : ( value : SourceData ) => ({
+				ObservableContext : ObservableContextType<typeof value>;
 				Wrapper : typeof Wrapper;
 			});
 			let sourceData : SourceData;
@@ -1693,7 +1692,7 @@ describe( 'ReactObservableContext', () => {
 								2: {
 									city: 'Marakesh',
 									country: 'Morocco'
-								} as unknown as SourceData["history"]["places"][0]
+								}
 							} as unknown as SourceData["history"]["places"]
 						} as SourceData["history"]
 					} as SourceData );

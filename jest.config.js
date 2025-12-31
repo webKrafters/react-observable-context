@@ -1,6 +1,7 @@
 module.exports = {
 	collectCoverageFrom: [
-		'src/**/*.ts'
+		'src/**/*.ts',
+		'src/**/*.tsx'
 	],
 	coveragePathIgnorePatterns: [
 		'src/constants',

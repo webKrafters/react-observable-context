@@ -156,7 +156,7 @@ export interface IStorage<T extends State = State> {
 
 export type NonReactUsageReport = (...args: Array<unknown>) => void;
 
-export type PartialState<T extends State> = Partial<T>;
+export type PartialState<T extends State> = T extends Partial<infer U> ? T : Partial<T>;
 
 export interface Prehooks<T extends State = State> {
     resetState?: (

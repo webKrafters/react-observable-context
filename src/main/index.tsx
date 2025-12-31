@@ -82,7 +82,6 @@ export class ObservableContext<T extends State> {
 	}
 	get [ __CTX_SYM__ ] () { return this.cxt }
 	get Consumer() { return this.cxt.Consumer }
-	get displayName() { return this.cxt.displayName }
 	get Provider() { return this.provider }
 }
 
