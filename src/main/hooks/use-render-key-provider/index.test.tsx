@@ -1,5 +1,7 @@
 import clonedeep from '@webkrafters/clone-total';
 
+import { SelectorMap } from '../../..';
+
 import useRenderKeyProvider from '.';
 
 import { renderHook } from '@testing-library/react';
@@ -7,7 +9,7 @@ import { renderHook } from '@testing-library/react';
 import '../../../test-artifacts/suppress-render-compat';
 
 describe( 'useRenderKeyProvider', () => {
-	let selectorMap;
+	let selectorMap : SelectorMap;
 	beforeAll(() => { selectorMap = { _a: 'a', _b: 'b', _c: 'c' } });
 	test( 'calculates new selectors for new selectorMap', () => {
 		const initialProps = clonedeep( selectorMap );
@@ -20,14 +22,17 @@ describe( 'useRenderKeyProvider', () => {
 		expect( result.current ).not.toBe( selectors );
 	} );
 	test( 'ensures no abrupt updates to selectors for new list with same selectorMap', () => {
-		const { result, rerender } = renderHook( useRenderKeyProvider, { initialProps: selectorMap } );
+		const { result, rerender } = renderHook(
+			useRenderKeyProvider, {
+				initialProps: selectorMap
+			}
+		);
 		const selectors = result.current;
 		rerender( clonedeep( selectorMap ) );
 		expect( result.current ).toBe( selectors );
 	} );
 	describe( 'productive call', () => {
-		let expected;
-		beforeAll(() => { expected = [ 'a', 'b', 'c' ] } );
+		let expected = [ 'a', 'b', 'c' ];
 		test.each([
 			[ 'object', { _a: 'a', _b: 'b', _c: 'c' } ],
 			[ 'array', [ 'a', 'b', 'c' ] ]
@@ -43,6 +48,7 @@ describe( 'useRenderKeyProvider', () => {
 		[ '{}', {} ]
 	])( 'empty selectoMap = %s', ( label, value ) => {
 		test( 'returns empty renderKeys list', () => {
+			// @ts-expect-error
 			const { result } = renderHook( useRenderKeyProvider, { initialProps: value } );
 			expect( result.current ).toEqual([]);
 		} );
@@ -59,9 +65,9 @@ describe( 'useRenderKeyProvider', () => {
 		test( 'throws Type error', () => {
 			try {
 				renderHook( useRenderKeyProvider, {
-					initialProps: value as unknown
+					initialProps: value as unknown as SelectorMap
 				} );
-			} catch( e ) {
+			} catch( e : any ) {
 				expect( e.constructor.name ).toEqual( 'TypeError' );
 				expect( e.message ).toEqual( 'Incompatible Selector Map type provided.' );
 			}

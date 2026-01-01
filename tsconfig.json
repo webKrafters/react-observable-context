@@ -16,6 +16,7 @@
     // Removing this would place the .d.ts files
     // next to the .js files
     "esModuleInterop": true,
+    "isolatedModules": true,
     "jsx": "react",
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
@@ -28,7 +29,9 @@
   "exclude": [
 	  "src/**/test",
 		"src/**/test-apps",
-		"src/**/test-artifacts",
+		"src/test-artifacts",
+		"src/**/*.test.ts",
+		"src/**/*.test.tsx",
 		"src/**/*.test.js"
   ],
   "include": [ "src/**/*" ]

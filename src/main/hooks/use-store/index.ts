@@ -6,6 +6,7 @@ import type {
 import type {
 	Connection,
 	Immutable,
+	Listener as ConnectionListener,
 	UpdatePayload
 } from '@webkrafters/auto-immutable';
 
@@ -106,12 +107,12 @@ const useStore = <T extends State>(
 			consumer[ connKey.current ] = { cache, self };
 		}
 		return [
-			consumer[ connKey.current ].cache,
-			consumer[ connKey.current ].self
+			consumer[ connKey.current ].cache as Immutable<Partial<T>>,
+			consumer[ connKey.current ].self as Connection<T>
 		];
 	});
 
-	const [ listeners ] = useState<Set<Listener>>(() => new Set());
+	const [ listeners ] = useState<Set<Listener<State>>>(() => new Set());
 
 	const [ _storage ] = useState<CurrentStorage<T>>(() => {
 		let isKeyRequired = true;
@@ -126,7 +127,12 @@ const useStore = <T extends State>(
 		return _storage;
 	});
 
-	const onChange : Listener = changes => listeners.forEach( listener => listener( changes ) );
+	const onChange = useCallback<ConnectionListener >((
+		changes: Readonly<T>,
+		changedPathsTokens: Readonly<Array<Array<string>>>
+	 ) => listeners.forEach( listener => listener(
+		changes, createChangePathSearch( changedPathsTokens )
+	) ), []);
 
 	const resetState = useCallback<StoreInternal<T>["resetState"]>((
 		connection : Connection<T>,
@@ -190,7 +196,7 @@ const useStore = <T extends State>(
 		connection.set( changes, onChange );
 	}, []);
 
-	const subscribe = useCallback<StoreInternal<T>["subscribe"]>(( listener : Listener ) => {
+	const subscribe = useCallback<StoreInternal<T>["subscribe"]>( listener => {
 		listeners.add( listener );
 		return () => listeners.delete( listener );
 	}, []);
@@ -222,3 +228,28 @@ const useStore = <T extends State>(
 };
 
 export default useStore;
+
+function createChangePathSearch({ length, ...pathTokenGroups } : Readonly<Array<Array<string>>> ){
+	const root = {};
+	for( let g = 0; g < length; g++ ) {
+		for( let obj = root, tokens = pathTokenGroups[ g ], tLen = tokens.length, t = 0; t < tLen; t++ ) {
+			const key = tokens[ t ];
+			if( !( key in obj ) ) {
+				obj[ key ] = {};
+			}
+			obj = obj[ key ];
+		}
+	}
+	return ({ length, ...pathTokens }: Array<string> ) => {
+		let obj = root;
+		for( let p = 0; p < length; p++ ) {
+			const key = pathTokens[ p ];
+			if( key in obj ) {
+				obj = obj[ key ];
+				continue;
+			}
+			return !Object.keys( obj ).length;
+		}
+		return true;
+	}
+}
