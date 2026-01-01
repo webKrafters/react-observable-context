@@ -16,6 +16,7 @@
     // Removing this would place the .d.ts files
     // next to the .js files
     "esModuleInterop": true,
+    "isolatedModules": true,
     "jsx": "react",
     "moduleResolution": "NodeNext",
     "module": "NodeNext",

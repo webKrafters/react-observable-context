@@ -127,12 +127,12 @@ const useStore = <T extends State>(
 		return _storage;
 	});
 
-	const onChange : ConnectionListener = (
+	const onChange = useCallback<ConnectionListener >((
 		changes: Readonly<T>,
-		changedPaths: Readonly<Array<Array<string>>>
+		changedPathsTokens: Readonly<Array<Array<string>>>
 	 ) => listeners.forEach( listener => listener(
-		changes, createChangePathSearch( changedPaths )
-	) );
+		changes, createChangePathSearch( changedPathsTokens )
+	) ), []);
 
 	const resetState = useCallback<StoreInternal<T>["resetState"]>((
 		connection : Connection<T>,

@@ -1121,16 +1121,18 @@ describe( 'ReactObservableContext', () => {
 						const onChange = (({ data } : {
 							data : typeof mockGetReturnValue
 						}) => { _data = data }) as handler;
+						const _selectorMapOnRender = { ...selectorMapOnRender };
+						_selectorMapOnRender.company = 'company';
 						const { rerender } = render(
 							<Wrapper>
 								<Client
 									onChange={ onChange }
-									selectorMap={ selectorMapOnRender }
+									selectorMap={ _selectorMapOnRender }
 								/>
 							</Wrapper>
 						);
 						expect( Object.keys( _data ) )
-							.toEqual( Object.keys( selectorMapOnRender ));
+							.toEqual( Object.keys( _selectorMapOnRender ));
 						rerender(
 							<Wrapper>
 								<Client
@@ -1569,7 +1571,6 @@ describe( 'ReactObservableContext', () => {
 							selectorMap
 						}) => {
 							meta.store = useContext( ctx, selectorMap );
-							// React.useMemo(() => onChange( store, isDirty ), [ store ]);
 							return null;
 						};
 						Client.displayName = 'Client';

@@ -19,7 +19,6 @@ import type {
 	IProps,
 	ObservableProvider,
 	Prehooks,
-	PropsExtract,
 	ProviderProps,
 	SelectorMap,
 	State,
@@ -43,12 +42,10 @@ import React, {
 	useState
 } from 'react';
 
-import isEmpty from 'lodash.isempty';
 import isEqual from 'lodash.isequal';
 import isPlainObject from 'lodash.isplainobject';
 import omit from 'lodash.omit';
 
-import get from '@webKrafters/get-property';
 import stringToDotPath from '@webkrafters/path-dotize';
 
 import type {
@@ -171,7 +168,7 @@ export function useContext<
 	/* Reverses selectorMap i.e. {selectorKey: propertyPath} => {propertyPath: selectorKey} */
 	const [ selectorMapInverse, fullStateSelectorIndex ] = useMemo(() => {
 		const map = {} as {[propertyPath: string]: string};
-		if( isEmpty( _renderKeys ) ) {
+		if( !_renderKeys.length ) {
 			return [ map, _renderKeys.indexOf( constants.FULL_STATE_SELECTOR ) ];
 		}
 		for( const selectorKey in selectorMap ) {
@@ -182,7 +179,7 @@ export function useContext<
 
 	const [ data, setData ] = React.useState(() => {
 		const data = {} as Data<SELECTOR_MAP, STATE>;
-		if( isEmpty( _renderKeys ) ) { return data }
+		if( !_renderKeys.length ) { return data }
 		const state = connection.get( ...refineKeys() as string[] );
 		for( const propertyPath of _renderKeys ) {
 			data[ selectorMapInverse[ propertyPath ] ] = state[
@@ -206,17 +203,16 @@ export function useContext<
 	const updateData = () => {
 		let hasChanges = false;
 		const state = connection.get( ...refineKeys() as Array<string> );
-		const d = data;
 		for( const propertyPath of _renderKeys ) {
 			const selectorKey = selectorMapInverse[ propertyPath ];
 			if( propertyPath === constants.FULL_STATE_SELECTOR ) {
 				if( data[ selectorKey ] === state[ constants.GLOBAL_SELECTOR ] ) { continue }
-				d[ selectorKey ] = state[ constants.GLOBAL_SELECTOR ];
+				data[ selectorKey ] = state[ constants.GLOBAL_SELECTOR ];
 				hasChanges = true;
 				continue;
 			}
 			if( data[ selectorKey ] === state[ propertyPath ] ) { continue }
-			d[ selectorKey ] = state[ propertyPath ];
+			data[ selectorKey ] = state[ propertyPath ];
 			hasChanges = true;
 		}
 		hasChanges && setData({ ...data });
@@ -233,9 +229,10 @@ export function useContext<
 	);
 
 	React.useEffect(() => { // sync data states with new renderKeys
+		// istanbul ignore if
 		if( cache.closed ) { return }
 		connection = getConnectionFrom( connKey, cache );
-		if( isEmpty( _renderKeys ) ) {
+		if( !_renderKeys.length ) {
 			const _default = {} as typeof data;
 			!isEqual( _default, data ) && setData( _default );
 			return;
@@ -381,7 +378,7 @@ function memoizeImmediateChildTree( children : ReactNode ) : ReactNode {
 		let child = _child as JSX.Element;
 		if( !( child?.type ) || ( // skip memoized or non element(s)
 			typeof child.type === 'object' &&
-			'compare' in ( child.type ?? {} )
+			child.type.$$typeof?.toString() === 'Symbol(react.memo)'
 		) ) {
 			return child;
 		}

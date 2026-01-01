@@ -58,7 +58,9 @@ export type Data<SELECTOR_MAP extends SelectorMap = SelectorMap> = {
 CustomerPhoneDisplay.displayName = 'CustomerPhoneDisplay';
 
 export const TallyDisplay : React.FC = () => {
-	const { data: { color, name, price, type } } = useObservableContext({
+	const { data: {
+		color, name, price, type
+	} } = useObservableContext({
 		color: 'color',
 		name: 'customer.name',
 		price: 'price',
