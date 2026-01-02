@@ -22,6 +22,13 @@
 
 # React-Observable-Context [Eagle Eye]
 
+<table BORDER-COLOR="0a0" BORDER-WIDTH="2">
+    <td VALIGN="middle" ALIGN="center" FONT-WEIGHT="BOLD" COLOR="#333" HEIGHT="250px" width="1250px">
+		COMPATIBLE WITH REACT VERSIONS 16.8 to 18.x.x.<br />
+		A VERSION 3.0.0 FOR REACT 19+ IS CURRENTLY UNDER DEVELOPMENT.
+	</td>
+</table>
+
 <ul>
 	<li> Auto-immutable update-friendly context. See <a href="https://eagleeye.js.org/concepts/store/setstate"><code>store.setState</code></a>.</li>
 	<li> A context bearing an observable consumer <a href="https://eagleeye.js.org/concepts/store">store</a>.</li>
