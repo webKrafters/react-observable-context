@@ -120,7 +120,7 @@
     "test:watch": "eslint --fix && jest --updateSnapshot --watchAll"
   },
   "types": "dist/index.d.ts",
-  "version": "6.0.0-rc.1",
+  "version": "6.0.0-rc.1.0",
   "dependencies": {
     "@webkrafters/auto-immutable": "^2.0.0-rc.9"
   }
