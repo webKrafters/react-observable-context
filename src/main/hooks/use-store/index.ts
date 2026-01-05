@@ -130,9 +130,10 @@ const useStore = <T extends State>(
 	const onChange = useCallback<ConnectionListener >((
 		changes: Readonly<T>,
 		changedPathsTokens: Readonly<Array<Array<string>>>
-	 ) => listeners.forEach( listener => listener(
-		changes, createChangePathSearch( changedPathsTokens )
-	) ), []);
+	 ) => {
+		const pSearch = createChangePathSearch( changedPathsTokens );
+		listeners.forEach( listener => listener( changes, pSearch ) );
+	}, [] );
 
 	const resetState = useCallback<StoreInternal<T>["resetState"]>((
 		connection : Connection<T>,
