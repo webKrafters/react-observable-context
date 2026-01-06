@@ -24,8 +24,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-
       - run: npm install --package-lock-only
+      - run: npm install
       - run: npm ci --legacy-peer-deps
       - run: npm run test:core -- --coverage
 
