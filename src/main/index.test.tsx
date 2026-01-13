@@ -9,6 +9,8 @@ import type {
 	StoreRef
 } from '..';
 
+import getProperty from '@webkrafters/get-property';
+
 import React, {
 	useRef,
 	useEffect,
@@ -562,7 +564,9 @@ describe( 'ReactObservableContext', () => {
 			});
 			expect( onChangeMock ).toHaveBeenCalledTimes( 1 );
 			expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual({ company: NEW_CNAME });
-			expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual( expect.any( Function ) );
+			expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual([[ 'company' ]]);
+			expect( onChangeMock.mock.calls[ 0 ][ 2 ] ).toEqual({ company: NEW_CNAME });
+			expect( onChangeMock.mock.calls[ 0 ][ 3 ] ).toEqual( expect.any( Function ) );
 			onChangeMock.mockClear();
 			const NEW_CNAME2 = 'Alright! let me tell you what\'s what!!!!!';
 			fireEvent.click( screen.getByRole( 'button' ), {
@@ -570,7 +574,9 @@ describe( 'ReactObservableContext', () => {
 			});
 			expect( onChangeMock ).toHaveBeenCalledTimes( 1 );
 			expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual({ company: NEW_CNAME2 });
-			expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual( expect.any( Function ) );
+			expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual([[ 'company' ]]);
+			expect( onChangeMock.mock.calls[ 0 ][ 2 ] ).toEqual({ company: NEW_CNAME2 });
+			expect( onChangeMock.mock.calls[ 0 ][ 3 ] ).toEqual( expect.any( Function ) );
 			unsub(); // unsubscribe store change listener
 			onChangeMock.mockClear();
 			const NEW_CNAME3 = 'Geez! Did you get the name I just gave ya?????';
@@ -590,7 +596,7 @@ describe( 'ReactObservableContext', () => {
 					render( <Product prehooks={ prehooks } type="Computer" /> );
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
-					let baseRenderCount : Record<string,any>;
+					let baseRenderCount : Record<string,any> = {};
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.click( screen.getByRole( 'button', { name: 'reset context' } ) );
 					await wait(() => {
@@ -975,11 +981,76 @@ describe( 'ReactObservableContext', () => {
 							subscribe: expect.any( Function )
 						}) );
 					} );
-					test( 'gets a copy of the current state', () => {
-						render( <TestProvider /> );
-						const currentState = storeRef.current!.getState();
-						expect( currentState ).not.toBe( state );
-						expect( currentState ).toStrictEqual( state );
+					describe( 'accessing the state', () => {
+						test( 'returns entire copy of the current state by default', () => {
+							render( <TestProvider /> );
+							const currentState = storeRef.current!.getState();
+							expect( currentState ).not.toBe( state );
+							expect( currentState ).toStrictEqual( state );
+						} );
+						test( 'returns only copy of the state targeted by property paths', () => {
+							render( <TestProvider /> );
+							const expected = {
+								customer: {
+									name: { last: 'tLast' },
+									phone: null
+								},
+								type: 'TEST TYPE'
+							};
+							const currentState = storeRef.current!.getState([
+								'customer.name.last',
+								'type',
+								'customer.phone'
+							]);
+							expect( currentState ).toEqual( expected );
+						} );
+						test( 'returns entire copy of the current state if ' + FULL_STATE_SELECTOR + ' found in property paths used', () => {
+							render( <TestProvider /> );
+							expect( storeRef.current!.getState([
+								'customer.name.last',
+								'type',
+								'customer.phone',
+								FULL_STATE_SELECTOR
+							]) ).toEqual( state );
+						} );
+						describe( 'when unchanged, guarantees data consistency by ensuring that...', () => {
+							function areExact( a : any, b : any ) {
+								if( a !== b ) { return false };
+								if( typeof a === 'object' ) {
+									for( const k in a ) {
+										return areExact( a[ k ], b[ k ] );
+									}
+								}
+								return true;
+							}
+							test( 'same entire state is returned for all default requests', () => {
+								render( <TestProvider /> );
+								expect( areExact(
+									storeRef.current!.getState(),
+									storeRef.current!.getState()
+								) ).toBe( true );
+							} );
+							test( 'same values at property paths are returned when using property paths', () => {
+								render( <TestProvider /> );
+								const pPaths = [ 'customer.name.last', 'type', 'customer.phone' ];
+								const s1 = storeRef.current!.getState( pPaths );
+								const s2 = storeRef.current!.getState( pPaths );
+								for( const path of pPaths ) {
+									expect( areExact(
+										getProperty( s1, path )._value,
+										getProperty( s2, path )._value
+									) ).toBe( true );
+								}
+							} );
+							test( 'same entire state is returned if ' + FULL_STATE_SELECTOR + ' found in property paths used', () => {
+								render( <TestProvider /> );
+								const pPaths = [ 'customer.name.last', 'type', FULL_STATE_SELECTOR, 'customer.phone' ];
+								expect( areExact(
+									storeRef.current!.getState(),
+									storeRef.current!.getState()
+								) ).toBe( true );
+							} );
+						} );
 					} );
 					test( 'updates internal state', async () => {
 						const { renderCount } : PerfValue = perf( React );
@@ -1012,12 +1083,38 @@ describe( 'ReactObservableContext', () => {
 						storeRef.current!.setState( changes );
 						expect( onChangeMock ).toHaveBeenCalled();
 						expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual( changes );
-						expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual( expect.any( Function ) );
+						expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual([[ 'price' ]]);
+						expect( onChangeMock.mock.calls[ 0 ][ 2 ] ).toEqual( changes );
+						expect( onChangeMock.mock.calls[ 0 ][ 3 ] ).toEqual( expect.any( Function ) );
+						onChangeMock.mockClear();
+						const changes2 = [
+							{
+								color: 'Navy',
+								type: 'TEST TYPE_2'
+							},
+							{ customer: { name: { last: 'T_last_2' } } }
+						];
+						storeRef.current!.setState( changes2 );
+						expect( onChangeMock ).toHaveBeenCalled();
+						expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual( changes2 );
+						expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual([
+							[ 'color' ],
+							[ 'type' ],
+							[ 'customer', 'name', 'last' ]
+						]);
+						expect( onChangeMock.mock.calls[ 0 ][ 2 ] ).toEqual({
+							color: 'Navy',
+							customer: { name: { last: 'T_last_2' } },
+							type: 'TEST TYPE_2'
+						});
+						expect( onChangeMock.mock.calls[ 0 ][ 3 ] ).toEqual( expect.any( Function ) );
 						onChangeMock.mockClear();
 						storeRef.current!.resetState([ FULL_STATE_SELECTOR ]);
 						expect( onChangeMock ).toHaveBeenCalled();
-						expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual( state );
-						expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual( expect.any( Function ) );
+						expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual({[ REPLACE_TAG ]: state });
+						expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual([[]]);
+						expect( onChangeMock.mock.calls[ 0 ][ 2 ] ).toEqual( state );
+						expect( onChangeMock.mock.calls[ 0 ][ 3 ] ).toEqual( expect.any( Function ) );
 						onChangeMock.mockClear();
 						unsub();
 						storeRef.current!.setState( changes );

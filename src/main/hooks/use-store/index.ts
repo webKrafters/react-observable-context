@@ -127,80 +127,84 @@ const useStore = <T extends State>(
 		return _storage;
 	});
 
-	const onChange = useCallback<ConnectionListener >((
-		changes: Readonly<T>,
-		changedPathsTokens: Readonly<Array<Array<string>>>
-	 ) => {
-		const pSearch = createChangePathSearch( changedPathsTokens );
-		listeners.forEach( listener => listener( changes, pSearch ) );
-	}, [] );
+	const getChangHandler = useCallback<( changes : Changes<T> ) => ConnectionListener>(
+		changes => ( netChanges, changedPathsTokens ) => {
+			const mayHaveChangesAt = createChangePathSearch( changedPathsTokens );
+			listeners.forEach( listener => listener( changes, changedPathsTokens, netChanges, mayHaveChangesAt ) );
+		},
+		[]
+	);
 
-	const resetState = useCallback<StoreInternal<T>["resetState"]>((
-		connection : Connection<T>,
-		propertyPaths : string[] = []
-	) => {
-		const original = _storage.clone( _storage.getItem( storageKey.current ) );
-		let resetData;
-		if( !propertyPaths.length ) {
-			resetData = {};
-		} else if( propertyPaths.includes( FULL_STATE_SELECTOR ) ) {
-			resetData = isEmpty( original ) ? CLEAR_TAG : { [ REPLACE_TAG ]: original };
-		} else {
-			const visitedPathMap = {};
-			const transformer = ({ trail, value } : PropertyInfo ) => {
-				visitedPathMap[ trail.join( '.' ) ] = null;
-				return { [ REPLACE_TAG ]: value };
-			} 
-			resetData = mapPathsToObject( original, propertyPaths, transformer as Transform );
-			if( Object.keys( visitedPathMap ).length < propertyPaths.length ) {
-				for( let path of propertyPaths ) {
-					path = stringToDotPath( path );
-					if( path in visitedPathMap ) { continue }
-					let trail = path.split( '.' );
-					const keyTuple = trail.slice( -1 );
-					trail = trail.slice( 0, -1 );
-					let node = resetData;
-					for( const t of trail ) {
-						if( isEmpty( node[ t ] ) ) {
-							node[ t ] = {};
+	const resetState = useCallback<StoreInternal<T>["resetState"]>(
+		( connection, propertyPaths = [] ) => {
+			const original = _storage.clone( _storage.getItem( storageKey.current ) );
+			let resetData;
+			if( !propertyPaths.length ) {
+				resetData = {};
+			} else if( propertyPaths.includes( FULL_STATE_SELECTOR ) ) {
+				resetData = isEmpty( original ) ? CLEAR_TAG : { [ REPLACE_TAG ]: original };
+			} else {
+				const visitedPathMap = {};
+				const transformer = ({ trail, value } : PropertyInfo ) => {
+					visitedPathMap[ trail.join( '.' ) ] = null;
+					return { [ REPLACE_TAG ]: value };
+				} 
+				resetData = mapPathsToObject( original, propertyPaths, transformer as Transform );
+				if( Object.keys( visitedPathMap ).length < propertyPaths.length ) {
+					for( let path of propertyPaths ) {
+						path = stringToDotPath( path );
+						if( path in visitedPathMap ) { continue }
+						let trail = path.split( '.' );
+						const keyTuple = trail.slice( -1 );
+						trail = trail.slice( 0, -1 );
+						let node = resetData;
+						for( const t of trail ) {
+							if( isEmpty( node[ t ] ) ) {
+								node[ t ] = {};
+							}
+							node = node[ t ];
 						}
-						node = node[ t ];
-					}
-					if( DELETE_TAG in node ) {
-						node[ DELETE_TAG ].push( ...keyTuple );
-					} else {
-						node[ DELETE_TAG ] = keyTuple;
+						if( DELETE_TAG in node ) {
+							node[ DELETE_TAG ].push( ...keyTuple );
+						} else {
+							node[ DELETE_TAG ] = keyTuple;
+						}
 					}
 				}
 			}
-		}
-		runPrehook( prehooksRef.current, 'resetState', [
-			resetData, {
-				current: connection.get( GLOBAL_SELECTOR )[ GLOBAL_SELECTOR ],
-				original
+			runPrehook( prehooksRef.current, 'resetState', [
+				resetData, {
+					current: connection.get( GLOBAL_SELECTOR )[ GLOBAL_SELECTOR ],
+					original
+				}
+			] ) && connection.set( resetData, getChangHandler( resetData ) );
+		},
+		[]
+	);
+
+	const setState = useCallback<StoreInternal<T>["setState"]>(
+		( connection, changes ) => {
+			if( !runPrehook( prehooksRef.current, 'setState', [ changes ] ) ) { return }
+			if( !Array.isArray( changes ) ) {
+				changes = transformPayload( changes );
+			} else {
+				changes = changes.slice();
+				for( let c = changes.length; c--; ) {
+					changes[ c ] = transformPayload( changes[ c ] );
+				}
 			}
-		] ) && connection.set( resetData, onChange );
-	}, []);
+			connection.set( changes, getChangHandler( changes ) );
+		},
+		[]
+	);
 
-	const setState = useCallback<StoreInternal<T>["setState"]>((
-		connection : Connection<T>,
-		changes : Changes<T>
-	) => {
-		if( !runPrehook( prehooksRef.current, 'setState', [ changes ] ) ) { return }
-		if( !Array.isArray( changes ) ) {
-			return connection.set( transformPayload( changes ), onChange );
-		}
-		changes = changes.slice();
-		for( let c = changes.length; c--; ) {
-			changes[ c ] = transformPayload( changes[ c ] );
-		}
-		connection.set( changes, onChange );
-	}, []);
-
-	const subscribe = useCallback<StoreInternal<T>["subscribe"]>( listener => {
-		listeners.add( listener );
-		return () => listeners.delete( listener );
-	}, []);
+	const subscribe = useCallback<StoreInternal<T>["subscribe"]>(
+		listener => {
+			listeners.add( listener );
+			return () => listeners.delete( listener );
+		},
+		[]
+	);
 
 	useEffect(() => {
 		const sKey = storageKey.current;
@@ -230,6 +234,10 @@ const useStore = <T extends State>(
 
 export default useStore;
 
+/**
+ * @param {string[][]} changedPathsTokens - list containing tokenized changed object paths.
+ * @returns {Function} - function verifying that a random tokenized object path falls within the changed paths domain.
+ */
 function createChangePathSearch({ length, ...pathTokenGroups } : Readonly<Array<Array<string>>> ){
 	const root = {};
 	for( let g = 0; g < length; g++ ) {

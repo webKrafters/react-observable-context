@@ -12,7 +12,6 @@ import type {
     Changes as BaseChanges,
     Connection,
     Immutable,
-    KeyType,
     Value
 } from '@webkrafters/auto-immutable';
 
@@ -37,10 +36,10 @@ export type {
 export type State = Value;
 
 export type Listener<T extends State = {}> = (
-    changes : Readonly<T>,
-    hasChangedPath : (
-        pathTokens : Array<string>
-    ) => boolean
+    changes : Changes<T>,
+    changedPathsTokens : Readonly<Array<Array<string>>>,
+    netChanges : Readonly<T>,
+    mayHaveChangesAt : (pathTokens : Array<string>) => boolean
 ) => void;
 
 export type ObservableProvider<T extends State> = ForwardRefExoticComponent<
@@ -206,8 +205,8 @@ export interface StorePlaceholder extends IStoreInternal {
 };
 
 export interface StoreRef<T extends State = State> extends StorePlaceholder {
-    getState: () => T,
-    resetState: (propertyPaths?: string[]) => void;
+    getState: (propertyPaths?: Array<string>) => T,
+    resetState: (propertyPaths?: Array<string>) => void;
     setState: (changes: Changes<T>) => void;
     subscribe: Subscribe;
 }

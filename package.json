@@ -45,6 +45,7 @@
     "lodash.isequal": "^4.5.0",
     "lodash.isplainobject": "^4.0.6",
     "lodash.omit": "^4.5.0",
+    "lodash.set": "^4.3.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-performance-testing": "^2.0.0",
@@ -54,8 +55,8 @@
     "typescript": "^5.4.5"
   },
   "files": [
-    "dist",
-    "logo.png"
+    "logo.png",
+    "dist"
   ],
   "homepage": "https://eagleeye.js.org",
   "keywords": [
@@ -89,6 +90,7 @@
     "lodash.isequal": ">= 0.1.0",
     "lodash.isplainobject": ">= 0.8.0",
     "lodash.omit": ">= 0.1.0",
+    "lodash.set": ">= 0.1.0",
     "react": ">= 16.8.0 <19"
   },
   "publishConfig": {
@@ -100,14 +102,13 @@
   },
   "scripts": {
     "build": "eslint --fix && rm -rf dist && tsc && babel dist -d dist",
-    "postbuild": "node ./post-build",
     "test": "eslint --fix && jest --coverage --updateSnapshot",
     "test:clean": "jest --clearCache",
     "test:core": "jest --updateSnapshot",
     "test:watch": "eslint --fix && jest --updateSnapshot --watchAll"
   },
   "types": "dist/index.d.ts",
-  "version": "6.0.0-rc.2.1",
+  "version": "6.0.0-rc.3",
   "dependencies": {
     "@webkrafters/auto-immutable": "^2.0.0-rc.10"
   }
