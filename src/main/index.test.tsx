@@ -562,7 +562,9 @@ describe( 'ReactObservableContext', () => {
 			});
 			expect( onChangeMock ).toHaveBeenCalledTimes( 1 );
 			expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual({ company: NEW_CNAME });
-			expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual( expect.any( Function ) );
+			expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual([[ 'company' ]]);
+			expect( onChangeMock.mock.calls[ 0 ][ 2 ] ).toEqual({ company: NEW_CNAME });
+			expect( onChangeMock.mock.calls[ 0 ][ 3 ] ).toEqual( expect.any( Function ) );
 			onChangeMock.mockClear();
 			const NEW_CNAME2 = 'Alright! let me tell you what\'s what!!!!!';
 			fireEvent.click( screen.getByRole( 'button' ), {
@@ -570,7 +572,9 @@ describe( 'ReactObservableContext', () => {
 			});
 			expect( onChangeMock ).toHaveBeenCalledTimes( 1 );
 			expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual({ company: NEW_CNAME2 });
-			expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual( expect.any( Function ) );
+			expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual([[ 'company' ]]);
+			expect( onChangeMock.mock.calls[ 0 ][ 2 ] ).toEqual({ company: NEW_CNAME2 });
+			expect( onChangeMock.mock.calls[ 0 ][ 3 ] ).toEqual( expect.any( Function ) );
 			unsub(); // unsubscribe store change listener
 			onChangeMock.mockClear();
 			const NEW_CNAME3 = 'Geez! Did you get the name I just gave ya?????';
@@ -584,7 +588,9 @@ describe( 'ReactObservableContext', () => {
 	describe( 'prehooks', () => {
 		describe( 'resetState prehook', () => {
 			describe( 'when `resetState` prehook does not exist on the context', () => {
-				test( 'completes `store.resetState` method call', async () => {
+				// @debug
+				test( '1xxx', async () => {
+				// test( 'completes `store.resetState` method call', async () => {
 					const { renderCount } : PerfValue = perf( React );
 					const prehooks = {};
 					render( <Product prehooks={ prehooks } type="Computer" /> );
@@ -1012,12 +1018,38 @@ describe( 'ReactObservableContext', () => {
 						storeRef.current!.setState( changes );
 						expect( onChangeMock ).toHaveBeenCalled();
 						expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual( changes );
-						expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual( expect.any( Function ) );
+						expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual([[ 'price' ]]);
+						expect( onChangeMock.mock.calls[ 0 ][ 2 ] ).toEqual( changes );
+						expect( onChangeMock.mock.calls[ 0 ][ 3 ] ).toEqual( expect.any( Function ) );
+						onChangeMock.mockClear();
+						const changes2 = [
+							{
+								color: 'Navy',
+								type: 'TEST TYPE_2'
+							},
+							{ customer: { name: { last: 'T_last_2' } } }
+						];
+						storeRef.current!.setState( changes2 );
+						expect( onChangeMock ).toHaveBeenCalled();
+						expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual( changes2 );
+						expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual([
+							[ 'color' ],
+							[ 'type' ],
+							[ 'customer', 'name', 'last' ]
+						]);
+						expect( onChangeMock.mock.calls[ 0 ][ 2 ] ).toEqual({
+							color: 'Navy',
+							customer: { name: { last: 'T_last_2' } },
+							type: 'TEST TYPE_2'
+						});
+						expect( onChangeMock.mock.calls[ 0 ][ 3 ] ).toEqual( expect.any( Function ) );
 						onChangeMock.mockClear();
 						storeRef.current!.resetState([ FULL_STATE_SELECTOR ]);
 						expect( onChangeMock ).toHaveBeenCalled();
-						expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual( state );
-						expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual( expect.any( Function ) );
+						expect( onChangeMock.mock.calls[ 0 ][ 0 ] ).toEqual({[ REPLACE_TAG ]: state });
+						expect( onChangeMock.mock.calls[ 0 ][ 1 ] ).toEqual([[]]);
+						expect( onChangeMock.mock.calls[ 0 ][ 2 ] ).toEqual( state );
+						expect( onChangeMock.mock.calls[ 0 ][ 3 ] ).toEqual( expect.any( Function ) );
 						onChangeMock.mockClear();
 						unsub();
 						storeRef.current!.setState( changes );

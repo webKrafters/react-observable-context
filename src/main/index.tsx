@@ -45,6 +45,7 @@ import React, {
 import isEqual from 'lodash.isequal';
 import isPlainObject from 'lodash.isplainobject';
 import omit from 'lodash.omit';
+import set from 'lodash.set';
 
 import stringToDotPath from '@webkrafters/path-dotize';
 
@@ -191,9 +192,11 @@ export function useContext<
 		return data;
 	});
 
-	const dataSourceListener : Listener = ( changes, hasChangedPath ) => {
+	const dataSourceListener : Listener = (
+		changes, changePathsTokens, netChanges, mayHaveChangesAt
+	) => {
 		for( let _Len = _renderKeys.length, _ = 0; _ < _Len; _++ ) {
-			if( _renderKeys[ _ ] !== constants.FULL_STATE_SELECTOR && !hasChangedPath(
+			if( _renderKeys[ _ ] !== constants.FULL_STATE_SELECTOR && !mayHaveChangesAt(
 				stringToDotPath( _renderKeys[ _ ] as string ).split( '.' )
 			) ) { continue }
 			return updateData();
@@ -351,9 +354,23 @@ function makeObservable<T extends State = State>( Provider : Provider<IStore> ) 
 		const connKey = useRef<string>();
 		const store = useStore( prehooks, value, storage );
 		const [ connection ] = useState(() => getConnectionFrom( connKey, store.cache ));
+		const getState = useCallback<StoreRef<T>["getState"]>(
+			( propertyPaths = [] ) => {
+				if( !propertyPaths.length || propertyPaths.indexOf( constants.FULL_STATE_SELECTOR ) !== -1 ) {
+					return connection.get( constants.GLOBAL_SELECTOR )[ constants.GLOBAL_SELECTOR ] as T;
+				}
+				const data = connection.get( ...propertyPaths );
+				const state = {} as T;
+				for( const d in data ) {
+					set( state, d, data[ d ] );
+				}
+				return state;
+			},
+			[]
+		);
 		useImperativeHandle( storeRef, () => ({
 			...( storeRef as MutableRefObject<StoreRef<T>> )?.current ?? {},
-			getState: () => connection.get( constants.GLOBAL_SELECTOR )[ constants.GLOBAL_SELECTOR ] as T,
+			getState,
 			resetState: propertyPaths => store.resetState( connection, propertyPaths ),
 			setState: changes => store.setState( connection, changes ),
 			subscribe: store.subscribe
