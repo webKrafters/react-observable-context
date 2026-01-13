@@ -56,20 +56,7 @@
   },
   "files": [
     "logo.png",
-    "dist\\main\\hooks\\use-store\\index.js",
-    "dist\\main\\hooks\\use-store\\index.d.ts",
-    "dist\\main\\hooks\\use-render-key-provider\\index.js",
-    "dist\\main\\hooks\\use-render-key-provider\\index.d.ts",
-    "dist\\main\\hooks\\use-prehooks-ref\\index.js",
-    "dist\\main\\hooks\\use-prehooks-ref\\index.d.ts",
-    "dist\\model\\storage\\index.js",
-    "dist\\model\\storage\\index.d.ts",
-    "dist\\main\\index.js",
-    "dist\\main\\index.d.ts",
-    "dist\\index.js",
-    "dist\\index.d.ts",
-    "dist\\constants.js",
-    "dist\\constants.d.ts"
+    "dist"
   ],
   "homepage": "https://eagleeye.js.org",
   "keywords": [
