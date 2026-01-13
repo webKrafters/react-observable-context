@@ -9,6 +9,8 @@ import type {
 	StoreRef
 } from '..';
 
+import getProperty from '@webkrafters/get-property';
+
 import React, {
 	useRef,
 	useEffect,
@@ -588,15 +590,13 @@ describe( 'ReactObservableContext', () => {
 	describe( 'prehooks', () => {
 		describe( 'resetState prehook', () => {
 			describe( 'when `resetState` prehook does not exist on the context', () => {
-				// @debug
-				test( '1xxx', async () => {
-				// test( 'completes `store.resetState` method call', async () => {
+				test( 'completes `store.resetState` method call', async () => {
 					const { renderCount } : PerfValue = perf( React );
 					const prehooks = {};
 					render( <Product prehooks={ prehooks } type="Computer" /> );
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
 					fireEvent.click( screen.getByRole( 'button', { name: 'update type' } ) );
-					let baseRenderCount : Record<string,any>;
+					let baseRenderCount : Record<string,any> = {};
 					await wait(() => { baseRenderCount = transformRenderCount( renderCount ) });
 					fireEvent.click( screen.getByRole( 'button', { name: 'reset context' } ) );
 					await wait(() => {
@@ -981,11 +981,76 @@ describe( 'ReactObservableContext', () => {
 							subscribe: expect.any( Function )
 						}) );
 					} );
-					test( 'gets a copy of the current state', () => {
-						render( <TestProvider /> );
-						const currentState = storeRef.current!.getState();
-						expect( currentState ).not.toBe( state );
-						expect( currentState ).toStrictEqual( state );
+					describe( 'accessing the state', () => {
+						test( 'returns entire copy of the current state by default', () => {
+							render( <TestProvider /> );
+							const currentState = storeRef.current!.getState();
+							expect( currentState ).not.toBe( state );
+							expect( currentState ).toStrictEqual( state );
+						} );
+						test( 'returns only copy of the state targeted by property paths', () => {
+							render( <TestProvider /> );
+							const expected = {
+								customer: {
+									name: { last: 'tLast' },
+									phone: null
+								},
+								type: 'TEST TYPE'
+							};
+							const currentState = storeRef.current!.getState([
+								'customer.name.last',
+								'type',
+								'customer.phone'
+							]);
+							expect( currentState ).toEqual( expected );
+						} );
+						test( 'returns entire copy of the current state if ' + FULL_STATE_SELECTOR + ' found in property paths used', () => {
+							render( <TestProvider /> );
+							expect( storeRef.current!.getState([
+								'customer.name.last',
+								'type',
+								'customer.phone',
+								FULL_STATE_SELECTOR
+							]) ).toEqual( state );
+						} );
+						describe( 'when unchanged, guarantees data consistency by ensuring that...', () => {
+							function areExact( a : any, b : any ) {
+								if( a !== b ) { return false };
+								if( typeof a === 'object' ) {
+									for( const k in a ) {
+										return areExact( a[ k ], b[ k ] );
+									}
+								}
+								return true;
+							}
+							test( 'same entire state is returned for all default requests', () => {
+								render( <TestProvider /> );
+								expect( areExact(
+									storeRef.current!.getState(),
+									storeRef.current!.getState()
+								) ).toBe( true );
+							} );
+							test( 'same values at property paths are returned when using property paths', () => {
+								render( <TestProvider /> );
+								const pPaths = [ 'customer.name.last', 'type', 'customer.phone' ];
+								const s1 = storeRef.current!.getState( pPaths );
+								const s2 = storeRef.current!.getState( pPaths );
+								for( const path of pPaths ) {
+									expect( areExact(
+										getProperty( s1, path )._value,
+										getProperty( s2, path )._value
+									) ).toBe( true );
+								}
+							} );
+							test( 'same entire state is returned if ' + FULL_STATE_SELECTOR + ' found in property paths used', () => {
+								render( <TestProvider /> );
+								const pPaths = [ 'customer.name.last', 'type', FULL_STATE_SELECTOR, 'customer.phone' ];
+								expect( areExact(
+									storeRef.current!.getState(),
+									storeRef.current!.getState()
+								) ).toBe( true );
+							} );
+						} );
 					} );
 					test( 'updates internal state', async () => {
 						const { renderCount } : PerfValue = perf( React );

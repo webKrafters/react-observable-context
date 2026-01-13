@@ -361,9 +361,7 @@ function makeObservable<T extends State = State>( Provider : Provider<IStore> ) 
 				}
 				const data = connection.get( ...propertyPaths );
 				const state = {} as T;
-				for( const d in data ) {
-					set( state, d, data[ d ] );
-				}
+				for( const d in data ) { set( state, d, data[ d ] ) }
 				return state;
 			},
 			[]

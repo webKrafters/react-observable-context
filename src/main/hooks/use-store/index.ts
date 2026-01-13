@@ -127,10 +127,8 @@ const useStore = <T extends State>(
 		return _storage;
 	});
 
-	const getChangHandler = useCallback(
-		( changes : Changes<T> ) : ConnectionListener => (
-			netChanges, changedPathsTokens
-		) => {
+	const getChangHandler = useCallback<( changes : Changes<T> ) => ConnectionListener>(
+		changes => ( netChanges, changedPathsTokens ) => {
 			const mayHaveChangesAt = createChangePathSearch( changedPathsTokens );
 			listeners.forEach( listener => listener( changes, changedPathsTokens, netChanges, mayHaveChangesAt ) );
 		},

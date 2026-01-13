@@ -103,6 +103,7 @@
     "lodash.isequal": ">= 0.1.0",
     "lodash.isplainobject": ">= 0.8.0",
     "lodash.omit": ">= 0.1.0",
+    "lodash.set": ">= 0.1.0",
     "react": ">= 16.8.0 <19"
   },
   "publishConfig": {
