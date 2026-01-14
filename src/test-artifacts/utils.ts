@@ -1,8 +1,8 @@
 import isPlainObject from 'lodash.isplainobject';
 
-export const isReadonly = v => {
+export function isReadonly<T>( v : T ) {
 	let isReadonly = true;
-	const verify = value => {
+	const verify = ( value : any ) => {
 		if( isPlainObject( value ) ) {
 			if( !Object.isFrozen( value ) ) { isReadonly = false } else {
 				for( const k in value ) { verify( value[ k ] ) }

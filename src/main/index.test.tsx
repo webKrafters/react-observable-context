@@ -40,19 +40,20 @@ import * as AutoImmutableModule from '@webkrafters/auto-immutable';
 
 import clonedeep from '@webkrafters/clone-total';
 
-import { FULL_STATE_SELECTOR } from '../constants';
-
 import {
 	connect,
 	createContext,
+	mkReadonly,
 	ObservableContext as ObservableContextType,
 	UsageError,
 	useContext
 } from '.';
 
-import type { SourceData } from '../test-artifacts/data/create-state-obj';
+import { isReadonly } from '../test-artifacts/utils';
 
-import createSourceData from '../test-artifacts/data/create-state-obj';
+import createSourceData, {
+	type SourceData
+} from '../test-artifacts/data/create-state-obj';
 
 import AppNormal, {
 	ObservableContext,
@@ -65,6 +66,7 @@ import AppWithPureChildren from './test-apps/with-pure-children';
 
 import {
 	DELETE_TAG,
+	FULL_STATE_SELECTOR,
 	MOVE_TAG,
 	REPLACE_TAG
 } from '../constants';
@@ -973,7 +975,7 @@ describe( 'ReactObservableContext', () => {
 						};
 					});
 					test( 'is provided', () => {
-						render( <TestProvider /> );
+						const d = render( <TestProvider /> );
 						expect( storeRef.current ).toStrictEqual( expect.objectContaining({
 							getState: expect.any( Function ),
 							resetState: expect.any( Function ),
@@ -1048,6 +1050,35 @@ describe( 'ReactObservableContext', () => {
 								expect( areExact(
 									storeRef.current!.getState(),
 									storeRef.current!.getState()
+								) ).toBe( true );
+							} );
+						} );
+						describe( 'guarantees data immutability by ensuring by...', () => {
+							test( 'returning readonly state for all default requests', () => {
+								render( <TestProvider /> );
+								expect( isReadonly(
+									storeRef.current!.getState()
+								) ).toBe( true );
+							} );
+							test( 'returning readonly state for when using property paths', () => {
+								render( <TestProvider /> );
+								expect( isReadonly(
+									storeRef.current!.getState([
+										'customer.name.last',
+										'type',
+										'customer.phone'
+									])
+								) ).toBe( true );
+							} );
+							test( 'returning entire state as readonly if ' + FULL_STATE_SELECTOR + ' found in property paths used', () => {
+								render( <TestProvider /> );
+								expect( isReadonly(
+									storeRef.current!.getState([
+										'customer.name.last',
+										'type',
+										FULL_STATE_SELECTOR,
+										'customer.phone'
+									])
 								) ).toBe( true );
 							} );
 						} );
@@ -1944,4 +1975,34 @@ describe( 'ReactObservableContext', () => {
 			} );
 		} );
 	} );
+	describe( 'util', () => {
+		describe( 'mkReadonly(...)', () => {
+			function getTestData() {
+				return {
+					a: {
+						b: {
+							c: 33,
+							d: new Date()
+						},
+						items: [ 1, 3, 5 ],
+						j: 'this is my test message'
+					},
+					items: [ , {}, 'just me', null ],
+					r: new RegExp( /g/ ),
+					x: true,
+					y: { z: new class{} },
+					z: new class{}
+				};
+			}
+			test( 'converts all to readonly', () => {
+				const data = getTestData();
+				expect( isReadonly( data ) ).toBe( false );
+				mkReadonly( data );
+				expect( isReadonly( data ) ).toBe( true );
+			} );
+			test( 'also returns the object reference', () => {
+				expect( isReadonly( mkReadonly( getTestData() )) ).toBe( true );
+			} );
+		} );
+	})
 } );

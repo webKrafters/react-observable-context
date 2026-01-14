@@ -235,7 +235,7 @@ const useStore = <T extends State>(
 export default useStore;
 
 /**
- * @param {string[][]} changedPathsTokens - list containing tokenized changed object paths.
+ * @param {Array<Array<string>>} changedPathsTokens - list containing tokenized changed object paths.
  * @returns {Function} - function verifying that a random tokenized object path falls within the changed paths domain.
  */
 function createChangePathSearch({ length, ...pathTokenGroups } : Readonly<Array<Array<string>>> ){
