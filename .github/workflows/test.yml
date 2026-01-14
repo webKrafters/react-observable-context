@@ -25,7 +25,6 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm install --legacy-peer-deps
-      - run: npm ci --legacy-peer-deps
       - run: npm run test:core -- --coverage
 
       - uses: coverallsapp/github-action@master
