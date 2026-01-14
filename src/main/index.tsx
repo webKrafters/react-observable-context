@@ -362,7 +362,7 @@ function makeObservable<T extends State = State>( Provider : Provider<IStore> ) 
 				const data = connection.get( ...propertyPaths );
 				const state = {} as T;
 				for( const d in data ) { set( state, d, data[ d ] ) }
-				return state;
+				return mkReadonly( state );
 			},
 			[]
 		);
@@ -386,6 +386,14 @@ function makeObservable<T extends State = State>( Provider : Provider<IStore> ) 
 	} );
 	Observable.displayName = 'ObservableContext.Provider';
 	return Observable;
+}
+
+export function mkReadonly( v : any ) {
+	if( Object.isFrozen( v ) ) { return v }
+	if( isPlainObject( v ) || Array.isArray( v ) ) {
+		for( const k in v ) { v[ k ] = mkReadonly( v[ k ] ) }
+	}
+	return Object.freeze( v );
 }
 
 function memoizeImmediateChildTree( children : ReactNode ) : ReactNode {

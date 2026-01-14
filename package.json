@@ -22,6 +22,7 @@
     "@types/jest": "^29.5.12",
     "@types/jest-cli": "^24.3.0",
     "@types/lodash.isempty": "^4.4.9",
+    "@types/lodash.isplainobject": "^4.0.9",
     "@types/node": "^20.11.28",
     "@webkrafters/clone-total": "^1.0.1",
     "@webkrafters/data-distillery": "^0.1.1",
@@ -108,7 +109,7 @@
     "test:watch": "eslint --fix && jest --updateSnapshot --watchAll"
   },
   "types": "dist/index.d.ts",
-  "version": "6.0.0-rc.3",
+  "version": "6.0.0-rc.4",
   "dependencies": {
     "@webkrafters/auto-immutable": "^2.0.0-rc.10"
   }
