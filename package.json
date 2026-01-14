@@ -83,9 +83,9 @@
   "name": "@webkrafters/react-observable-context",
   "peerDependencies": {
     "@types/react": ">= 16.8.0 <19",
-    "@webkrafters/clone-total": "^1.0.1",
-    "@webkrafters/data-distillery": "^0.0.3",
-    "@webkrafters/path-dotize": "^0.0.2",
+    "@webkrafters/clone-total": ">= 1.0.1",
+    "@webkrafters/data-distillery": ">= 0.0.3",
+    "@webkrafters/path-dotize": ">= 0.0.2",
     "lodash.isboolean": ">= 0.1.0",
     "lodash.isempty": ">= 0.1.0",
     "lodash.isequal": ">= 0.1.0",
