@@ -62,9 +62,31 @@ import useStore from './hooks/use-store';
 
 const __CTX_SYM__ = Symbol( 'Context Symbol' );
 
-const reportNonReactUsage : NonReactUsageReport  = () => {
-	throw new UsageError( 'Detected usage outside of this context\'s Provider component tree. Please apply the exported Provider component' );
-};
+const connRegister : Record<string, Connection<State>> = {};
+
+const ChildMemo : FC<{ child: ReactNode }> = (() => {
+
+	const useNodeMemo = ( node : ReactNode ) : ReactNode => {
+		const nodeRef = useRef( node );
+		if( !isEqual(
+			omit( nodeRef.current, '_owner' ),
+			omit( node, '_owner' )
+		) ) { nodeRef.current = node }
+		return nodeRef.current;
+	};
+
+	const ChildMemo = memo<{ child: ReactNode }>(({ child }) => ( <>{ child }</> ));
+	ChildMemo.displayName = 'ObservableContext.Provider.Internal.Guardian.ChildMemo';
+
+	const Guardian : FC<{ child: ReactNode }> = ({ child }) => (
+		<ChildMemo child={ useNodeMemo( child ) } />
+	);
+	Guardian.displayName = 'ObservableContext.Provider.Internal.Guardian';
+
+	return Guardian;
+})();
+
+const defaultPrehooks : Readonly<Prehooks<State>> = Object.freeze({});
 
 export class ObservableContext<T extends State> {
 	private cxt : React.Context<IStoreInternal>;
@@ -83,11 +105,62 @@ export class ObservableContext<T extends State> {
 	get Provider() { return this.provider }
 }
 
+const reportNonReactUsage : NonReactUsageReport  = () => {
+	throw new UsageError( 'Detected usage outside of this context\'s Provider component tree. Please apply the exported Provider component' );
+};
+
+export class UsageError extends Error {};
+
+/**
+ * Provides an HOC function for connecting its WrappedComponent argument to the context store.
+ *
+ * The HOC function automatically memoizes any un-memoized WrappedComponent argument.
+ *
+ * @param context - Refers to the PublicObservableContext<T> type of the ObservableContext<T>
+ * @param [selectorMap] - Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
+ * @see {useContext} for selectorMap sample
+ */
+export function connect<
+	STATE extends State = State,
+	SELECTOR_MAP extends SelectorMap = SelectorMap
+>(
+	context : ObservableContext<STATE>,
+	selectorMap? : SELECTOR_MAP
+) {
+	function connector<
+		P extends ExtractInjectedProps<STATE, SELECTOR_MAP>
+	>(
+		WrappedComponent : ElementType<ConnectProps<P, STATE, SELECTOR_MAP>>
+	) : ConnectedComponent<P>;
+	function connector<
+		P extends ExtractInjectedProps<STATE, SELECTOR_MAP>	
+	>(
+		WrappedComponent : NamedExoticComponent<ConnectProps<P, STATE, SELECTOR_MAP>>
+	) : ConnectedComponent<P>;
+	function connector<
+		P extends ExtractInjectedProps<STATE, SELECTOR_MAP>
+	>( WrappedComponent ) : ConnectedComponent<P> {
+		const Wrapped = (
+			!( isPlainObject( WrappedComponent ) && 'compare' in WrappedComponent as {} )
+				? memo( WrappedComponent )
+				: WrappedComponent
+		);
+		const ConnectedComponent = memo( forwardRef<
+			P extends IProps ? P["ref"] : never,
+			Omit<P, "ref">
+		>(( ownProps, ref ) => {
+			const store = useContext( context, selectorMap );
+			return ( <Wrapped { ...store } { ...ownProps } ref={ ref } /> );
+		}) );
+		ConnectedComponent.displayName = 'ObservableContext.Connected';
+		return ConnectedComponent as ConnectedComponent<P>;
+	}
+	return connector;
+}
+
 export function createContext<T extends State = State>() {
 	return new ObservableContext<T>();
 };
-
-const connRegister : Record<string, Connection<State>> = {};
 
 function getConnectionFrom<T extends State>(
 	connKey : MutableRefObject<string>,
@@ -103,6 +176,86 @@ function getConnectionFrom<T extends State>(
 		}
 	}
 	return connRegister[ connKey.current ] as Connection<T>;
+}
+
+function getStoreRef<T extends State>(
+	store : StoreInternal<T>,
+	connection: Connection<T>
+) : StoreRef<T> {
+	return {
+		getState: ( propertyPaths = [] ) => {
+			if( !propertyPaths.length || propertyPaths.indexOf( constants.FULL_STATE_SELECTOR ) !== -1 ) {
+				return connection.get( constants.GLOBAL_SELECTOR )[ constants.GLOBAL_SELECTOR ];
+			}
+			const data = connection.get( ...propertyPaths );
+			const state = {} as T;
+			for( const d in data ) { set( state, d, data[ d ] ) }
+			return mkReadonly( state );
+		},
+		resetState: ( propertyPaths = [] ) => store.resetState( connection, propertyPaths ),
+		setState: changes => store.setState( connection, changes ),
+		subscribe: store.subscribe
+	};
+}
+
+function makeObservable<T extends State = State>( Provider : Provider<IStore> ) {
+	const Observable : ObservableProvider<T> = forwardRef<
+		StoreRef<T>,
+		ProviderProps<T>
+	>(({
+		children = null,
+		prehooks = defaultPrehooks as Readonly<Prehooks<T>>,
+		storage = null,
+		value
+	}, storeRef ) => {
+		const connKey = useRef<string>();
+		const store = useStore( prehooks, value, storage );
+		const [ connection ] = useState(() => getConnectionFrom( connKey, store.cache ));
+		useImperativeHandle( storeRef, () => ({
+			...( storeRef as MutableRefObject<StoreRef<T>> )?.current ?? {},
+			...getStoreRef( store, connection )
+		}), [ ( storeRef as MutableRefObject<StoreRef<T>> )?.current ] );
+		useEffect(() => () => {
+			connection.disconnect();
+			delete connRegister[ connKey.current ];
+			connKey.current = undefined;
+		}, []);
+		return (
+			<Provider value={ store }>
+				{ memoizeImmediateChildTree( children ) }
+			</Provider>
+		);
+	} );
+	Observable.displayName = 'ObservableContext.Provider';
+	return Observable;
+}
+
+export function mkReadonly( v : any ) {
+	if( Object.isFrozen( v ) ) { return v }
+	if( isPlainObject( v ) || Array.isArray( v ) ) {
+		for( const k in v ) { v[ k ] = mkReadonly( v[ k ] ) }
+	}
+	return Object.freeze( v );
+}
+
+function memoizeImmediateChildTree( children : ReactNode ) : ReactNode {
+	return Children.map( children, _child => {
+		let child = _child as JSX.Element;
+		if( !( child?.type ) || ( // skip memoized or non element(s)
+			typeof child.type === 'object' &&
+			child.type.$$typeof?.toString() === 'Symbol(react.memo)'
+		) ) {
+			return child;
+		}
+		if( child.props?.children ) {
+			child = cloneElement(
+				child,
+				omit( child.props, 'children' ),
+				memoizeImmediateChildTree( child.props.children )
+			);
+		}
+		return ( <ChildMemo child={ child } /> );
+	} );
 }
 
 /** 
@@ -260,158 +413,4 @@ export function useContext<
 		() => ({ data, resetState, setState }),
 		[ data ]
 	);
-};
-
-/**
- * Provides an HOC function for connecting its WrappedComponent argument to the context store.
- *
- * The HOC function automatically memoizes any un-memoized WrappedComponent argument.
- *
- * @param context - Refers to the PublicObservableContext<T> type of the ObservableContext<T>
- * @param [selectorMap] - Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
- * @see {useContext} for selectorMap sample
- */
-export function connect<
-	STATE extends State = State,
-	SELECTOR_MAP extends SelectorMap = SelectorMap
->(
-	context : ObservableContext<STATE>,
-	selectorMap? : SELECTOR_MAP
-) {
-	function connector<
-		P extends ExtractInjectedProps<STATE, SELECTOR_MAP>
-	>(
-		WrappedComponent : ElementType<ConnectProps<P, STATE, SELECTOR_MAP>>
-	) : ConnectedComponent<P>;
-	function connector<
-		P extends ExtractInjectedProps<STATE, SELECTOR_MAP>	
-	>(
-		WrappedComponent : NamedExoticComponent<ConnectProps<P, STATE, SELECTOR_MAP>>
-	) : ConnectedComponent<P>;
-	function connector<
-		P extends ExtractInjectedProps<STATE, SELECTOR_MAP>
-	>( WrappedComponent ) : ConnectedComponent<P> {
-
-		const Wrapped = (
-			!( isPlainObject( WrappedComponent ) && 'compare' in WrappedComponent as {} )
-				? memo( WrappedComponent )
-				: WrappedComponent
-		);
-
-		const ConnectedComponent = memo( forwardRef<
-			P extends IProps ? P["ref"] : never,
-			Omit<P, "ref">
-		>(( ownProps, ref ) => {
-			const store = useContext( context, selectorMap );
-			return ( <Wrapped { ...store } { ...ownProps } ref={ ref } /> );
-		}) );
-		ConnectedComponent.displayName = 'ObservableContext.Connected';
-		
-		return ConnectedComponent as ConnectedComponent<P>;
-
-	}
-
-	return connector;
-
-}
-
-export class UsageError extends Error {};
-
-const ChildMemo : FC<{ child: ReactNode }> = (() => {
-
-	const useNodeMemo = ( node : ReactNode ) : ReactNode => {
-		const nodeRef = useRef( node );
-		if( !isEqual(
-			omit( nodeRef.current, '_owner' ),
-			omit( node, '_owner' )
-		) ) { nodeRef.current = node }
-		return nodeRef.current;
-	};
-
-	const ChildMemo = memo<{ child: ReactNode }>(({ child }) => ( <>{ child }</> ));
-	ChildMemo.displayName = 'ObservableContext.Provider.Internal.Guardian.ChildMemo';
-
-	const Guardian : FC<{ child: ReactNode }> = ({ child }) => (
-		<ChildMemo child={ useNodeMemo( child ) } />
-	);
-	Guardian.displayName = 'ObservableContext.Provider.Internal.Guardian';
-
-	return Guardian;
-})();
-
-const defaultPrehooks : Readonly<Prehooks<State>> = Object.freeze({});
-
-function makeObservable<T extends State = State>( Provider : Provider<IStore> ) {
-	const Observable : ObservableProvider<T> = forwardRef<
-		StoreRef<T>,
-		ProviderProps<T>
-	>(({
-		children = null,
-		prehooks = defaultPrehooks,
-		storage = null,
-		value
-	}, storeRef ) => {
-		const connKey = useRef<string>();
-		const store = useStore( prehooks, value, storage );
-		const [ connection ] = useState(() => getConnectionFrom( connKey, store.cache ));
-		const getState = useCallback<StoreRef<T>["getState"]>(
-			( propertyPaths = [] ) => {
-				if( !propertyPaths.length || propertyPaths.indexOf( constants.FULL_STATE_SELECTOR ) !== -1 ) {
-					return connection.get( constants.GLOBAL_SELECTOR )[ constants.GLOBAL_SELECTOR ] as T;
-				}
-				const data = connection.get( ...propertyPaths );
-				const state = {} as T;
-				for( const d in data ) { set( state, d, data[ d ] ) }
-				return mkReadonly( state );
-			},
-			[]
-		);
-		useImperativeHandle( storeRef, () => ({
-			...( storeRef as MutableRefObject<StoreRef<T>> )?.current ?? {},
-			getState,
-			resetState: propertyPaths => store.resetState( connection, propertyPaths ),
-			setState: changes => store.setState( connection, changes ),
-			subscribe: store.subscribe
-		}), [ ( storeRef as MutableRefObject<StoreRef<T>> )?.current ] );
-		useEffect(() => () => {
-			connection.disconnect();
-			delete connRegister[ connKey.current ];
-			connKey.current = undefined;
-		}, []);
-		return (
-			<Provider value={ store }>
-				{ memoizeImmediateChildTree( children ) }
-			</Provider>
-		);
-	} );
-	Observable.displayName = 'ObservableContext.Provider';
-	return Observable;
-}
-
-export function mkReadonly( v : any ) {
-	if( Object.isFrozen( v ) ) { return v }
-	if( isPlainObject( v ) || Array.isArray( v ) ) {
-		for( const k in v ) { v[ k ] = mkReadonly( v[ k ] ) }
-	}
-	return Object.freeze( v );
-}
-
-function memoizeImmediateChildTree( children : ReactNode ) : ReactNode {
-	return Children.map( children, _child => {
-		let child = _child as JSX.Element;
-		if( !( child?.type ) || ( // skip memoized or non element(s)
-			typeof child.type === 'object' &&
-			child.type.$$typeof?.toString() === 'Symbol(react.memo)'
-		) ) {
-			return child;
-		}
-		if( child.props?.children ) {
-			child = cloneElement(
-				child,
-				omit( child.props, 'children' ),
-				memoizeImmediateChildTree( child.props.children )
-			);
-		}
-		return ( <ChildMemo child={ child } /> );
-	} );
 }

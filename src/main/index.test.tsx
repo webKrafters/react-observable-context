@@ -1090,7 +1090,7 @@ describe( 'ReactObservableContext', () => {
 						expect( ( renderCount.current.TallyDisplay as RenderCountField ).value ).toBe( 1 );
 						const currentState = storeRef.current!.getState();
 						storeRef.current!.setState({ price: 45 });
-						const newState = { ...state, price: 45 };
+						let newState = { ...state, price: 45 };
 						await wait(() => {});
 						await new Promise( resolve => setTimeout( resolve, 50 ) );
 						expect( ( renderCount.current.TallyDisplay as RenderCountField ).value ).toBe( 2 );
@@ -1100,9 +1100,27 @@ describe( 'ReactObservableContext', () => {
 						await wait(() => {});
 						await new Promise( resolve => setTimeout( resolve, 50 ) );
 						expect( ( renderCount.current.TallyDisplay as RenderCountField ).value ).toBe( 3 );
-						const currentState2 = storeRef.current!.getState();
+						let currentState2 = storeRef.current!.getState();
 						expect( currentState2 ).toStrictEqual( state );
 						expect( currentState2 ).toStrictEqual( currentState );
+						// alter internal state to ready for default reset feature
+						storeRef.current!.setState({ price: 300 });
+						currentState2 = storeRef.current!.getState();
+						await wait(() => {});
+						await new Promise( resolve => setTimeout( resolve, 50 ) );
+						newState = { ...state, price: 300 };
+						expect( currentState2 ).toEqual( newState );
+						expect( currentState2 ).not.toEqual( state );
+						expect( ( renderCount.current.TallyDisplay as RenderCountField ).value ).toBe( 4 );
+						// default reset results in no-operation
+						storeRef.current!.resetState();
+						const currentState3 = storeRef.current!.getState();
+						await wait(() => {});
+						await new Promise( resolve => setTimeout( resolve, 50 ) );
+						expect( ( renderCount.current.TallyDisplay as RenderCountField ).value ).toBe( 4 );
+						expect( newState ).toEqual( currentState3 );
+						expect( state ).not.toEqual( currentState3 );
+						expect( currentState2 ).toBe( currentState3 );
 						cleanupPerfTest();
 					}, 3e4 );
 					test( 'subscribes to state changes', async () => {

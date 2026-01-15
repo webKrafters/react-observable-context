@@ -21,7 +21,7 @@
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
     "outDir": "dist",
-    "removeComments": false,
+    "removeComments": true,
     "skipLibCheck": true,
     "target": "ES2020"
   },
