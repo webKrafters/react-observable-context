@@ -5,11 +5,11 @@
 	<a href="https://typescriptlang.org">
 		<img alt="TypeScript" src="https://badgen.net/badge/icon/typescript?icon=typescript&label">
 	</a>
-	<a href="https://github.com/webKrafters/eagleeye.js/actions">
-		<img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/webKrafters/eagleeye.js/test.yml">
+	<a href="https://github.com/webKrafters/react-observable-context/actions">
+		<img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/webKrafters/react-observable-context/test.yml">
 	</a>
-	<a href="https://coveralls.io/github/webKrafters/eagleeye.js">
-		<img alt="coverage" src="https://img.shields.io/coveralls/github/webKrafters/eagleeye.js">
+	<a href="https://coveralls.io/github/webKrafters/react-observable-context">
+		<img alt="coverage" src="https://img.shields.io/coverallsCoverage/github/webKrafters/react-observable-context.svg">
 	</a>
 	<img alt="NPM" src="https://img.shields.io/npm/l/@webkrafters/react-observable-context">
 	<img alt="Maintenance" src="https://img.shields.io/maintenance/yes/2032">
@@ -17,7 +17,7 @@
 	<a href="https://www.npmjs.com/package/@webKrafters/react-observable-context">
 		<img alt="Downloads" src="https://img.shields.io/npm/dt/@webkrafters/react-observable-context.svg">
 	</a>
-	<img alt="GitHub package.json version" src="https://img.shields.io/github/package-json/v/webKrafters/eagleeye.js">
+	<img alt="GitHub package.json version" src="https://img.shields.io/github/package-json/v/webKrafters/react-observable-context">
 </p>
 
 # React-Observable-Context [Eagle Eye]
