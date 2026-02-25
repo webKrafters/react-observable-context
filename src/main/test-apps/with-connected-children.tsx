@@ -17,9 +17,9 @@ import React, {
 
 import isEmpty from 'lodash.isempty';
 
-import { connect } from '..';
-
 import { CapitalizedDisplay, ObservableContext } from './normal';
+
+const connect = ObservableContext.connect;
 
 const Reset : FC<{resetState: (propertyPaths?: string[]) => void}> = ({ resetState }) => {
 	useEffect(() => console.log( 'Reset component rendered.....' ));
@@ -34,9 +34,9 @@ const CustomerPhoneDisplay : FC<{ data: { phone: string } }> = ({ data }) => {
 	return `Phone: ${ data.phone ?? 'n.a.' }` as unknown as ReactElement;
 };
 CustomerPhoneDisplay.displayName = 'CustomerPhoneDisplay';
-export const ConnectedCustomerPhoneDisplay = connect(
-	ObservableContext, { phone: 'customer.phone' }
-)( CustomerPhoneDisplay as unknown as FC<Store<Partial<TestState>, { phone : string }>> );
+export const ConnectedCustomerPhoneDisplay = connect({
+	phone: 'customer.phone'
+})( CustomerPhoneDisplay as unknown as FC<Store<Partial<TestState>, { phone : string }>> );
 
 const TallyDisplay : FC<{
 	data: Pick<TestState, "color" | "price" | "type"> & {
@@ -81,47 +81,47 @@ const TallyDisplay : FC<{
 	);
 };
 TallyDisplay.displayName = 'TallyDisplay';
-export const ConnectedTallyDisplay = connect( ObservableContext, {
+export const ConnectedTallyDisplay = connect({
 	color: 'color',
 	name: 'customer.name',
 	price: 'price',
 	type: 'type'
-})( TallyDisplay as unknown as FC<Pick<Store<TestState, {[ K in "color" | "name" | "price" | "type" ]: string}>, "data">>);
+})( TallyDisplay );
 
 const Editor : FC<{
 	setState: (changes: Record<any, any>) => void
 }> = ({ setState }) => {
 
-	const fNameInputRef = useRef<HTMLInputElement>();
-	const lNameInputRef = useRef<HTMLInputElement>();
-	const phoneInputRef = useRef<HTMLInputElement>();
-	const priceInputRef = useRef<HTMLInputElement>();
-	const colorInputRef = useRef<HTMLInputElement>();
-	const typeInputRef = useRef<HTMLInputElement>();
+	const fNameInputRef = useRef<HTMLInputElement>( null );
+	const lNameInputRef = useRef<HTMLInputElement>( null );
+	const phoneInputRef = useRef<HTMLInputElement>( null );
+	const priceInputRef = useRef<HTMLInputElement>( null );
+	const colorInputRef = useRef<HTMLInputElement>( null );
+	const typeInputRef = useRef<HTMLInputElement>( null );
 
 	const updateColor = useCallback(() => {
-		setState({ color: colorInputRef.current.value });
+		setState({ color: colorInputRef.current?.value });
 	}, []);
 	const updateName = useCallback(() => {
 		setState({
 			customer: {
 				name: {
-					first: fNameInputRef.current.value,
-					last: lNameInputRef.current.value
+					first: fNameInputRef.current?.value,
+					last: lNameInputRef.current?.value
 				}
 			}
 		});
 	}, []);
 	const updatePhone = useCallback(() => {
-		const phone = phoneInputRef.current.value;
-		if( phone.length && !/[0-9]{10}/.test( phone ) ) { return }
+		const phone = phoneInputRef.current?.value;
+		if( phone?.length && !/[0-9]{10}/.test( phone ) ) { return }
 		setState({ customer: { phone } });
 	}, []);
 	const updatePrice = useCallback(() => {
-		setState({ price: Number( priceInputRef.current.value ) });
+		setState({ price: Number( priceInputRef.current?.value ) });
 	}, []);
 	const updateType = useCallback(() => {
-		setState({ type: typeInputRef.current.value });
+		setState({ type: typeInputRef.current?.value });
 	}, []);
 
 	useEffect(() => console.log( 'Editor component rendered.....' ));
@@ -167,7 +167,7 @@ const Editor : FC<{
 	);
 };
 Editor.displayName = 'Editor';
-export const ConnectedEditor = connect( ObservableContext )( Editor );
+export const ConnectedEditor = connect()( Editor );
 
 export const ProductDescription : FC<{
 	data : {
@@ -183,9 +183,10 @@ export const ProductDescription : FC<{
 	);
 };
 ProductDescription.displayName = 'ProductDescription';
-export const ConnectedProductDescription = connect(
-	ObservableContext, { c: 'color', t: 'type' }
-)( ProductDescription as FC<Pick<Store<TestState, { c: string, t: string }>, "data">> );
+export const ConnectedProductDescription = connect({
+	c: 'color',
+	t: 'type'
+})( ProductDescription );
 
 export const PriceSticker : FC<{data: { p: number }}> = ({ data: { p } }) => {
 	useEffect(() => console.log( 'PriceSticker component rendered.....' ));
@@ -196,40 +197,24 @@ export const PriceSticker : FC<{data: { p: number }}> = ({ data: { p } }) => {
 	);
 };
 PriceSticker.displayName = 'PriceSticker';
-export const ConnectedPriceSticker = connect( ObservableContext, { p: 'price' } )(
-	PriceSticker as unknown as FC<Pick<Store<TestState, { p: string }>, "data">>
-);
+export const ConnectedPriceSticker = connect({ p: 'price' })( PriceSticker );
 
-export const Product : React.FC<{
-	prehooks? : import("../..").Prehooks,
-	type : string
-}> = ({ prehooks = undefined, type }) => {
+export const Product : React.FC<{ type : string }> = ({ type }) => {
 
-	const [ state, setState ] = useState(() => ({
-		color: 'Burgundy',
-		customer: {
-			name: { first: null, last: null },
-			phone: null
-		},
-		price: 22.5,
-		type
-	}));
+	useEffect(() => { ObservableContext.store.setState({ type }) }, [ type ]);
 
-	useEffect(() => {
-		setState({ type } as typeof state ); // use this to update only the changed state
-		// setState({ ...state, type }); // this will override the context internal state for these values
-	}, [ type ]);
-
-	const overridePricing = useCallback( e => setState({
-		price: Number( e.target.value )
-	} as typeof state ), [] );
+	const overridePricing = useCallback( e => {
+		ObservableContext.store.setState({
+			price: Number( e.target.value )
+		});
+	}, [] );
 
 	return (
 		<div>
 			<div style={{ marginBottom: 10 }}>
 				<label>$ <input onKeyUp={ overridePricing } placeholder="override price here..."/></label>
 			</div>
-			<ObservableContext.Provider prehooks={ prehooks } value={ state }>
+			<div>
 				<div style={{
 					borderBottom: '1px solid #333',
 					marginBottom: 10,
@@ -240,7 +225,7 @@ export const Product : React.FC<{
 				</div>
 				<ConnectedProductDescription />
 				<ConnectedPriceSticker />
-			</ObservableContext.Provider>
+			</div>
 		</div>
 	);
 };

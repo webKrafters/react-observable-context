@@ -15,7 +15,7 @@ import type {
     Value
 } from '@webkrafters/auto-immutable';
 
-import { FULL_STATE_SELECTOR } from './constants';
+import { FULL_STATE_SELECTOR } from './constants__OLD';
 
 export type {
     BaseType,
@@ -222,7 +222,7 @@ export {
     SET_TAG,
     SPLICE_TAG,
     Tag,
-} from './constants';
+} from './constants__OLD';
 
 export {
     connect,
@@ -230,4 +230,4 @@ export {
     ObservableContext,
     UsageError,
     useContext
-} from './main';
+} from './main/index__OLD';

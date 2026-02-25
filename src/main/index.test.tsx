@@ -41,12 +41,12 @@ import * as AutoImmutableModule from '@webkrafters/auto-immutable';
 import clonedeep from '@webkrafters/clone-total';
 
 import {
-	connect,
+	// connect,
 	createContext,
-	mkReadonly,
+	// mkReadonly,
 	ObservableContext as ObservableContextType,
-	UsageError,
-	useContext
+	// UsageError,
+	// useContext
 } from '.';
 
 import { isReadonly } from '../test-artifacts/utils';
@@ -64,12 +64,12 @@ import AppNormal, {
 import AppWithConnectedChildren from './test-apps/with-connected-children';
 import AppWithPureChildren from './test-apps/with-pure-children';
 
-import {
-	DELETE_TAG,
-	FULL_STATE_SELECTOR,
-	MOVE_TAG,
-	REPLACE_TAG
-} from '../constants';
+// import {
+// 	DELETE_TAG,
+// 	FULL_STATE_SELECTOR,
+// 	MOVE_TAG,
+// 	REPLACE_TAG
+// } from '../constants';
 
 type PerfValue = PerfTools<DefaultPerfToolsField>;
 
@@ -96,6 +96,26 @@ const transformRenderCount = (
 	}
 	return netCount;
 };
+
+describe( 'ReactObservableContext', () => {
+	describe( 'createContext(...)', () => {
+		test( 'returns an observable context instance', () => {
+			expect( createContext() ).toBeInstanceOf( ObservableContext );
+		} );
+	} );
+	describe( 'Provider-less', () => {
+		let sourceData : SourceData;
+		let obsCtx : ObservableContextType<SourceData>;
+		beforeAll(() => {
+			sourceData = createSourceData();
+			obsCtx = createContext( sourceData );
+		});
+		afterAll(() => { obsCtx.dispose() });
+		test( 'can be used in any part of the application', () => {
+			
+		} );
+	} );
+} );
 
 describe( 'ReactObservableContext', () => {
 	test( 'throws usage error on attempts to use context store outside of the Provider component tree', () => {

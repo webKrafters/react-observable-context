@@ -7,7 +7,7 @@ import React, {
 
 import isEmpty from 'lodash.isempty';
 
-import { createContext, useContext } from '..';
+import { createContext } from '..';
 import { SelectorMap } from '../../index';
 
 export interface TestState {
@@ -23,9 +23,22 @@ export interface TestState {
 	type: string
 };
 
-export const ObservableContext = createContext<Partial<TestState>>();
+const defaultState : TestState = {
+	color: 'Burgundy',
+	customer: {
+		name: {
+			first: null as unknown as string,
+			last: null as unknown as string
+		},
+		phone: null as unknown as string
+	},
+	price: 22.5,
+	type: ''
+};
 
-export const useObservableContext = <S extends SelectorMap>( selectorMap?: S ) => useContext( ObservableContext, selectorMap );
+export const ObservableContext = createContext<Partial<TestState>>( defaultState );
+
+export const useObservableContext = ObservableContext.stream;
 
 export const Reset : React.FC = () => {
 	const { resetState } = useObservableContext();
@@ -207,35 +220,21 @@ export const PriceSticker : React.FC = () => {
 PriceSticker.displayName = 'PriceSticker';
 
 
-export const Product : React.FC<{
-	prehooks? : import("../../index").Prehooks<{[x:string]:*}>,
-	type : string
-}> = ({ prehooks = undefined, type }) => {
-	const [ state, setState ] = useState<Partial<TestState>>(() => ({
-		color: 'Burgundy',
-		customer: {
-			name: {
-				first: null as unknown as string,
-				last: null as unknown as string
-			},
-			phone: null as unknown as string
-		},
-		price: 22.5,
-		type
-	}));
+export const Product : React.FC<{type : string}> = ({ type }) => {
 	useEffect(() => {
-		setState({ type } as typeof state ); // use this to update only the changed state
-		// setState({ ...state, type }); // this will override the context internal state for these values
+		ObservableContext.store.setState({ type });
 	}, [ type ]);
-	const overridePricing = useCallback( e => setState({
-		price: Number( e.target.value )
-	} as typeof state ), [] );
+	const overridePricing = useCallback(
+		e => ObservableContext.store.setState({
+			price: Number( e.target.value )
+ 		}), []
+	);
 	return (
 		<div>
 			<div style={{ marginBottom: 10 }}>
 				<label>$ <input onKeyUp={ overridePricing } placeholder="override price here..."/></label>
 			</div>
-			<ObservableContext.Provider prehooks={ prehooks } value={ state }>
+			<div>
 				<div style={{
 					borderBottom: '1px solid #333',
 					marginBottom: 10,
@@ -246,7 +245,7 @@ export const Product : React.FC<{
 				</div>
 				<ProductDescription />
 				<PriceSticker />
-			</ObservableContext.Provider>
+			</div>
 		</div>
 	);
 };
