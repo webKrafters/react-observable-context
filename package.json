@@ -115,6 +115,6 @@
   "types": "dist/index.d.ts",
   "version": "7.0.0",
   "dependencies": {
-    "@webkrafters/eagleeye": "^1.0.0-beta.3"
+    "@webkrafters/eagleeye": "^1.0.0-beta.4"
   }
 }

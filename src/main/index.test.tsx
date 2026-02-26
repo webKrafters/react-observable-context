@@ -1,12 +1,13 @@
 import { AccessorResponse } from '@webkrafters/auto-immutable';
 
-import type {
-	ConnectedComponent,
-	ConnectProps,
-	ExtractInjectedProps,
-	SelectorMap,
-	Store,
-	StoreRef
+import {
+	FULL_STATE_SELECTOR,
+	type ConnectedComponent,
+	type ConnectProps,
+	type ExtractInjectedProps,
+	type SelectorMap,
+	type Store,
+	type StoreRef
 } from '..';
 
 import getProperty from '@webkrafters/get-property';
@@ -56,6 +57,7 @@ import createSourceData, {
 } from '../test-artifacts/data/create-state-obj';
 
 import AppNormal, {
+	defaultState,
 	ObservableContext,
 	Product,
 	TallyDisplay,
@@ -63,6 +65,7 @@ import AppNormal, {
 } from './test-apps/normal';
 import AppWithConnectedChildren from './test-apps/with-connected-children';
 import AppWithPureChildren from './test-apps/with-pure-children';
+import { EagleEyeContext } from '@webkrafters/eagleeye';
 
 // import {
 // 	DELETE_TAG,
@@ -118,10 +121,6 @@ describe( 'ReactObservableContext', () => {
 } );
 
 describe( 'ReactObservableContext', () => {
-	test( 'throws usage error on attempts to use context store outside of the Provider component tree', () => {
-		// note: TallyDisplay component utilizes the ReactObservableContext store
-		expect(() => render( <TallyDisplay /> )).toThrow( UsageError );
-	} );
 	describe( 'store updates from within the Provider tree', () => {
 		describe( 'updates only subscribed components', () => {
 			describe( 'using connected store subscribers', () => {
@@ -501,7 +500,7 @@ describe( 'ReactObservableContext', () => {
 		test( 'can read the current store data', async () => {
 			storeRef = undefined as unknown as typeof storeRef;
 			const NEW_AGE = 71;
-			const Child =  connect( ObservableContext )(({ setState }) => {
+			const Child =  ObservableContext.connect()(({ setState }) => {
 				const setAge = React.useCallback(
 					() => setState({ age: NEW_AGE }),
 					[ setState ]
@@ -516,7 +515,7 @@ describe( 'ReactObservableContext', () => {
 		});
 		test( 'can update store and propagate observing components', async () => {
 			storeRef = undefined as unknown as typeof storeRef;
-			const Child =  connect( ObservableContext, {
+			const Child =  ObservableContext.connect({
 				fName: 'name.first'
 			})(({ data: { fName } }) => (
 				<>They call me: <span data-testid="fname">{ fName }</span></>
@@ -539,7 +538,7 @@ describe( 'ReactObservableContext', () => {
 		test( 'can reset store and propagate observing components', async () => {
 			storeRef = undefined as unknown as typeof storeRef;
 			const NEW_EMAIL = 'some.gobbledygook.co.uk';
-			const Child =  connect( ObservableContext, {
+			const Child = ObservableContext.connect({
 				myEmail: 'email'
 			} )(({ data: { myEmail }, setState }) => {
 				const setEmail = React.useCallback(
@@ -570,7 +569,7 @@ describe( 'ReactObservableContext', () => {
 		});
 		test( 'can observe state changes coming into the store', async () => {
 			storeRef = undefined as unknown as typeof storeRef;
-			const Child =  connect( ObservableContext )(({ setState }) => {
+			const Child = ObservableContext.connect()(({ setState }) => {
 				const setCompany : React.MouseEventHandler<HTMLButtonElement> = React.useCallback(
 					e => setState({ company: ( e.target as HTMLButtonElement ).value }),
 					[ setState ]
@@ -795,7 +794,7 @@ describe( 'ReactObservableContext', () => {
 	} );
 	describe( 'API', () => {
 		describe( 'connect(...)', () => {
-			let state : {items: Array<{name: string}>};
+			let state : { items : Array<{name: string}> };
 			let ObservableContext : ObservableContextType<typeof state>;
 			let selectorMap : { all : string; box : string; };
 			let connector : Function;
@@ -816,12 +815,12 @@ describe( 'ReactObservableContext', () => {
 						{ name: 'box_3' }
 					]
 				};
-				ObservableContext = createContext<typeof state>();
+				ObservableContext = createContext( state );
 				selectorMap = {
 					all: FULL_STATE_SELECTOR,
 					box: 'items.1.name'
 				};
-				connector = connect( ObservableContext, selectorMap );
+				connector = ObservableContext.connect( selectorMap );
 				let rawComp : React.FC<typeof compOneProps> = props => { compOneProps = props; return null };
 				ConnectedComponent1 = connector( rawComp );
 				rawComp = props => { compTwoProps = props; return null };
@@ -853,11 +852,7 @@ describe( 'ReactObservableContext', () => {
 							<footer>The End</footer>
 						</article>
 					);
-					render(
-						<ObservableContext.Provider value={ state }>
-							<Ui />
-						</ObservableContext.Provider>
-					);
+					render( <Ui /> );
 				});
 				test( 'is always a memoized component', () => {
 					expect( 'compare' in ConnectedComponent1 ).toBe( true );
@@ -897,11 +892,9 @@ describe( 'ReactObservableContext', () => {
 						capturedProps = props;
 						return ( <div /> );
 					};
-					const ConnectedComponent = connect( ObservableContext, selectorMap )( WrappedComponent );
+					const ConnectedComponent = ObservableContext.connect( selectorMap )( WrappedComponent );
 					const App = () => (
-						<ObservableContext.Provider value={ state }>
-							<ConnectedComponent { ...ownProps } ref={ React.useRef() } />
-						</ObservableContext.Provider>
+						<ConnectedComponent { ...ownProps } ref={ React.useRef() } />
 					);
 					render( <App /> );
 					const data : Record<string, unknown>  = {};
@@ -930,13 +923,9 @@ describe( 'ReactObservableContext', () => {
 							capturedProps = props;
 							return null
 						};
-						const fn = connect( ObservableContext, selectorMap );
-						const ConnectedComponent = connect( ObservableContext, selectorMap )( T );
-						render(
-							<ObservableContext.Provider value={ state }>
-								<ConnectedComponent { ...ownProps } />
-							</ObservableContext.Provider>
-						);
+						const fn = ObservableContext.connect( selectorMap );
+						const ConnectedComponent = ObservableContext.connect( selectorMap )( T );
+						render( <ConnectedComponent { ...ownProps } /> );
 						const data : Record<string,unknown> = {};
 						for( const k in selectorMap ) { data[ k ] = expect.anything() }
 						expect( capturedProps ).toEqual({
@@ -957,61 +946,24 @@ describe( 'ReactObservableContext', () => {
 						Provider: expect.any( Object )
 					})
 				);
-				expect( ObservableContext.Consumer.$$typeof.toString() )
-					.toEqual( 'Symbol(react.context)' );
-				expect( ObservableContext.Provider.$$typeof.toString() )
-					.toEqual( 'Symbol(react.forward_ref)' );
 			} );
-			describe( 'Context provider component property', () => {
-				test( 'also allows for no children', () => {
-					let renderResult;
-					expect(() => {
-						expect( 
-							render( <ObservableContext.Provider value={{}} /> ).container
-						).toBeEmptyDOMElement();
-					}).not.toThrow();
-				} );
-				describe( 'with store object reference for external exposure', () => {
-					let state : TestState;
-					let storeRef : React.RefObject<StoreRef<Partial<TestState>>>;
-					let TestProvider : React.FC;
-					beforeAll(() => {
-						state = {
-							color: 'Burgundy',
-							customer: {
-								name: { first: 'tFirst', last: 'tLast' },
-								phone: null as unknown as string
-							},
-							price: 22.5,
-							type: 'TEST TYPE'
-						}
-						TestProvider = () => { // eslint-disable-line react/display-name
-							storeRef = React.useRef<StoreRef<Partial<TestState>>>( null );
-							return (
-								<ObservableContext.Provider ref={ storeRef } value={ state }>
-									<TallyDisplay />
-								</ObservableContext.Provider>
-							);
-						};
-					});
-					test( 'is provided', () => {
-						const d = render( <TestProvider /> );
-						expect( storeRef.current ).toStrictEqual( expect.objectContaining({
+			describe( 'Context property', () => {
+				test( 'provides store object reference for external exposure', () => {
+					expect( ObservableContext.store ).toStrictEqual(
+						expect.objectContaining({
 							getState: expect.any( Function ),
 							resetState: expect.any( Function ),
 							setState: expect.any( Function ),
 							subscribe: expect.any( Function )
-						}) );
+						})
 					} );
 					describe( 'accessing the state', () => {
 						test( 'returns entire copy of the current state by default', () => {
-							render( <TestProvider /> );
-							const currentState = storeRef.current!.getState();
-							expect( currentState ).not.toBe( state );
-							expect( currentState ).toStrictEqual( state );
+							const currentState = ObservableContext.store.getState();
+							expect( currentState ).not.toBe( defaultState );
+							expect( currentState ).toStrictEqual( defaultState );
 						} );
 						test( 'returns only copy of the state targeted by property paths', () => {
-							render( <TestProvider /> );
 							const expected = {
 								customer: {
 									name: { last: 'tLast' },
@@ -1019,7 +971,7 @@ describe( 'ReactObservableContext', () => {
 								},
 								type: 'TEST TYPE'
 							};
-							const currentState = storeRef.current!.getState([
+							const currentState = ObservableContext.store.getState([
 								'customer.name.last',
 								'type',
 								'customer.phone'
@@ -1027,13 +979,12 @@ describe( 'ReactObservableContext', () => {
 							expect( currentState ).toEqual( expected );
 						} );
 						test( 'returns entire copy of the current state if ' + FULL_STATE_SELECTOR + ' found in property paths used', () => {
-							render( <TestProvider /> );
-							expect( storeRef.current!.getState([
+							expect( ObservableContext.store.getState([
 								'customer.name.last',
 								'type',
 								'customer.phone',
 								FULL_STATE_SELECTOR
-							]) ).toEqual( state );
+							]) ).toEqual( defaultState );
 						} );
 						describe( 'when unchanged, guarantees data consistency by ensuring that...', () => {
 							function areExact( a : any, b : any ) {
@@ -1046,17 +997,15 @@ describe( 'ReactObservableContext', () => {
 								return true;
 							}
 							test( 'same entire state is returned for all default requests', () => {
-								render( <TestProvider /> );
 								expect( areExact(
-									storeRef.current!.getState(),
-									storeRef.current!.getState()
+									ObservableContext.store.getState(),
+									ObservableContext.store.getState()
 								) ).toBe( true );
 							} );
 							test( 'same values at property paths are returned when using property paths', () => {
-								render( <TestProvider /> );
 								const pPaths = [ 'customer.name.last', 'type', 'customer.phone' ];
-								const s1 = storeRef.current!.getState( pPaths );
-								const s2 = storeRef.current!.getState( pPaths );
+								const s1 = ObservableContext.store.getState( pPaths );
+								const s2 = ObservableContext.store.getState( pPaths );
 								for( const path of pPaths ) {
 									expect( areExact(
 										getProperty( s1, path )._value,
@@ -1065,25 +1014,22 @@ describe( 'ReactObservableContext', () => {
 								}
 							} );
 							test( 'same entire state is returned if ' + FULL_STATE_SELECTOR + ' found in property paths used', () => {
-								render( <TestProvider /> );
 								const pPaths = [ 'customer.name.last', 'type', FULL_STATE_SELECTOR, 'customer.phone' ];
 								expect( areExact(
-									storeRef.current!.getState(),
-									storeRef.current!.getState()
+									ObservableContext.store.getState(),
+									ObservableContext.store.getState()
 								) ).toBe( true );
 							} );
 						} );
 						describe( 'guarantees data immutability by ensuring by...', () => {
 							test( 'returning readonly state for all default requests', () => {
-								render( <TestProvider /> );
 								expect( isReadonly(
-									storeRef.current!.getState()
+									ObservableContext.store.getState()
 								) ).toBe( true );
 							} );
 							test( 'returning readonly state for when using property paths', () => {
-								render( <TestProvider /> );
 								expect( isReadonly(
-									storeRef.current!.getState([
+									ObservableContext.store.getState([
 										'customer.name.last',
 										'type',
 										'customer.phone'
@@ -1091,9 +1037,8 @@ describe( 'ReactObservableContext', () => {
 								) ).toBe( true );
 							} );
 							test( 'returning entire state as readonly if ' + FULL_STATE_SELECTOR + ' found in property paths used', () => {
-								render( <TestProvider /> );
 								expect( isReadonly(
-									storeRef.current!.getState([
+									ObservableContext.store.getState([
 										'customer.name.last',
 										'type',
 										FULL_STATE_SELECTOR,
@@ -1105,27 +1050,77 @@ describe( 'ReactObservableContext', () => {
 					} );
 					test( 'updates internal state', async () => {
 						const { renderCount } : PerfValue = perf( React );
-						render( <TestProvider /> );
+						let ctx = React.createRef();
+						// @debug
+						// @todo
+						const TallyDisplay = export const TallyDisplay : React.FC = () => {
+							const { data: {
+								color, name, price, type
+							} } = useStream({
+								color: 'color',
+								name: 'customer.name',
+								price: 'price',
+								type: 'type'
+							});
+							useEffect(() => console.log( 'TallyDisplay component rendered.....' ));
+							return (
+								<div style={{ margin: '20px 0 10px' }}>
+									<div style={{ float: 'left', fontSize: '1.75rem' }}>
+										Customer:
+										{ ' ' }
+										{ isEmpty( name.first ) && isEmpty( name.last )
+											? 'n.a.'
+											: (
+												<>
+													<CapitalizedDisplay text={ name.first } />
+													{ ' ' }
+													<CapitalizedDisplay text={ name.last } />
+												</>
+											)
+										}
+									</div>
+									<div style={{ clear: 'both', paddingLeft: 3 }}>
+										<CustomerPhoneDisplay />
+									</div>
+									<table>
+										<tbody>
+											<tr><td><label>Type:</label></td><td>
+												<CapitalizedDisplay text={ type as unknown as string } />
+											</td></tr>
+											<tr><td><label>Color:</label></td><td>
+												<CapitalizedDisplay text={ color as unknown as string } />
+											</td></tr>
+											<tr><td><label>Price:</label></td><td>{ price.toFixed( 2 ) }</td></tr>
+										</tbody>
+									</table>
+									<div style={{ textAlign: 'right' }}>
+										<Reset />
+									</div>
+								</div>
+							);
+						};
+						//
+						render( <TallyDisplay /> );
 						await wait(() => {});
 						expect( ( renderCount.current.TallyDisplay as RenderCountField ).value ).toBe( 1 );
-						const currentState = storeRef.current!.getState();
-						storeRef.current!.setState({ price: 45 });
+						const currentState = ObservableContext.store.getState();
+						ObservableContext.store.setState({ price: 45 });
 						let newState = { ...state, price: 45 };
 						await wait(() => {});
 						await new Promise( resolve => setTimeout( resolve, 50 ) );
 						expect( ( renderCount.current.TallyDisplay as RenderCountField ).value ).toBe( 2 );
 						expect( currentState ).not.toEqual( newState );
-						expect( storeRef.current!.getState() ).toEqual( newState );
-						storeRef.current!.resetState([ FULL_STATE_SELECTOR ]); // resets store internal state
+						expect( ObservableContext.store.getState() ).toEqual( newState );
+						ObservableContext.store.resetState([ FULL_STATE_SELECTOR ]); // resets store internal state
 						await wait(() => {});
 						await new Promise( resolve => setTimeout( resolve, 50 ) );
 						expect( ( renderCount.current.TallyDisplay as RenderCountField ).value ).toBe( 3 );
-						let currentState2 = storeRef.current!.getState();
+						let currentState2 = ObservableContext.store.getState();
 						expect( currentState2 ).toStrictEqual( state );
 						expect( currentState2 ).toStrictEqual( currentState );
 						// alter internal state to ready for default reset feature
-						storeRef.current!.setState({ price: 300 });
-						currentState2 = storeRef.current!.getState();
+						ObservableContext.store.setState({ price: 300 });
+						currentState2 = ObservableContext.store.getState();
 						await wait(() => {});
 						await new Promise( resolve => setTimeout( resolve, 50 ) );
 						newState = { ...state, price: 300 };
@@ -1133,8 +1128,8 @@ describe( 'ReactObservableContext', () => {
 						expect( currentState2 ).not.toEqual( state );
 						expect( ( renderCount.current.TallyDisplay as RenderCountField ).value ).toBe( 4 );
 						// default reset results in no-operation
-						storeRef.current!.resetState();
-						const currentState3 = storeRef.current!.getState();
+						ObservableContext.store.resetState();
+						const currentState3 = ObservableContext.store.getState();
 						await wait(() => {});
 						await new Promise( resolve => setTimeout( resolve, 50 ) );
 						expect( ( renderCount.current.TallyDisplay as RenderCountField ).value ).toBe( 4 );
@@ -1194,7 +1189,7 @@ describe( 'ReactObservableContext', () => {
 				} );
 			} );
 		} );
-		describe( 'useContext(...)', () => {
+		describe( 'useStream(...)', () => {
 			type handler = ( ...args : Array<unknown> ) => void;
 			let Client : React.FC<{
 				selectorMap? : SelectorMap,
@@ -1208,31 +1203,24 @@ describe( 'ReactObservableContext', () => {
 			let sourceData : SourceData;
 			let ObservableContext : ObservableContextType<SourceData>;
 			let selectorMapOnRender : Record<string, string>;
-
 			beforeAll(() => {
-				createObservable = value => {
-					const ObservableContext = createContext<typeof value>();
-					const _Wrapper : typeof Wrapper = props => (
-						<ObservableContext.Provider value={ value }>
-							{ props.children }
-						</ObservableContext.Provider>
-					);
-					_Wrapper.displayName = 'Wrapper';
-					/* eslint-disable react/display-name */
-					return { ObservableContext, Wrapper: _Wrapper };
-				}
 				sourceData = createSourceData();
+				createObservable = value => ({
+					ObservableContext: createContext( sourceData ),
+					Wrapper: props => ( <>{ props.children }</> )
+				});
 				selectorMapOnRender = {
 					year3: 'history.places[2].year',
 					isActive: 'isActive',
 					tag6: 'tags[5]'
 				};
 				const observable = createObservable( sourceData );
+				const useStream = ObservableContext.useStream;
 				ObservableContext = observable.ObservableContext;
 				Wrapper = observable.Wrapper;
 				/* eslint-disable react/display-name */
 				Client = ({ selectorMap, onChange = ( ...args ) => {} }) => {
-					const store = useContext( ObservableContext, selectorMap );
+					const store = useStream( selectorMap );
 					React.useMemo(() => onChange( store ), [ store ]);
 					return (
 						<div data-testid="data-output">
@@ -1243,6 +1231,7 @@ describe( 'ReactObservableContext', () => {
 				Client.displayName = 'Client';
 				/* eslint-disable react/display-name */
 			});
+			afterAll(() => { ObservableContext.dispose() });
 			test( 'returns an observable context store', () => {
 				let store : Store<SourceData>;
 				const onChange : handler = s => { store = s as typeof store };
@@ -1327,14 +1316,6 @@ describe( 'ReactObservableContext', () => {
 						const mockSubscribe = jest.fn()
 							.mockReturnValue( mockUnsubscribe );
 						
-						const reactUseContextSpy = jest
-							.spyOn( React, 'useContext' )
-							.mockReturnValue({
-								cache,
-								resetState: () => {},
-								setState: () => {},
-								subscribe: mockSubscribe
-							});
 						const { rerender } = render(
 							<Wrapper>
 								<Client selectorMap={ selectorMapOnRender } />
@@ -1353,7 +1334,10 @@ describe( 'ReactObservableContext', () => {
 						expect( mockSubscribe ).toHaveBeenCalledTimes( 2 );
 						expect( disconnectSpy ).toHaveBeenCalledTimes( 1 );
 						expect( mockUnsubscribe ).toHaveBeenCalledTimes( 1 );
-						reactUseContextSpy.mockRestore();
+
+						disconnectSpy.mockRestore();
+						getSpy.mockRestore();
+						connectSpy.mockRestore();
 						cacheSpy.mockRestore();
 					});
 					describe( 'when the new selectorMap is not empty', () => {
@@ -1389,35 +1373,35 @@ describe( 'ReactObservableContext', () => {
 							expect( getSpy ).toHaveBeenCalledWith(
 								...Object.values( selectorMapOnRerender )
 							);
+							getSpy.mockRestore();
+							connectSpy.mockRestore();
 							cacheSpy.mockRestore();
 						});
 						test( 'sets up new subscription with the consumer', () => {
 							const mockUnsubscribe = jest.fn();
-							const mockSubscribe = jest.fn()
+							const base = new EagleEyeContext( sourceData );
+							const subscribeSpy = jest
+								.spyOn( base.store, 'subscribe' )
 								.mockReturnValue( mockUnsubscribe );
-							const reactUseContextSpy = jest
-								.spyOn( React, 'useContext' )
-								.mockReturnValue({
-									cache: new AutoImmutable( createSourceData() ),
-									resetState: () => {},
-									setState: () => {},
-									subscribe: mockSubscribe
-								});
 							const { rerender } = render(
 								<Wrapper>
 									<Client selectorMap={ selectorMapOnRender } />
 								</Wrapper>
 							);
-							expect( mockSubscribe ).toHaveBeenCalledTimes( 1 );
-							expect( mockUnsubscribe ).not.toHaveBeenCalled();
+							expect( subscribeSpy ).toHaveBeenCalledTimes( 2 );
+							expect( mockUnsubscribe ).toHaveBeenCalledTimes( 0 );
+							subscribeSpy.mockRestore();
 							rerender(
 								<Wrapper>
 									<Client selectorMap={ selectorMapOnRerender } />
 								</Wrapper>
 							);
-							expect( mockSubscribe ).toHaveBeenCalledTimes( 2 );
+							expect( subscribeSpy ).toHaveBeenCalledTimes( 2 );
 							expect( mockUnsubscribe ).toHaveBeenCalledTimes( 1 );
-							reactUseContextSpy.mockRestore();
+
+							subscribeSpy.mockRestore();
+
+							base.dispose();
 						});
 					});
 				} );
@@ -1473,7 +1457,8 @@ describe( 'ReactObservableContext', () => {
 								.toEqual( Object.keys({}));
 						} );
 						test( 'destroys previous and obtains new connection', () => {
-							const cache = new AutoImmutable( createSourceData() );
+							const sourceData = createSourceData();
+							const cache = new AutoImmutable( sourceData );
 							const connection = cache.connect();
 							const disconnectSpy = jest.spyOn( connection, 'disconnect' );
 							const getSpy = jest
@@ -1486,42 +1471,44 @@ describe( 'ReactObservableContext', () => {
 								.spyOn( AutoImmutableModule, 'default' )
 								.mockReturnValue( cache );
 							const mockUnsubscribe = jest.fn();
-							const mockSubscribe = jest.fn()
+
+							const base = new EagleEyeContext( sourceData );
+							const subscribeSpy = jest
+								.spyOn( base.store, 'subscribe' )
 								.mockReturnValue( mockUnsubscribe );
-							
-							const reactUseContextSpy = jest
-								.spyOn( React, 'useContext' )
-								.mockReturnValue({
-									cache,
-									resetState: () => {},
-									setState: () => {},
-									subscribe: mockSubscribe
-								});
+
 							const { rerender } = render(
 								<Wrapper>
 									<Client selectorMap={ selectorMapOnRender } />
 								</Wrapper>
 							);
 							expect( connectSpy ).toHaveBeenCalledTimes( 3 );
-							expect( mockSubscribe ).toHaveBeenCalledTimes( 1 );
+							expect( subscribeSpy ).toHaveBeenCalledTimes( 1 );
 							expect( disconnectSpy ).not.toHaveBeenCalled();
 							expect( mockUnsubscribe ).not.toHaveBeenCalled();
 							connectSpy.mockClear();
-							mockSubscribe.mockClear();
+							subscribeSpy.mockClear();
 							rerender(
 								<Wrapper>
 									<Client selectorMap={ selectorMapOnRerender } />
 								</Wrapper>
 							);
 							expect( connectSpy ).toHaveBeenCalledTimes( 1 );
-							expect( mockSubscribe ).toHaveBeenCalledTimes( 1 );
+							expect( subscribeSpy ).toHaveBeenCalledTimes( 1 );
 							expect( disconnectSpy ).toHaveBeenCalledTimes( 1 );
 							expect( mockUnsubscribe ).toHaveBeenCalledTimes( 1 );
-							reactUseContextSpy.mockRestore();
+							
+							getSpy.mockRestore();
+							subscribeSpy.mockRestore();
+							connectSpy.mockRestore();
+							disconnectSpy.mockRestore();
 							cacheSpy.mockRestore();
+
+							base.dispose();
 						} );
 						test( 'refreshes state data with empty object', async () => {
-							const cache = new AutoImmutable( createSourceData() );
+							const sourceData = createSourceData();
+							const cache = new AutoImmutable( sourceData );
 							const connection = cache.connect();
 							const getSpy = jest
 								.spyOn( connection, 'get' )
@@ -1532,6 +1519,7 @@ describe( 'ReactObservableContext', () => {
 							const cacheSpy = jest
 								.spyOn( AutoImmutableModule, 'default' )
 								.mockReturnValue( cache );
+
 							expect( getSpy ).not.toHaveBeenCalled();
 							const { rerender } = render(
 								<Wrapper>
@@ -1553,36 +1541,36 @@ describe( 'ReactObservableContext', () => {
 							await wait(() => {});
 							expect( getSpy ).not.toHaveBeenCalled();
 							expect( screen.getByTestId( 'data-output' ).textContent ).toEqual( '{}' );
+							
+							getSpy.mockRestore();
+							connectSpy.mockRestore();
 							cacheSpy.mockRestore();
 						} );
 						test( 'does not set up new subscription with the consumer', () => {
 							const mockUnsubscribe = jest.fn();
-							const mockSubscribe = jest.fn()
+							const base = new EagleEyeContext( sourceData );
+							const subscribeSpy = jest
+								.spyOn( base.store, 'subscribe' )
 								.mockReturnValue( mockUnsubscribe );
-							const reactUseContextSpy = jest
-								.spyOn( React, 'useContext' )
-								.mockReturnValue({
-									cache: new AutoImmutable( createSourceData() ),
-									resetState: () => {},
-									setState: () => {},
-									subscribe: mockSubscribe
-								});
 							const { rerender } = render(
 								<Wrapper>
 									<Client selectorMap={ selectorMapOnRender } />
 								</Wrapper>
 							);
-							expect( mockSubscribe ).toHaveBeenCalledTimes( 1 );
+							expect( subscribeSpy ).toHaveBeenCalledTimes( 1 );
 							expect( mockUnsubscribe ).not.toHaveBeenCalled();
-							mockSubscribe.mockClear();
+							subscribeSpy.mockClear();
 							rerender(
 								<Wrapper>
 									<Client selectorMap={{}} />
 								</Wrapper>
 							);
-							expect( mockSubscribe ).not.toHaveBeenCalled();
+							expect( subscribeSpy ).not.toHaveBeenCalled();
 							expect( mockUnsubscribe ).toHaveBeenCalledTimes( 1 );
-							reactUseContextSpy.mockRestore();
+							
+							subscribeSpy.mockRestore();
+
+							base.dispose();
 						} );
 					} );
 					describe( 'and existing data is empty', () => {
@@ -1643,39 +1631,42 @@ describe( 'ReactObservableContext', () => {
 							await wait(() => {});
 							expect( getSpy ).not.toHaveBeenCalled();
 							expect( screen.getByTestId( 'data-output' ).textContent ).toEqual( '{}' );
+
+							getSpy.mockRestore();
+							connectSpy.mockRestore();
 							cacheSpy.mockRestore();
 						} );
 						test( 'does not set up new subscription with the consumer', () => {
 							const mockUnsubscribe = jest.fn();
 							const mockSubscribe = jest.fn()
 								.mockReturnValue( mockUnsubscribe );
-							const reactUseContextSpy = jest
-								.spyOn( React, 'useContext' )
-								.mockReturnValue({
-									cache: new AutoImmutable( createSourceData() ),
-									resetState: () => {},
-									setState: () => {},
-									subscribe: mockSubscribe
-								});
+							const base = new EagleEyeContext();
+							const subscribeSpy = jest
+								.spyOn( base.store, 'subscribe' )
+								.mockReturnValue( mockSubscribe );
 							const { rerender } = render(
 								<Wrapper>
 									<Client selectorMap={{}} />
 								</Wrapper>
 							);
-							expect( mockSubscribe ).not.toHaveBeenCalled();
+							expect( subscribeSpy ).not.toHaveBeenCalled();
 							expect( mockUnsubscribe ).not.toHaveBeenCalled();
 							rerender(
 								<Wrapper>
 									<Client selectorMap={{}} />
 								</Wrapper>
 							);
-							expect( mockSubscribe ).not.toHaveBeenCalled();
+							expect( subscribeSpy ).not.toHaveBeenCalled();
 							expect( mockUnsubscribe ).not.toHaveBeenCalled();
-							reactUseContextSpy.mockRestore();
+
+							subscribeSpy.mockRestore();
+
+							base.dispose();
 						} );
 						describe( 'and previous property path is empty', () => {
 							test( 'skips refreshing connection: no previous connections to the consumer existed', () => {
-								const cache = new AutoImmutable( createSourceData() );
+								const sourceData = createSourceData();
+								const cache = new AutoImmutable( sourceData );
 								const connection = cache.connect();
 								const disconnectSpy = jest.spyOn( connection, 'disconnect' );
 								const getSpy = jest
@@ -1688,23 +1679,17 @@ describe( 'ReactObservableContext', () => {
 									.spyOn( AutoImmutableModule, 'default' )
 									.mockReturnValue( cache );
 								const mockUnsubscribe = jest.fn();
-								const mockSubscribe = jest.fn()
+								const base = new EagleEyeContext( sourceData );
+								const subscribeSpy = jest
+									.spyOn( base.store, 'subscribe' )
 									.mockReturnValue( mockUnsubscribe );
-								const reactUseContextSpy = jest
-									.spyOn( React, 'useContext' )
-									.mockReturnValue({
-										cache,
-										resetState: () => {},
-										setState: () => {},
-										subscribe: mockSubscribe
-									});
 								const { rerender } = render(
 									<Wrapper>
 										<Client selectorMap={{}} />
 									</Wrapper>
 								);
 								expect( connectSpy ).toHaveBeenCalledTimes( 3 );
-								expect( mockSubscribe ).not.toHaveBeenCalled();
+								expect( subscribeSpy ).not.toHaveBeenCalled();
 								expect( disconnectSpy ).not.toHaveBeenCalled();
 								expect( mockUnsubscribe ).not.toHaveBeenCalled();
 								connectSpy.mockClear();
@@ -1714,11 +1699,17 @@ describe( 'ReactObservableContext', () => {
 									</Wrapper>
 								);
 								expect( connectSpy ).not.toHaveBeenCalled();
-								expect( mockSubscribe ).not.toHaveBeenCalled();
+								expect( subscribeSpy ).not.toHaveBeenCalled();
 								expect( disconnectSpy ).not.toHaveBeenCalled();
 								expect( mockUnsubscribe ).not.toHaveBeenCalled();
-								reactUseContextSpy.mockRestore();
+
+								getSpy.mockRestore();
+								connectSpy.mockRestore();
+								subscribeSpy.mockRestore();
+								disconnectSpy.mockRestore();
 								cacheSpy.mockRestore();
+
+								base.dispose();
 							} );
 						} );
 					} );
@@ -1733,10 +1724,11 @@ describe( 'ReactObservableContext', () => {
 				beforeAll(() => {
 					setup = ctx => {
 						let meta = { store : {}  };
+						const useStream = ctx.useStream;
 						const Client : React.FC<{selectorMap : SelectorMap}> = ({
 							selectorMap
 						}) => {
-							meta.store = useContext( ctx, selectorMap );
+							meta.store = useStream( selectorMap );
 							return null;
 						};
 						Client.displayName = 'Client';
@@ -1773,7 +1765,9 @@ describe( 'ReactObservableContext', () => {
 					};
 					expect( store.data ).toEqual( expectedValue );
 					store.setState({
-						friends: { [ MOVE_TAG ]: [ -1, 1 ] } as unknown as Array<any>,
+						friends: {
+							[ AutoImmutableModule.MOVE_TAG ]: [ -1, 1 ]
+						} as unknown as Array<any>,
 						isActive: true,
 						history: {
 							places: {
@@ -1783,7 +1777,7 @@ describe( 'ReactObservableContext', () => {
 								}  as SourceData["history"]["places"][0]
 							} as unknown as SourceData["history"]["places"]
 						},
-						tags: { [ DELETE_TAG ]: [ 3, 5 ] } as unknown as SourceData["tags"]
+						tags: { [ AutoImmutableModule.DELETE_TAG ]: [ 3, 5 ] } as unknown as SourceData["tags"]
 					} as SourceData );
 					await new Promise( resolve => setTimeout( resolve, 10 ) );
 					expect( store.data ).toEqual({
@@ -1846,6 +1840,7 @@ describe( 'ReactObservableContext', () => {
 						isActive: true,
 						state: updatedDataEquiv
 					});
+					ObservableContext.dispose();
 				} );
 				test( 'holds an empty object when no renderKeys provided ', async () => {
 					let store = {} as Store<SourceData>;
@@ -1873,15 +1868,13 @@ describe( 'ReactObservableContext', () => {
 					resetPaths? : Array<string>
 				}>;
 				beforeAll(() => {
+					const useStream = ObservableContext.useStream;
 					Client = props => {
-						const { resetState } = useContext(
-							ObservableContext,
-							props.selectorMap
-						)
+						const { resetState } = useStream( props.selectorMap );
 						const doReset = useCallback(() => {
 							resetState( props.resetPaths );
 						}, [ resetState ]);
-						return (<button onClick={ doReset } /> )
+						return ( <button onClick={ doReset } /> )
 					};
 				});
 				describe( 'when selectorMap is present in the consumer', () => {
@@ -1897,7 +1890,7 @@ describe( 'ReactObservableContext', () => {
 								.spyOn( AutoImmutableModule, 'default' )
 								.mockReturnValue( autoImmutable )
 							const args = [ 'blatant', 'company', 'xylophone', 'yodellers', 'zenith' ];
-							const { rerender } = render(
+							render(
 								<Wrapper>
 									<Client
 										selectorMap={ selectorMapOnRender }
@@ -1910,12 +1903,15 @@ describe( 'ReactObservableContext', () => {
 							fireEvent.click( screen.getByRole( 'button' ) );
 							expect( setSpy ).toHaveBeenCalledTimes( 1 );
 							expect( setSpy.mock.calls[ 0 ][ 0 ] ).toEqual({
-								[ DELETE_TAG ]: [ 'blatant', 'xylophone', 'yodellers', 'zenith' ],
+								[ AutoImmutableModule.DELETE_TAG ]: [
+									'blatant', 'xylophone', 'yodellers', 'zenith'
+								],
 								company: {
-									[ REPLACE_TAG ]: sourceData.company
+									[ AutoImmutableModule.REPLACE_TAG ]: sourceData.company
 								}
 							});
 							connectSpy.mockRestore();
+							setSpy.mockRestore();
 						} );
 					} );
 					describe( 'and called with NO  own property paths argument to reset', () => {
@@ -1943,21 +1939,22 @@ describe( 'ReactObservableContext', () => {
 									places: {
 									    2: {
 									    	year: {
-									    		[ REPLACE_TAG ]: sourceData.history.places[ 2 ].year,
+									    		[ AutoImmutableModule.REPLACE_TAG ]: sourceData.history.places[ 2 ].year,
 									      	},
 									    },
 									},
 								},
 								isActive: {
-									[ REPLACE_TAG ]: sourceData.isActive
+									[ AutoImmutableModule.REPLACE_TAG ]: sourceData.isActive
 								},
 								tags: {
 									5: {
-										[ REPLACE_TAG ]: sourceData.tags[ 5 ]
+										[ AutoImmutableModule.REPLACE_TAG ]: sourceData.tags[ 5 ]
 									},
 								},
 							});
 							connectSpy.mockRestore();
+							setSpy.mockRestore();
 						} );
 					} );
 				} );
@@ -1981,11 +1978,14 @@ describe( 'ReactObservableContext', () => {
 							fireEvent.click( screen.getByRole( 'button' ) );
 							expect( setSpy ).toHaveBeenCalledTimes( 1 );
 							expect( setSpy.mock.calls[ 0 ][ 0 ] ).toEqual({
-								[ DELETE_TAG ]: [ 'blatant','xylophone','yodellers','zenith' ],
+								[ AutoImmutableModule.DELETE_TAG ]: [
+									'blatant','xylophone','yodellers','zenith'
+								],
 								company: {
-									[ REPLACE_TAG ]: sourceData.company
+									[ AutoImmutableModule.REPLACE_TAG ]: sourceData.company
 								},
 							});
+							setSpy.mockRestore();
 							connectSpy.mockRestore();
 						} );
 					} );
@@ -2006,6 +2006,7 @@ describe( 'ReactObservableContext', () => {
 							fireEvent.click( screen.getByRole( 'button' ) );
 							expect( setSpy ).toHaveBeenCalledTimes( 1 );
 							expect( setSpy.mock.calls[ 0 ][ 0 ] ).toEqual({});
+							setSpy.mockRestore();
 							connectSpy.mockRestore();
 						} );
 					} );
@@ -2013,34 +2014,4 @@ describe( 'ReactObservableContext', () => {
 			} );
 		} );
 	} );
-	describe( 'util', () => {
-		describe( 'mkReadonly(...)', () => {
-			function getTestData() {
-				return {
-					a: {
-						b: {
-							c: 33,
-							d: new Date()
-						},
-						items: [ 1, 3, 5 ],
-						j: 'this is my test message'
-					},
-					items: [ , {}, 'just me', null ],
-					r: new RegExp( /g/ ),
-					x: true,
-					y: { z: new class{} },
-					z: new class{}
-				};
-			}
-			test( 'converts all to readonly', () => {
-				const data = getTestData();
-				expect( isReadonly( data ) ).toBe( false );
-				mkReadonly( data );
-				expect( isReadonly( data ) ).toBe( true );
-			} );
-			test( 'also returns the object reference', () => {
-				expect( isReadonly( mkReadonly( getTestData() )) ).toBe( true );
-			} );
-		} );
-	})
 } );

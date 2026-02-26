@@ -15,8 +15,6 @@ import type {
     Value
 } from '@webkrafters/auto-immutable';
 
-import { FULL_STATE_SELECTOR } from './constants__OLD';
-
 export type {
     BaseType,
     ClearCommand,
@@ -33,26 +31,44 @@ export type {
     UpdatePayloadArray
 } from '@webkrafters/auto-immutable';
 
-export type State = Value;
+export type {
+    ArraySelector,
+    Changes,
+    Channel,
+    Data,
+    FullStateSelector,
+    IStorage,
+    IStore,
+    Listener,
+    ObjectSelector,
+    Prehooks,
+    ProviderProps,
+    SelectorMap,
+    State,
+    Store,
+    StoreInternal,
+    StoreRef,
+    Stream,
+    Text,
+    Unsubscribe
+} from '@webkrafters/eagleeye';
 
-export type Listener<T extends State = {}> = (
-    changes : Changes<T>,
-    changedPathsTokens : Readonly<Array<Array<string>>>,
-    netChanges : Readonly<T>,
-    mayHaveChangesAt : (pathTokens : Array<string>) => boolean
-) => void;
+import { SelectorMap,State, Store } from '@webkrafters/eagleeye';
 
-export type ObservableProvider<T extends State> = ForwardRefExoticComponent<
-    ProviderProps<T> &
-    RefAttributes<StoreRef<T>>
->;
+export {
+    CLEAR_TAG,
+    DELETE_TAG,
+    FULL_STATE_SELECTOR,
+    MOVE_TAG,
+    NULL_SELECTOR,
+    PUSH_TAG,
+    REPLACE_TAG,
+    SET_TAG,
+    SPLICE_TAG,
+    Tag,
+} from '@webkrafters/eagleeye';
 
-export interface ProviderProps<T extends State> {
-    children?: ReactNode;
-    prehooks?: Prehooks<T>;
-    storage?: IStorage<T>;
-    value: PartialState<T>;
-};
+
 
 export type ConnectProps<
     OWNPROPS extends OwnProps = IProps,
@@ -87,147 +103,4 @@ export interface IProps { ref?: unknown }
 
 export type OwnProps = IProps & Record<any, any>;
 
-export type Text = string | number;
-
-export type FullStateSelector = typeof FULL_STATE_SELECTOR;
-
-export type ObjectSelector = Record<Text, Text | FullStateSelector>;
-
-export type ArraySelector = Array<Text | FullStateSelector>;
-
-export type SelectorMap = ObjectSelector | ArraySelector | void;
-
-type ReplacePathSeps<
-    P extends Text,
-    T extends string,
-> = P extends `${infer U}${T}${infer V}`
-    ? ReplacePathSeps<`${U}.${V}`, T>
-    : P;
-
-type TrimPathSep<P extends Text> = P extends `${infer U}]${never}` ? U : P;
-
-type NormalizePath<P extends Text> = TrimPathSep<
-    ReplacePathSeps<
-        ReplacePathSeps<
-            ReplacePathSeps<
-                P,
-                ']['
-            >,
-            '].'
-        >,
-        '['
-    >
->;
-
-type Datum<
-    P extends Text,
-    S extends Record<Text, any> = State
-> = P extends `${infer K}.${infer P_1}`
-    ? Datum<P_1, S[K]>
-    : P extends ''
-    ? S
-    : any;
-
-type DataPoint<
-    P extends Text,
-    S extends State
-> = P extends FullStateSelector ? S : Datum<NormalizePath<P>, S>;
-
-export type Data<
-    SELECTOR_MAP extends SelectorMap,
-    STATE extends State = State
-> = (
-    SELECTOR_MAP extends ObjectSelector
-    ? {[ S_KEY in keyof SELECTOR_MAP ] : DataPoint<SELECTOR_MAP[S_KEY], STATE> }
-    : SELECTOR_MAP extends ArraySelector
-    ? {[ S_NUM : number ] : DataPoint<SELECTOR_MAP[number], STATE>}
-    : Array<any>
-);
-
-export type Changes<T extends State = State> = BaseChanges<T>;
-
-export interface IStorage<T extends State = State> {
-    clone: (data: T) => T;
-    getItem: (key: string) => T;
-    removeItem: (key: string) => void;
-    setItem: (key: string, data: T) => void;
-};
-
-export type NonReactUsageReport = (...args: Array<unknown>) => void;
-
-export type PartialState<T extends State> = T extends Partial<infer U> ? T : Partial<T>;
-
-export interface Prehooks<T extends State = State> {
-    resetState?: (
-        resetData: PartialState<T>,
-        state: {
-            current: T;
-            original: T;
-        }
-    ) => boolean;
-    setState?: (newChanges: Changes<T>) => boolean;
-};
-
-export type Subscribe = <T extends State>( listener : Listener<T> ) => Unsubscribe;
-
-export type Unsubscribe = (...args: Array<unknown>) => void;
-
-export interface IStore {
-    resetState: Function;
-    setState: Function;
-}
-
-export interface IStoreInternal extends IStore {
-    subscribe: Function;
-}
-
-export interface Store<
-    T extends State,
-    SELECTOR_MAP extends SelectorMap = SelectorMap
-> extends IStore {
-    data: Data<SELECTOR_MAP>;
-    resetState: (propertyPaths?: Array<string>) => void;
-    setState: (changes: Changes<T>) => void;
-};
-
-export interface StoreInternal<T extends State> extends IStoreInternal {
-    cache: Immutable<Partial<T>>,
-    resetState: (connection: Connection<T>, propertyPaths?: Array<string>) => void;
-    setState: (connection: Connection<T>, changes: Changes<T>) => void;
-    subscribe: Subscribe;
-};
-
-export interface StorePlaceholder extends IStoreInternal {
-    getState: NonReactUsageReport;
-    resetState: NonReactUsageReport;
-    setState: NonReactUsageReport;
-    subscribe: NonReactUsageReport;
-};
-
-export interface StoreRef<T extends State = State> extends StorePlaceholder {
-    getState: (propertyPaths?: Array<string>) => T,
-    resetState: (propertyPaths?: Array<string>) => void;
-    setState: (changes: Changes<T>) => void;
-    subscribe: Subscribe;
-}
-
-export {
-    CLEAR_TAG,
-    DELETE_TAG,
-    FULL_STATE_SELECTOR,
-    MOVE_TAG,
-    NULL_SELECTOR,
-    PUSH_TAG,
-    REPLACE_TAG,
-    SET_TAG,
-    SPLICE_TAG,
-    Tag,
-} from './constants__OLD';
-
-export {
-    connect,
-    createContext,
-    ObservableContext,
-    UsageError,
-    useContext
-} from './main/index__OLD';
+export { createContext as createEagleEye } from './main';

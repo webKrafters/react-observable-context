@@ -8,9 +8,9 @@ import React, {
 import isEmpty from 'lodash.isempty';
 
 import { createContext } from '..';
-import { SelectorMap } from '../../index';
+import { SelectorMap } from '../..';
 
-export interface TestState {
+export type TestState = {
 	color: string,
 	customer: {
 		name: {
@@ -23,7 +23,7 @@ export interface TestState {
 	type: string
 };
 
-const defaultState : TestState = {
+export const defaultState : TestState = {
 	color: 'Burgundy',
 	customer: {
 		name: {
@@ -38,10 +38,10 @@ const defaultState : TestState = {
 
 export const ObservableContext = createContext<Partial<TestState>>( defaultState );
 
-export const useObservableContext = ObservableContext.stream;
+export const useStream = ObservableContext.useStream;
 
 export const Reset : React.FC = () => {
-	const { resetState } = useObservableContext();
+	const { resetState } = useStream();
 	useEffect(() => console.log( 'Reset component rendered.....' ));
 	const reset = useCallback(() => resetState([ '@@STATE' ]), [ resetState ]);
 	return ( <button onClick={ reset }>reset context</button> );
@@ -59,7 +59,7 @@ export const CapitalizedDisplay : React.FC<{text: string}> = ({ text }) => {
 CapitalizedDisplay.displayName = 'CapitalizedDisplay';
 
 export const CustomerPhoneDisplay : React.FC = () => {
-	const { data } = useObservableContext({ phone: 'customer.phone' });
+	const { data } = useStream({ phone: 'customer.phone' });
 	useEffect(() => console.log( 'CustomerPhoneDisplay component rendered.....' ));
 	return ( <>{ `Phone: ${ data.phone ?? 'n.a.' }` }</> );
 };
@@ -73,7 +73,7 @@ CustomerPhoneDisplay.displayName = 'CustomerPhoneDisplay';
 export const TallyDisplay : React.FC = () => {
 	const { data: {
 		color, name, price, type
-	} } = useObservableContext({
+	} } = useStream({
 		color: 'color',
 		name: 'customer.name',
 		price: 'price',
@@ -119,7 +119,6 @@ export const TallyDisplay : React.FC = () => {
 TallyDisplay.displayName = 'TallyDisplay';
 
 export const Editor : React.FC = () => {
-	const { setState } = useObservableContext();
 	const fNameInputRef = useRef<HTMLInputElement>( null );
 	const lNameInputRef = useRef<HTMLInputElement>( null );
 	const phoneInputRef = useRef<HTMLInputElement>( null );
@@ -127,10 +126,12 @@ export const Editor : React.FC = () => {
 	const colorInputRef = useRef<HTMLInputElement>( null );
 	const typeInputRef = useRef<HTMLInputElement>( null );
 	const updateColor = useCallback(() => {
-		setState({ color: colorInputRef.current!.value }); // as unknown as string
+		ObservableContext.store.setState({
+			color: colorInputRef.current!.value
+		});
 	}, []);
 	const updateName = useCallback(() => {
-		setState({
+		ObservableContext.store.setState({
 			customer: {
 				name: {
 					first: fNameInputRef.current!.value,
@@ -142,13 +143,17 @@ export const Editor : React.FC = () => {
 	const updatePhone = useCallback(() => {
 		const phone = phoneInputRef.current!.value;
 		if( phone.length && !/[0-9]{10}/.test( phone ) ) { return }
-		setState({ customer: { phone } });
+		ObservableContext.store.setState({ customer: { phone } });
 	}, []);
 	const updatePrice = useCallback(() => {
-		setState({ price: Number( priceInputRef.current!.value ) } );
+		ObservableContext.store.setState({
+			price: Number( priceInputRef.current!.value )
+		} );
 	}, []);
 	const updateType = useCallback(() => {
-		setState({ type: typeInputRef.current!.value });
+		ObservableContext.store.setState({
+			type: typeInputRef.current!.value
+		});
 	}, []);
 	useEffect(() => console.log( 'Editor component rendered.....' ));
 	return (
@@ -194,7 +199,7 @@ export const Editor : React.FC = () => {
 Editor.displayName = 'Editor';
 
 export const ProductDescription : React.FC = () => {
-	const { data } = useObservableContext({
+	const { data } = useStream({
 		c: 'color', t: 'type'
 	}) as unknown as {
 		data: {[K in 'c'|'t']: React.ReactNode}
@@ -209,7 +214,7 @@ export const ProductDescription : React.FC = () => {
 ProductDescription.displayName = 'ProductDescription';
 
 export const PriceSticker : React.FC = () => {
-	const { data: { p } } = useObservableContext({ p: 'price' });
+	const { data: { p } } = useStream({ p: 'price' });
 	useEffect(() => console.log( 'PriceSticker component rendered.....' ));
 	return (
 		<div style={{ fontSize: 36, fontWeight: 800 }}>

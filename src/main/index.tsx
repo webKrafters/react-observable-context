@@ -75,6 +75,8 @@ export class ObservableContext<T extends State> {
 
 	get closed(){ return this.consumer.closed }
 
+	get connect() { return this._connect }
+
 	get prehooks() { return this.consumer.prehooks }
 
 	get storage() { return this.consumer.storage }
@@ -109,7 +111,7 @@ export class ObservableContext<T extends State> {
 	 * {myX: 'd.e.f[1].x'} or {myX: 'd.e.f.1.x'} => {myX: 7} // same applies to {myY: 'd.e.f[1].y'} = {myY: 8}; {myZ: 'd.e.f[1].z'} = {myZ: 9}
 	 * {myData: '@@STATE'} => {myData: state}
 	 */
-	get stream() {
+	get useStream() {
 		const stream = this.consumer.stream;
 		return <S extends SelectorMap>( selectorMap? : S ) => {
 			const [ channel ] = useState(() => stream( selectorMap ));
@@ -150,7 +152,7 @@ export class ObservableContext<T extends State> {
 	 * @param [selectorMap] - Key:value pairs where `key` => arbitrary key given to a Store.data property holding a state slice and `value` => property path to a state slice used by this component: see examples below. May add a mapping for a certain arbitrary key='state' and value='@@STATE' to indicate a desire to obtain the entire state object and assign to a `state` property of Store.data. A change in any of the referenced properties results in this component render. When using '@@STATE', note that any change within the state object will result in this component render.
 	 * @see {useContext} for selectorMap sample
 	 */
-	connect<S extends SelectorMap>( selectorMap? : S ) {
+	private _connect = <S extends SelectorMap>( selectorMap? : S ) => {
 		const ctx = this;
 		function connector<P extends ExtractInjectedProps<T, S>>(
 			WrappedComponent : ElementType<ConnectProps<P, T, S>>
@@ -161,7 +163,7 @@ export class ObservableContext<T extends State> {
 		function connector<P extends ExtractInjectedProps<T, S>>(
 			WrappedComponent
 		) : ConnectedComponent<P> {
-			const useStream = ctx.stream;
+			const useStream = ctx.useStream;
 			const Wrapped = (
 				!( isPlainObject( WrappedComponent ) && 'compare' in WrappedComponent as {} )
 					? memo( WrappedComponent )

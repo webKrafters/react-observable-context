@@ -4,7 +4,7 @@ import type {
 	ReactNode
 } from 'react';
 
-import type { Store } from '../..';
+import type { Prehooks, Store } from '../..';
 
 import { TestState } from './normal';
 
@@ -17,17 +17,20 @@ import React, {
 
 import isEmpty from 'lodash.isempty';
 
-import { CapitalizedDisplay, ObservableContext } from './normal';
+import { createContext } from '..';
+
+import { CapitalizedDisplay, defaultState } from './normal';
+
+const ObservableContext = createContext<Partial<TestState>>( defaultState );
 
 const connect = ObservableContext.connect;
 
-const Reset : FC<{resetState: (propertyPaths?: string[]) => void}> = ({ resetState }) => {
+const Reset : FC = () => {
 	useEffect(() => console.log( 'Reset component rendered.....' ));
-	const reset = useCallback(() => resetState([ '@@STATE' ]), [ resetState ]);
+	const reset = useCallback(() => ObservableContext.store.resetState(), []);
 	return ( <button onClick={ reset }>reset context</button> );
 };
 Reset.displayName = 'Reset';
-export const ConnectedReset = connect( ObservableContext )( Reset );
 
 const CustomerPhoneDisplay : FC<{ data: { phone: string } }> = ({ data }) => {
 	useEffect(() => console.log( 'CustomerPhoneDisplay component rendered.....' ));
@@ -36,7 +39,7 @@ const CustomerPhoneDisplay : FC<{ data: { phone: string } }> = ({ data }) => {
 CustomerPhoneDisplay.displayName = 'CustomerPhoneDisplay';
 export const ConnectedCustomerPhoneDisplay = connect({
 	phone: 'customer.phone'
-})( CustomerPhoneDisplay as unknown as FC<Store<Partial<TestState>, { phone : string }>> );
+})( CustomerPhoneDisplay );
 
 const TallyDisplay : FC<{
 	data: Pick<TestState, "color" | "price" | "type"> & {
@@ -75,7 +78,7 @@ const TallyDisplay : FC<{
 				</tbody>
 			</table>
 			<div style={{ textAlign: 'right' }}>
-				<ConnectedReset />
+				<Reset />
 			</div>
 		</div>
 	);
@@ -88,9 +91,7 @@ export const ConnectedTallyDisplay = connect({
 	type: 'type'
 })( TallyDisplay );
 
-const Editor : FC<{
-	setState: (changes: Record<any, any>) => void
-}> = ({ setState }) => {
+const Editor : FC = () => {
 
 	const fNameInputRef = useRef<HTMLInputElement>( null );
 	const lNameInputRef = useRef<HTMLInputElement>( null );
@@ -100,10 +101,12 @@ const Editor : FC<{
 	const typeInputRef = useRef<HTMLInputElement>( null );
 
 	const updateColor = useCallback(() => {
-		setState({ color: colorInputRef.current?.value });
+		ObservableContext.store.setState({
+		color: colorInputRef.current?.value
+		});
 	}, []);
 	const updateName = useCallback(() => {
-		setState({
+		ObservableContext.store.setState({
 			customer: {
 				name: {
 					first: fNameInputRef.current?.value,
@@ -113,15 +116,19 @@ const Editor : FC<{
 		});
 	}, []);
 	const updatePhone = useCallback(() => {
-		const phone = phoneInputRef.current?.value;
+		const phone = phoneInputRef.current!.value;
 		if( phone?.length && !/[0-9]{10}/.test( phone ) ) { return }
-		setState({ customer: { phone } });
+		ObservableContext.store.setState({ customer: { phone } });
 	}, []);
 	const updatePrice = useCallback(() => {
-		setState({ price: Number( priceInputRef.current?.value ) });
+		ObservableContext.store.setState({
+			price: Number( priceInputRef.current?.value )
+		});
 	}, []);
 	const updateType = useCallback(() => {
-		setState({ type: typeInputRef.current?.value });
+		ObservableContext.store.setState({
+			type: typeInputRef.current?.value
+		});
 	}, []);
 
 	useEffect(() => console.log( 'Editor component rendered.....' ));
@@ -167,7 +174,6 @@ const Editor : FC<{
 	);
 };
 Editor.displayName = 'Editor';
-export const ConnectedEditor = connect()( Editor );
 
 export const ProductDescription : FC<{
 	data : {
@@ -199,8 +205,13 @@ export const PriceSticker : FC<{data: { p: number }}> = ({ data: { p } }) => {
 PriceSticker.displayName = 'PriceSticker';
 export const ConnectedPriceSticker = connect({ p: 'price' })( PriceSticker );
 
-export const Product : React.FC<{ type : string }> = ({ type }) => {
+export const Product : React.FC<{
+	prehooks? : Prehooks<Partial<TestState>>,
+	type? : string
+}> = ({ prehooks = undefined, type }) => {
 
+	useEffect(() => { ObservableContext.prehooks = prehooks! }, [ prehooks ]);
+		
 	useEffect(() => { ObservableContext.store.setState({ type }) }, [ type ]);
 
 	const overridePricing = useCallback( e => {
@@ -220,7 +231,7 @@ export const Product : React.FC<{ type : string }> = ({ type }) => {
 					marginBottom: 10,
 					paddingBottom: 5
 				}}>
-					<ConnectedEditor />
+					<Editor />
 					<ConnectedTallyDisplay />
 				</div>
 				<ConnectedProductDescription />
