@@ -11,6 +11,7 @@ import {
 	createContext,
 	ObservableContext as ObservableContextType
 } from '..';
+
 import { FULL_STATE_SELECTOR, Prehooks } from '../..';
 
 export type TestState = {
@@ -44,11 +45,11 @@ export const {
 	CapitalizedDisplay, CustomerPhoneDisplay,
 	Editor, Reset, TallyDisplay, PriceSticker,
 	Product, ProductDescription
-} = createClientComponents( createContext( defaultState as Partial<TestState> ) );
+} = createNormalClient( createContext( defaultState as Partial<TestState> ) );
 
 export default App;
 
-export function createClientComponents(
+export function createNormalClient(
 	ObservableContext : ObservableContextType<Partial<TestState>>
 ) {
 	

@@ -12,11 +12,7 @@ import {
 
 import getProperty from '@webkrafters/get-property';
 
-import React, {
-	useRef,
-	useEffect,
-	useCallback
-} from 'react';
+import React, { useCallback } from 'react';
 
 import {
 	cleanup as cleanupPerfTest,
@@ -52,13 +48,13 @@ import createSourceData, {
 	type SourceData
 } from '../test-artifacts/data/create-state-obj';
 
-import AppNormal, {
+import {
 	defaultState,
-	createClientComponents,
+	createNormalClient,
 	TestState
 } from './test-apps/normal';
-import AppWithConnectedChildren from './test-apps/with-connected-children';
-import AppWithPureChildren from './test-apps/with-pure-children';
+import { createConnectedClient } from './test-apps/with-connected-children';
+import { createPureClient } from './test-apps/with-pure-children';
 
 type PerfValue = PerfTools<DefaultPerfToolsField>;
 
@@ -88,7 +84,15 @@ describe( 'ReactObservableContext', () => {
 	describe( 'Provider-less', () => {
 		describe( 'applicable anywhere external of and within the application', () => {
 			describe( 'using connected store subscribers', () => {
-				test( 'scenario 1', async () => {
+				let ObservableContext : ObservableContextType<Partial<TestState>>;
+				let AppWithConnectedChildren : React.FC;
+				beforeEach(() => {
+					ObservableContext = createContext( defaultState as Partial<TestState> );
+					const client = createConnectedClient( ObservableContext );
+					AppWithConnectedChildren = client.App;
+				});
+				afterAll(() => { ObservableContext.dispose() });
+			test( 'scenario 1', async () => {
 					const { renderCount } : PerfValue = perf( React );
 					render( <AppWithConnectedChildren /> );
 					let baseRenderCount : Record<string,any>;
@@ -164,6 +168,14 @@ describe( 'ReactObservableContext', () => {
 				} );
 			} );
 	 		describe( 'using pure-component store subscribers', () => {
+				let ObservableContext : ObservableContextType<Partial<TestState>>;
+				let AppWithPureChildren : React.FC;
+				beforeEach(() => {
+					ObservableContext = createContext( defaultState as Partial<TestState> );
+					const client = createPureClient( ObservableContext );
+					AppWithPureChildren = client.App;
+				});
+				afterAll(() => { ObservableContext.dispose() });
 				test( 'scenario 1', async () => {
 					const { renderCount } : PerfValue = perf( React );
 					render( <AppWithPureChildren /> );
@@ -240,6 +252,14 @@ describe( 'ReactObservableContext', () => {
 				} );
 			} );
 			describe( 'using non pure-component store subscribers', () => {
+				let ObservableContext : ObservableContextType<Partial<TestState>>;
+				let AppNormal : React.FC;
+				beforeEach(() => {
+					ObservableContext = createContext( defaultState as Partial<TestState> );
+					const client = createNormalClient( ObservableContext );
+					AppNormal = client.App;
+				});
+				afterAll(() => { ObservableContext.dispose() });
 				test( 'scenario 1', async () => {
 					const { renderCount } : PerfValue = perf( React );
 					render( <AppNormal /> );
@@ -318,7 +338,14 @@ describe( 'ReactObservableContext', () => {
 		} );
 	} );
 	describe( 'store updates from outside the Provider tree', () => {
-		describe( 'with connected component children', () => {
+		describe( 'with connected component children', () => {let ObservableContext : ObservableContextType<Partial<TestState>>;
+			let AppWithConnectedChildren : React.FC;
+			beforeEach(() => {
+				ObservableContext = createContext( defaultState as Partial<TestState> );
+				const client = createConnectedClient( ObservableContext );
+				AppWithConnectedChildren = client.App;
+			});
+			afterAll(() => { ObservableContext.dispose() });
 			test( 'only re-renders Provider children affected by the Provider parent prop change', async () => {
 				const { renderCount } : PerfValue = perf( React );
 				render( <AppWithConnectedChildren /> );
@@ -358,6 +385,14 @@ describe( 'ReactObservableContext', () => {
 			} );
 	 	} );
 		describe( 'with pure-component children', () => {
+			let ObservableContext : ObservableContextType<Partial<TestState>>;
+			let AppWithPureChildren : React.FC;
+			beforeEach(() => {
+				ObservableContext = createContext( defaultState as Partial<TestState> );
+				const client = createPureClient( ObservableContext );
+				AppWithPureChildren = client.App;
+			});
+			afterAll(() => { ObservableContext.dispose() });
 			test( 'only re-renders Provider children affected by the Provider parent prop change', async () => {
 				const { renderCount } : PerfValue = perf( React );
 				render( <AppWithPureChildren /> );
@@ -394,7 +429,17 @@ describe( 'ReactObservableContext', () => {
 			} );
 		} );
 		describe( 'with non pure-component children ', () => {
-			test( 'only re-renders Provider children affected by the Provider parent prop change', async () => {
+			let ObservableContext : ObservableContextType<Partial<TestState>>;
+			let AppNormal : React.FC;
+			beforeEach(() => {
+				ObservableContext = createContext( defaultState as Partial<TestState> );
+				const client = createNormalClient( ObservableContext );
+				AppNormal = client.App;
+			});
+			afterAll(() => { ObservableContext.dispose() });
+			// @debug
+			test( '1xxxx', async () => {
+			// test( 'only re-renders Provider children affected by the Provider parent prop change', async () => {
 				const { renderCount } : PerfValue = perf( React );
 				render( <AppNormal /> );
 				let baseRenderCount : Record<string,any>;
@@ -582,12 +627,12 @@ describe( 'ReactObservableContext', () => {
 	describe( 'prehooks', () => {
 		let ObservableContext : ObservableContextType<Partial<TestState>>;
 		let Product : React.FC<{
-			prehooks?: Prehooks;
-			type: string;
+			prehooks? : Prehooks;
+			type : string;
 		}>;
 		beforeEach(() => {
 			ObservableContext = createContext( defaultState as Partial<TestState> );
-			const client = createClientComponents( ObservableContext );
+			const client = createNormalClient( ObservableContext );
 			Product = client.Product;
 		});
 		afterAll(() => { ObservableContext.dispose() });
@@ -615,10 +660,7 @@ describe( 'ReactObservableContext', () => {
 				} );
 			} );
 			describe( 'when `resetState` prehook exists on the context', () => {
-				// @debug
-				test( '1QQQQ', () => {
-				// test( 'is called by the `store.resetState` method', async () => {
-					
+				test( 'is called by the `store.resetState` method', async () => {
 					const prehooks = Object.freeze({ resetState: jest.fn().mockReturnValue( false ) });
 					render( <Product prehooks={ prehooks } type="Computer" /> );
 					fireEvent.change( screen.getByLabelText( 'New Type:' ), { target: { value: 'Bag' } } );
