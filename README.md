@@ -172,4 +172,4 @@ May also see <b><a href="https://eagleeye.js.org/history/features">What's Change
 
 # License
 
-MIT
+GPLv3
