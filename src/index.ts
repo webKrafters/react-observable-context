@@ -3,17 +3,9 @@ import type {
     ForwardRefExoticComponent, 
     MemoExoticComponent,
     NamedExoticComponent,
-    ReactNode,
     PropsWithoutRef,
     RefAttributes
 } from 'react';
-
-import type {
-    Changes as BaseChanges,
-    Connection,
-    Immutable,
-    Value
-} from '@webkrafters/auto-immutable';
 
 export type {
     BaseType,
@@ -53,7 +45,7 @@ export type {
     Unsubscribe
 } from '@webkrafters/eagleeye';
 
-import { SelectorMap,State, Store } from '@webkrafters/eagleeye';
+import { SelectorMap, State, Store } from '@webkrafters/eagleeye';
 
 export {
     CLEAR_TAG,
@@ -67,8 +59,6 @@ export {
     SPLICE_TAG,
     Tag,
 } from '@webkrafters/eagleeye';
-
-
 
 export type ConnectProps<
     OWNPROPS extends OwnProps = IProps,
@@ -97,7 +87,6 @@ export type ExtractInjectedProps<
     SELECTOR_MAP extends SelectorMap = SelectorMap,
     ALL_PROPS extends OwnProps = OwnProps
 > = Omit<ALL_PROPS, keyof Store<STATE>|keyof SELECTOR_MAP>
-
 
 export interface IProps { ref?: unknown }
 

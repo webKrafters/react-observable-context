@@ -1883,18 +1883,53 @@ describe( 'ReactObservableContext', () => {
 				expect( ctx.storage ).toBe( storage );
 				ctx.storage = undefined as unknown as IStorage<TestState>;
 			} );
-			// @todo
-			test( 'furnishes external store reference: readonly', () => {
-			} );
-			// @todo
-			test( 'furnishes useStream hook: readonly', () => {
-				const prehooks = {
-					resetState: jest.fn(),
-					setState: jest.fn()
-				} as unknown as Prehooks<TestState>;
-				ctx.prehooks = prehooks;
-				expect( ctx.prehooks ).toBe( prehooks );
-				ctx.prehooks = undefined as unknown as Prehooks<TestState>;
+			describe( 'readonly', () => {
+				test( 'furnishes access to underlying cache', () => {
+					expect( ctx.cache ).toBeInstanceOf( AutoImmutableModule.default );
+					expect(() => {
+						// @ts-expect-error
+						ctx.cache = expect.any( AutoImmutableModule.default );
+					}).toThrow( 'Cannot set property cache of #<ObservableContext> which has only a getter' );
+				} );
+				// @todo
+				test( 'furnishes this context active status', () => {
+					const ctx = createContext();
+					expect( ctx.closed ).toBe( false );
+					expect(() => {
+						// @ts-expect-error
+						ctx.closed = true;
+					}).toThrow( 'Cannot set property closed of #<ObservableContext> which has only a getter' );
+					expect( ctx.closed ).toBe( false );
+					ctx.dispose();
+					expect( ctx.closed ).toBe( true );
+				} );
+				// @todo
+				test( 'furnishes reusable HOC connector to change stream', () => {
+					expect( ctx.connect ).toEqual( expect.any( Function ) );
+					expect(() => {
+						// @ts-expect-error
+						ctx.connect = expect.any( Function );
+					}).toThrow( 'Cannot set property connect of #<ObservableContext> which has only a getter' );
+				} );
+				test( 'furnishes external store reference', () => {
+					expect( ctx.store ).toEqual({
+						getState: expect.any( Function ),
+						resetState: expect.any( Function ),
+						setState: expect.any( Function ),
+						subscribe: expect.any( Function )
+					});
+					expect(() => {
+						// @ts-expect-error
+						ctx.store = expect.any( Object );
+					}).toThrow( 'Cannot set property store of #<ObservableContext> which has only a getter' );
+				} );
+				test( 'furnishes useStream hook', () => {
+					expect( ctx.useStream ).toEqual( expect.any( Function ) );
+					expect(() => {
+						// @ts-expect-error
+						ctx.useStream = expect.any( Function )
+					}).toThrow( 'Cannot set property useStream of #<ObservableContext> which has only a getter' );
+				} );
 			} );
 		} );
 	} );

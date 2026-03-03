@@ -8,23 +8,10 @@ import type {
 import type {
 	ConnectedComponent,
 	ConnectProps,
-	// Data,
 	ExtractInjectedProps,
-	// IStore,
-	// IStoreInternal,
-	// Listener,
-	// NonReactUsageReport,
 	IProps,
-	// ObservableProvider,
-	// Prehooks,
-	// ProviderProps,
 	SelectorMap,
-	// State,
 	Store,
-	// StoreRef,
-	// StoreInternal,
-	// StorePlaceholder,
-	// ObservableContext
 } from '..';
 
 import React, {
@@ -33,10 +20,7 @@ import React, {
 	createContext as _createContext,
 	forwardRef,
 	memo,
-	// useCallback,
 	useEffect,
-	// useImperativeHandle,
-	// useMemo,
 	useRef,
 	useState
 } from 'react';
@@ -44,7 +28,6 @@ import React, {
 import isEqual from 'lodash.isequal';
 import isPlainObject from 'lodash.isplainobject';
 import omit from 'lodash.omit';
-// import set from 'lodash.set';
 
 import {
 	AutoImmutable,
@@ -139,6 +122,7 @@ export class ObservableContext<T extends State> {
 	set prehooks( prehooks : Prehooks<T> ) {
 		this.consumer.prehooks = prehooks;
 	}
+
 	set storage( storage : IStorage<T> ) {
 		this.consumer.storage = storage;
 	}
