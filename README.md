@@ -45,7 +45,7 @@
 
 **Usage:** Please see <b><a href="https://eagleeye.js.org/getting-started">Getting Started (docs under revision)</a></b>.
 
-**Demo:** [Play with the app on codesandbox (docs under revision)](https://codesandbox.io/s/github/webKrafters/react-observable-context-app)\
+**Demo:** [Play with the app on codesandbox](https://codesandbox.io/s/github/webKrafters/react-observable-context-app)\
 If sandbox fails to load app, please refresh dependencies on its lower left.
 
 **Install:**\
