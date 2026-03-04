@@ -11,27 +11,23 @@ import SelectTab from '../partials/select-tab';
 
 const providerCode =
 `import React, { forwardRef } from 'react';
-import ObservableContext from './context'; // using example from the "Getting Started Page"
+import MyContext from './context'; // using example from the "Getting Started Page"
 import Ui from './ui'; // using example from the "Getting Started Page"
 
 const initState = {a: { b: { x: { y: { z: [ 2022 ] } } } }};
 
-const ProviderDemo = forwardRef(( props, ref ) => {
+const Container = forwardRef(( props, ref ) => {
     // signify to parent the exit of the storeRef Provider on component unmount.
     useEffect(() => () => setTimeout( () => props?.onDismount(), 0 ), []);
-    return (
-        <ObservableContext.Provider ref={ ref } value={ initState }>
-            <Ui />
-        </ObservableContext.Provider>
-    );
+    return ( <Ui /> );
 };
-ProviderDemo.displayName = 'ProviderDemo';
+Container.displayName = 'Container';
 
-export default ProviderDemo;`
+export default Container;`
 
 const setupCode =
 `import React, { useCallback, useEffect, useRef, useState } from 'react';
-import ProviderDemo from './provider-demo';
+import Container from './container';
 import StoreMonitor from './debug-monitor';
 const App = () => {
     const storeRef = useRef();
@@ -43,7 +39,7 @@ const App = () => {
         return () => monitor.cleanup();
     }, [ refChangeCount ]);
     return (
-        <ProviderDemo
+        <Container
             onDismount={ updateMonitor }
             ref={ storeRef }
         />
@@ -92,6 +88,16 @@ const RESET_STATE_SAMPLE_v6_0_0 =
     mayHaveChangesAt : (tokenizedPath : string[]) => boolean
 ) => void) // => VoidFunction`
 
+const RESET_STATE_SAMPLE_v7_0_0 =
+`store.subscribe(
+    'data-updated', (
+        changes : Changes<State>,
+        changedPaths : Array<Array<string>>,
+        netChanges : Partial<State>,
+        mayHaveChangesAt : (tokenizedPath : string[]) => boolean
+    ) => void
+); // => VoidFunction`
+
 const ExternalAccessPage : React.FC<{className : string}> = ({ className }) => (
     <article className={ `external-access-page ${ className }` }>
         <h1>External Access</h1>
@@ -123,6 +129,20 @@ const ExternalAccessPage : React.FC<{className : string}> = ({ className }) => (
                 </table>
                 <SelectTab
                     options={[{
+                        label: <b>As of: v7.0.0</b>,
+                        value: (
+                            <>
+                                <pre>{ RESET_STATE_SAMPLE_v7_0_0 }</pre>
+                                <b>Observer Callback Params</b><br />
+                                <ol>
+                                    <li><u>changes:</u> an object or array holding the original change request payload(s).</li>
+                                    <li><u>changedPaths:</u> an array of tokenized property paths belonging to state properties changed during this request.</li>
+                                    <li><u>netChanges:</u> an object of the final state of all properties in state changed.</li>
+                                    <li><u>mayHaveChangesAt:</u> a function to confirm that a given property path is among the new changes. This path is to be supplied as a tokenized string (i.e. supply <code>['a', 'b', 'c', '0', 'r']</code> for <code>'a.b.c[0].r'</code>).</li>
+                                </ol>
+                            </>
+                        )
+                    }, {
                         label: <b>As of: v6.0.0</b>,
                         value: (
                             <>

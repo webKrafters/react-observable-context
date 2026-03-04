@@ -17,6 +17,11 @@ const FeaturesHistoryPage : React.FC<PageProps> = ({ className }) => (
     <article className={ `features-history-page ${ className }` }>
         <h1 id="changes">What's Changed?</h1>
         <table>
+            <thead><TRow><THCol>v7.0.0</THCol></TRow></thead>
+            <tbody>
+                <TRow><TCol><b>1.</b></TCol><TCol>Migrating to Object Oriented first standalone state manager.</TCol></TRow>
+                <TRow><td><b>2.</b></td><td>Expanded external subscriptions adding <code>data-updated</code> and <code>closing</code> events.</td></TRow>
+               </tbody>
             <thead><TRow><THCol>v6.0.0</THCol></TRow></thead>
             <tbody>
                 <TRow><TCol><b>1.</b></TCol><TCol>Upgraded data store to auto-immutable v2.</TCol></TRow>
