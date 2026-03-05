@@ -1,18 +1,27 @@
-import type { NamedExoticComponent, ReactNode } from 'react';
+import type {
+	NamedExoticComponent,
+	ReactNode
+} from 'react';
 
-import React, { forwardRef, useEffect, useState } from 'react';
+import React, {
+	forwardRef,
+	useCallback,
+	useEffect,
+	useState
+} from 'react';
 
 import { Select } from 'antd';
 
 import './style.scss';
 
-interface Content {
+export interface Content {
 	label : ReactNode;
 	value : ReactNode;
 }
 
 interface IProps {
 	currentIndex? : number;
+	onTabChange?: (newTabIndex : number) => void;
 	options : Array<Content>;
 }
 
@@ -20,9 +29,16 @@ export type Props = Omit<JSX.IntrinsicElements[ "div" ], "children"> & IProps
 
 const SelectTab : NamedExoticComponent<Props> = forwardRef<
 	HTMLDivElement, Props
->(({ className, options, currentIndex = 0, ...props }, ref ) => {
+>(({ className, onTabChange = noop, options, currentIndex = 0, ...props }, ref ) => {
 	const [ content, setContent ] = useState( options[ currentIndex ] );
-	useEffect(() => setContent( options[ currentIndex ] ), [ options, currentIndex ]);
+	useEffect(() => {
+		onTabChange( currentIndex );
+		setContent( options[ currentIndex ] );
+	}, [ options, currentIndex ]);
+	const onSelect = useCallback(( opt: Content ) => {
+		onTabChange( options.findIndex( c => c.label === opt.label ) );
+		setContent( opt );
+	}, [ onTabChange ]);
 	return (
 		<div
 			role="tabpanel"
@@ -32,7 +48,7 @@ const SelectTab : NamedExoticComponent<Props> = forwardRef<
 		>
 			<Select
 				labelInValue
-				onSelect={ setContent }
+				onSelect={ onSelect }
 				options={ options }
 				popupClassName="select-tab__dropdown"
 				style={{ width: 132 }}
@@ -48,3 +64,5 @@ const SelectTab : NamedExoticComponent<Props> = forwardRef<
 SelectTab.displayName = 'SelectTab';
 
 export default SelectTab;
+
+function noop(){}

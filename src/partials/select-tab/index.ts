@@ -1,2 +1,2 @@
-export type { Props } from './component';
+export type { Content, Props } from './component';
 export { default } from './component';

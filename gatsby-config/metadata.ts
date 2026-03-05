@@ -30,5 +30,9 @@ export default {
         npm: 'https://www.npmjs.com/package/@webkrafters/react-observable-context',
         repo: "https://github.com/webKrafters/eagleeye.js.git",
         site: pkgJson.homepage
-    }
+    },
+    versionOfInterest: {
+        defaultValue: 'Latest',
+        key: 'VEROI-E'
+    },
 };

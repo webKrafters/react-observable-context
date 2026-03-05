@@ -2,25 +2,20 @@ import React from 'react';
 
 import Anchor from '../../partials/anchor';
 import Paragraph from '../../partials/paragraph';
-import RedMessageBox from '../../partials/red-msg-box';
+import VersionTabs, { SemVer } from '../../partials/version-tabs';
+import DepecateAlert from '../../partials/alert/deprecate';
 
-import SelectTab from '../../partials/select-tab';
-
+const semver0 : SemVer = [ 7, 0, 0 ];
 
 const ConceptProviderPage : React.FC<{className? : string}> = ({ className }) => (
     <article className={ `concept-provider-page ${ className }` }>
         <h1>Provider</h1>
-        <SelectTab
+        <VersionTabs
             options={[{
-                label: <b>As of: v7.0.0</b>,
-                value: (
-                    <RedMessageBox>
-                        DEPRECATED.
-                    </RedMessageBox>
-                )
+                documentation: ( <DepecateAlert /> ),
+                version: semver0
             }, {
-                label: <b>Legacy</b>,
-                value: (
+                documentation: (
                    <div>
                         <h3>What is the Provider?</h3>
                         <div>
@@ -29,7 +24,8 @@ const ConceptProviderPage : React.FC<{className? : string}> = ({ className }) =>
                             <Paragraph>Routinely, the <code>value</code>  prop is initialized with the full initial state. It may only be updated with parts of the state which are changing. Please see a <Anchor to="/getting-started#provider-usage">Provider Usage</Anchor> sample.</Paragraph>
                         </div>
                     </div>
-                )
+                ),
+                version: 'Legacy'
             }]}
         />
     </article>

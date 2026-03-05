@@ -8,6 +8,8 @@ import PageProvider from './src/page-context';
 
 import DarkmodeProvider from './src/partials/dark-mode-settings/context';
 
+import VersionOfInterestProvider from './src/partials/version-tabs/context';
+
 import Layout from './src/partials/layouts/index/index';
 
 export const onPreRenderHTML : GatsbySSR[ "onPreRenderHTML" ] = ({ getHeadComponents, replaceHeadComponents }) => {
@@ -46,7 +48,9 @@ export const wrapRootElement : GatsbySSR[ 'wrapRootElement' ] = ({ element, path
         isNoSiderPage: NO_SIDER_URI_PATTERN.test( pathname ?? '' )
     }}>
         <DarkmodeProvider>
-            { element }
+            <VersionOfInterestProvider>
+                { element }
+            </VersionOfInterestProvider>
         </DarkmodeProvider>
     </PageProvider>
 );

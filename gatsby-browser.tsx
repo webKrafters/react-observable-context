@@ -10,7 +10,10 @@ import PageProvider, { UpdaterCtx as PageCtxUpdater } from './src/page-context';
 
 import DarkmodeProvider, { ValueCtx as DarkmodeValueCtx } from './src/partials/dark-mode-settings/context';
 
+import VersionOfInterestProvider, { ValueCtx as VersionOfInterest } from './src/partials/version-tabs/context';
+
 import Layout from './src/partials/layouts/index';
+import { fromLocalStorage, Version } from './src/partials/version-tabs/component';
 
 export const onRouteUpdate : GatsbyBrowser[ "onRouteUpdate" ] = ({
     location: { href }, prevLocation
@@ -57,7 +60,11 @@ export const wrapRootElement : GatsbyBrowser[ 'wrapRootElement' ] = ({ element, 
                 ? metadata.darkmode.defaultValue
                 : false
         }>
-            { element }
+            <VersionOfInterestProvider initValue={( 
+                fromLocalStorage( metadata.versionOfInterest.key ) ?? metadata.versionOfInterest.defaultValue
+            ) as Version }>
+                { element }
+            </VersionOfInterestProvider>
         </DarkmodeProvider>
     </PageProvider>
 );

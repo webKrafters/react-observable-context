@@ -7,7 +7,10 @@ import Anchor from '../partials/anchor';
 import Header from '../partials/segment-header';
 import ListItem from '../partials/list-item';
 import Paragraph from '../partials/paragraph';
-import SelectTab from '../partials/select-tab';
+import VersionTabs, { SemVer } from '../partials/version-tabs';
+
+const semver0 : SemVer = [ 7, 0, 0 ];
+const semver1 : SemVer = [ 6, 0, 0 ];
 
 const providerCode =
 `import React, { forwardRef } from 'react';
@@ -127,10 +130,9 @@ const ExternalAccessPage : React.FC<{className : string}> = ({ className }) => (
                         <td>Returns a parameterless void function - the <b><u>unsubcriber</u></b>.</td>
                     </tr>
                 </table>
-                <SelectTab
+                <VersionTabs
                     options={[{
-                        label: <b>As of: v7.0.0</b>,
-                        value: (
+                        documentation: (
                             <>
                                 <pre>{ RESET_STATE_SAMPLE_v7_0_0 }</pre>
                                 <b>Observer Callback Params</b><br />
@@ -141,10 +143,10 @@ const ExternalAccessPage : React.FC<{className : string}> = ({ className }) => (
                                     <li><u>mayHaveChangesAt:</u> a function to confirm that a given property path is among the new changes. This path is to be supplied as a tokenized string (i.e. supply <code>['a', 'b', 'c', '0', 'r']</code> for <code>'a.b.c[0].r'</code>).</li>
                                 </ol>
                             </>
-                        )
+                        ),
+                        version: semver0
                     }, {
-                        label: <b>As of: v6.0.0</b>,
-                        value: (
+                        documentation: (
                             <>
                                 <pre>{ RESET_STATE_SAMPLE_v6_0_0 }</pre>
                                 <b>Observer Callback Params</b><br />
@@ -155,10 +157,10 @@ const ExternalAccessPage : React.FC<{className : string}> = ({ className }) => (
                                     <li><u>mayHaveChangesAt:</u> a function to confirm that a given property path is among the new changes. This path is to be supplied as a tokenized string (i.e. supply <code>['a', 'b', 'c', '0', 'r']</code> for <code>'a.b.c[0].r'</code>).</li>
                                 </ol>
                             </>
-                        )
+                        ),
+                        version: semver1
                     }, {
-                        label: <b>Legacy</b>,
-                        value: (
+                        documentation: (
                             <>  
                                 <pre>{ RESET_STATE_SAMPLE }</pre>
                                 <b>Observer Callback Params</b><br />
@@ -166,7 +168,8 @@ const ExternalAccessPage : React.FC<{className : string}> = ({ className }) => (
                                     <li><u>changes:</u> an object or array holding the original change request payload(s).</li>
                                 </ol>
                             </>
-                        )
+                        ),
+                        version: 'Legacy'
                     }]}
                 />
             </li>
