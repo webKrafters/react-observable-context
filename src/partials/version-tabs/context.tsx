@@ -17,18 +17,8 @@ const Provider : React.FC<Props> = ({
     initValue = metadata.versionOfInterest.defaultValue
 }) => {
     const [ versionOfInteret, setVersionOfInterest ] = useState( () => initValue );
-
-    // @debug
-    const setter = React.useCallback(( ...args : any[] ) => {
-        console.info( 'ARGS TO CONTEXT >>>>> ', args );
-        // @ts-expect-error
-        setVersionOfInterest( ...args );
-    }, []);
-
     return (
-        // @debug
-        // <UpdateCtx.Provider value={ setVersionOfInterest }>
-        <UpdateCtx.Provider value={ setter }>
+        <UpdateCtx.Provider value={ setVersionOfInterest }>
             <ValueCtx.Provider value={ versionOfInteret }>
                 { Children.map( children, c => c ) }
             </ValueCtx.Provider>

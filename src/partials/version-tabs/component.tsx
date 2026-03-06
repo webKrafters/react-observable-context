@@ -20,6 +20,8 @@ export type Props = Omit<JSX.IntrinsicElements[ "div" ], "children"> & {
 	options : Array<Content>
 }
 
+const strVersions = Object.freeze([ 'Latest', 'Legacy' ]);
+
 const VersionTabs : FC<Props> = ({ options: sOptions, ...props }) => {
 
 	const { site: { siteMetadata: { versionOfInterest: {
@@ -72,10 +74,10 @@ const VersionTabs : FC<Props> = ({ options: sOptions, ...props }) => {
 		});
 		if( res.currentIndex > -1 ) { return res }
 		const SEMVER_LEN = 3;
-		if( versionOfInterest === 'Latest' ) {
+		if( versionOfInterest === strVersions[ 0 ] ) {
 			let closestVer = [ 0, 0, 0 ];
 			for( let s = 0, sLen = sOptions.length; s < sLen; s++ ) {
-				if( sOptions[ s ].version === 'Legacy' ) { continue }
+				if( sOptions[ s ].version === strVersions[ 1 ] ) { continue }
 				const version = sOptions[ s ].version as Array<number>;
 				for( let v = 0; v < SEMVER_LEN; v++ ) {
 					if( version[ v ] === closestVer[ v ] ) { continue }
@@ -88,13 +90,11 @@ const VersionTabs : FC<Props> = ({ options: sOptions, ...props }) => {
 			}
 			return res;
 		}
-		if( versionOfInterest === 'Legacy' ) {
-			// const semverOfInterest = versionOfInterest as unknown as Array<number>;
+		if( versionOfInterest === strVersions[ 1 ] ) {
 			let closestVer = [ 0, 0, 0 ];
 			for( let s = 0, sLen = sOptions.length; s < sLen; s++ ) {
-				if( sOptions[ s ].version === 'Latest' ) { continue }
+				if( sOptions[ s ].version === strVersions[ 0 ] ) { continue }
 				const version = sOptions[ s ].version as Array<number>;
-				// if( version[ 0 ] > semverOfInterest[ 0 ] ) { continue }
 				for( let v = 0; v < SEMVER_LEN; v++ ) {
 					if( version[ v ] === closestVer[ v ] ) { continue }
 					if( version[ v ] < closestVer[ v ] ) {
@@ -108,21 +108,31 @@ const VersionTabs : FC<Props> = ({ options: sOptions, ...props }) => {
 		}
 		const semverOfInterest = versionOfInterest as unknown as Array<number>;
 		let closestVer = [ 0, 0, 0 ];
+		const strVerIndex = { Latest: -1, Legacy: -1 };
+		const verRange = new VersionRange();
 		for( let s = 0, sLen = sOptions.length; s < sLen; s++ ) {
-			if( sOptions[ s ].version === 'Latest' ) { continue }
-			if( sOptions[ s ].version === 'Legacy' ) { continue }
+			for( const v of strVersions ) {
+				if( sOptions[ s ].version === v ) {
+					strVerIndex[ v ] = s;
+					continue;
+				}
+			}
 			const version = sOptions[ s ].version as Array<number>;
-			if( version[ 0 ] > semverOfInterest[ 0 ] ) { continue }
+			if( version[ 0 ] > semverOfInterest[ 0 ] ) {
+				verRange.value = [ s, version as SemVer ];
+				continue;
+			}
 			const sameVerTable : Array<boolean> = [];
 			for( let v = 0; v < SEMVER_LEN; v++ ) {
 				sameVerTable.push( version[ v ] === semverOfInterest[ v ] );
 				if( version[ v ] === closestVer[ v ] ) { continue }
 				if( v === 0 ) {
 					closestVer = version.slice( 0, SEMVER_LEN );
+					verRange.value = [ s, version as SemVer ];
 					res.currentIndex = s;
 					continue;
 				}
-				for( let t = 0; t < v; t++ ) {
+				for( let tLen = sameVerTable.length - 1, t = 0; t < tLen; t++ ) {
 					if( !sameVerTable[ t ] ) {
 						if( version[ v ] > closestVer[ v ] ) {
 							closestVer = version.slice( 0, SEMVER_LEN );
@@ -138,10 +148,33 @@ const VersionTabs : FC<Props> = ({ options: sOptions, ...props }) => {
 				}
 			}
 		}
+		if( res.currentIndex !== -1 ) { return res }
+		if( verRange.info.max.index !== -1 && VersionRange.gt(
+			semverOfInterest as SemVer,
+			verRange.info.max.value
+		) ) {
+			res.currentIndex = strVerIndex.Latest === -1
+				? verRange.info.max.index
+				: strVerIndex.Latest;
+		} else if( verRange.info.min.index === -1 ) {
+			if( strVerIndex.Legacy !== -1 ) {
+				res.currentIndex = strVerIndex.Legacy;
+			}
+		} else if( VersionRange.lt(
+			semverOfInterest as SemVer,
+			verRange.info.min.value
+		) ) {
+			res.currentIndex = strVerIndex.Legacy === -1
+				? verRange.info.min.index
+				: strVerIndex.Legacy;
+		} else if( strVerIndex.Latest !== -1 ) {
+			res.currentIndex = strVerIndex.Latest;
+		}
 		return res;
 	}, [ sOptions ]);
 
 	const onTabChange = useCallback(( i : number ) => {
+		if( i === currentIndex ) { return }
 		updateVersionOfInterest( sOptions[ i ].version );
 		localStorage.setItem( V_INTEREST_LOCALSTORAGE_KEY, ( sOptions[ i ].version as SemVer ).join?.( '.' ) ?? sOptions[ i ].version );
 	}, [ sOptions ]);
@@ -175,8 +208,37 @@ export function fromLocalStorage( storageKey : string ) {
 		const ver = [ w, y ];
 		const [ v3, ...descStart ] = z.split( '-' );
 		ver.push( v3 );
-		ver.push( `${ descStart.join( '-' ) }.${ rest.join( '.' ) }` )
+		descStart.length && ver.push(
+			`${ descStart.join( '-' ) }.${ rest.join( '.' ) }`
+		);
 		return ver;
 	}
 	return v;
+}
+
+class VersionRange {
+	static gt( a : SemVer, b : SemVer ){
+		for( let i = 0; i < 3; i++ ) {
+			if( a[ i ] === b[ i ] ) { continue }
+			return ( a[ i ] as number ) > ( b[ i ] as number );
+		}
+		return false;
+	}
+	static lt( a : SemVer, b : SemVer ){
+		for( let i = 0; i < 3; i++ ) {
+			if( a[ i ] === b[ i ] ) { continue }
+			return ( a[ i ] as number ) < ( b[ i ] as number );
+		}
+		return false;
+	}
+	private _max = { index: -1, value: [ 0, 0, 0 ] as SemVer };
+	private _min = { index: -1, value: [ 0, 0, 0 ] as SemVer };
+	get info () { return { max: this._max, min: this._min } }
+	set value([ index, value ] : [ number, SemVer ] ) {
+		if( VersionRange.gt( value, this._max.value ) ) {
+			this._max = { index, value };
+		} else if( VersionRange.lt( value, this._min.value ) ) {
+			this._min = { index, value };
+		}
+	}
 }
