@@ -2,7 +2,9 @@ import React, { FC, useCallback, useContext, useMemo, useState } from 'react';
 
 import { graphql, useStaticQuery } from 'gatsby';
 
-import SelectTab from '../../partials/select-tab';
+import SelectTab, {
+	Content as SelectOption
+} from '../../partials/select-tab';
 
 import { UpdateCtx, ValueCtx } from './context';
 
@@ -50,16 +52,93 @@ const VersionTabs : FC<Props> = ({ options: sOptions, ...props }) => {
 	});
 	
 	const { currentIndex, options } = useMemo(() => {
-		let currentIndex : number = 0;
-		const options = sOptions.map(( v, i ) => {
-			const c = eqVersions( v.version, versionOfInterest as Version );
-			if( c.equals ) { currentIndex = i }
-			return {
-				label: <b>{ !c.isArrayV1 ? v.version : `As of v${ ( v.version as Array<number> ).join( '.' ) }` }</b>,
+		let res : {
+			currentIndex : number;
+			options : Array<SelectOption>;
+		} = { currentIndex: -1, options: [] } ;
+		res.options = sOptions.map(( v, i ) => {
+			const r : SelectOption = {
+				label: null,
 				value: v.documentation
 			};
+			if( res.currentIndex > -1 ) {
+				r.label = ( <b>{ !Array.isArray( v.version ) ? v.version : `As of v${ ( v.version as Array<number> ).join( '.' ) }` }</b> );
+			} else {
+				const c = eqVersions( v.version, versionOfInterest as Version );
+				if( c.equals ) { res.currentIndex = i }
+				r.label = ( <b>{ !c.isArrayV1 ? v.version : `As of v${ ( v.version as Array<number> ).join( '.' ) }` }</b> );
+			}
+			return r;
 		});
-		return { currentIndex, options };
+		if( res.currentIndex > -1 ) { return res }
+		const SEMVER_LEN = 3;
+		if( versionOfInterest === 'Latest' ) {
+			let closestVer = [ 0, 0, 0 ];
+			for( let s = 0, sLen = sOptions.length; s < sLen; s++ ) {
+				if( sOptions[ s ].version === 'Legacy' ) { continue }
+				const version = sOptions[ s ].version as Array<number>;
+				for( let v = 0; v < SEMVER_LEN; v++ ) {
+					if( version[ v ] === closestVer[ v ] ) { continue }
+					if( version[ v ] > closestVer[ v ] ) {
+						closestVer = version.slice( 0, SEMVER_LEN );
+						res.currentIndex = s;
+					}
+					break;
+				}
+			}
+			return res;
+		}
+		if( versionOfInterest === 'Legacy' ) {
+			// const semverOfInterest = versionOfInterest as unknown as Array<number>;
+			let closestVer = [ 0, 0, 0 ];
+			for( let s = 0, sLen = sOptions.length; s < sLen; s++ ) {
+				if( sOptions[ s ].version === 'Latest' ) { continue }
+				const version = sOptions[ s ].version as Array<number>;
+				// if( version[ 0 ] > semverOfInterest[ 0 ] ) { continue }
+				for( let v = 0; v < SEMVER_LEN; v++ ) {
+					if( version[ v ] === closestVer[ v ] ) { continue }
+					if( version[ v ] < closestVer[ v ] ) {
+						closestVer = version.slice( 0, SEMVER_LEN );
+						res.currentIndex = s;
+					}
+					break;
+				}
+			}
+			return res;
+		}
+		const semverOfInterest = versionOfInterest as unknown as Array<number>;
+		let closestVer = [ 0, 0, 0 ];
+		for( let s = 0, sLen = sOptions.length; s < sLen; s++ ) {
+			if( sOptions[ s ].version === 'Latest' ) { continue }
+			if( sOptions[ s ].version === 'Legacy' ) { continue }
+			const version = sOptions[ s ].version as Array<number>;
+			if( version[ 0 ] > semverOfInterest[ 0 ] ) { continue }
+			const sameVerTable : Array<boolean> = [];
+			for( let v = 0; v < SEMVER_LEN; v++ ) {
+				sameVerTable.push( version[ v ] === semverOfInterest[ v ] );
+				if( version[ v ] === closestVer[ v ] ) { continue }
+				if( v === 0 ) {
+					closestVer = version.slice( 0, SEMVER_LEN );
+					res.currentIndex = s;
+					continue;
+				}
+				for( let t = 0; t < v; t++ ) {
+					if( !sameVerTable[ t ] ) {
+						if( version[ v ] > closestVer[ v ] ) {
+							closestVer = version.slice( 0, SEMVER_LEN );
+							res.currentIndex = s;
+						}
+						break;
+					} 
+				}
+				if( res.currentIndex === s ) { continue }
+				if( version[ v ] > closestVer[ v ] && version[ v ] < semverOfInterest[ v ] ) {
+					closestVer = version.slice( 0, SEMVER_LEN );
+					res.currentIndex = s;
+				}
+			}
+		}
+		return res;
 	}, [ sOptions ]);
 
 	const onTabChange = useCallback(( i : number ) => {
