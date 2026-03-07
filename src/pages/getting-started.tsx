@@ -30,9 +30,7 @@ const GettingStartedPage : React.FC<PageProps> = ({ className }) => (
 
 export default GettingStartedPage;
 
-export const Head : HeadFC = () => (
-    <title>Getting Started</title>
-);
+export const Head : HeadFC = () => ( <title>Getting Started</title> );
 
 const creatorCode_7_0_0 =
 `import { createEagleEye } from '@webkrafters/react-observable-context';
@@ -154,7 +152,7 @@ function BodyCurrent() {
     return (
         <>
             <Paragraph className="snippet-intro" id="install">
-                Eagle Eye context is now an independent state manager, once created can be deployed at any location in any react application without the need for a Provider component. 
+                Eagle Eye context is now an independent state manager, which once created, can be deployed at any location in all parts of the application without the need for a Provider component. 
             </Paragraph>
             <Paragraph className="snippet-box">
                 <CodeBlock isInline>
@@ -163,7 +161,7 @@ function BodyCurrent() {
             </Paragraph>
             <Paragraph className="snippet-intro" id="create-context-usage">
                 <h3>Creating the context store</h3>
-                To obtain a fresh context store, just call the parameterless <code>createEagleEye()</code> function. 
+                To obtain a fresh context store, just call the <code>createEagleEye(...)</code> function. 
             </Paragraph>
             <Paragraph className="snippet-box">
                 <Header>context.js</Header>
@@ -171,7 +169,7 @@ function BodyCurrent() {
             </Paragraph>
             <div className="snippet-intro" id="provider-usage">
                 <h3>Providing the context store</h3>
-                <Paragraph>Simply accessing the <code>store</code> property of the Eagle Eye context from anywhere on an application makes available the internal store.</Paragraph>
+                <Paragraph>Simply accessing the <code>store</code> property of the Eagle Eye context from anywhere on an application makes available the internal store. The Provider component is no longer required for this.</Paragraph>
                 <Paragraph>Further readings on the Eagle Eye Context Provider could be found <Anchor to="/concepts/provider">here</Anchor>.</Paragraph>
             </div>
             <Paragraph className="snippet-box">
@@ -180,7 +178,7 @@ function BodyCurrent() {
             </Paragraph>
             <div className="snippet-intro" id="connect-usage">
                 <h3>Consuming the context change stream</h3>
-                <Paragraph>Context change stream is an reactive store whose data are automatically changing to reflect most recent changes affecting them. </Paragraph>
+                <Paragraph>Context change stream is a reactive store whose data are automatically changing to reflect most recent changes affecting them. </Paragraph>
                 <Paragraph>There are two ways of consuming the Eagle Eye context change stream: The HOC method and the React Hook method.</Paragraph>
                 <Paragraph>Let's tackle the HOC method first. This method uses the context's <code>connect(...)</code> property holding an HOC function to wire up the context change stream to your consumer component.</Paragraph>
                 <Paragraph>It embodies the "set-it-and-forget-it" paradigm. Just set up a list of property paths to state slices to observe { '(' }see <Anchor to="/concepts/selector-map">Selector Map</Anchor>{ ')' }. The context takes care of the rest.</Paragraph>

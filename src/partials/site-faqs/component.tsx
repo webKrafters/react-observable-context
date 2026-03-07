@@ -8,7 +8,7 @@ const Component : React.FC = () => (
     <nav className="site-faqs">
         <Anchor to="/getting-started#install">Installation</Anchor>
         <Anchor to="/external-access">Can I observe this state externally?</Anchor>
-        <Anchor to="/concepts/store/setstate">Is true that the state can never be mutated?</Anchor>
+        <Anchor to="/concepts/store/setstate">Is it true that the state can never be mutated?</Anchor>
 		<Anchor to="/getting-started#provider-usage">Making reactive component trees.</Anchor>
         <Anchor to="/external-access#external-apis">How to observe state externally.</Anchor>
         <Anchor to="/concepts/property-path#fullstate-selectorkey">About the <strong><code>@@STATE</code></strong> keyword.</Anchor>

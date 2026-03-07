@@ -1,6 +1,16 @@
-import React, { FC, useCallback, useContext, useMemo, useState } from 'react';
+import React, {
+	FC,
+	useCallback,
+	useContext,
+	useMemo,
+	useState
+} from 'react';
 
-import { graphql, useStaticQuery } from 'gatsby';
+import {
+	graphql,
+	navigate,
+	useStaticQuery
+} from 'gatsby';
 
 import SelectTab, {
 	Content as SelectOption
@@ -177,6 +187,7 @@ const VersionTabs : FC<Props> = ({ options: sOptions, ...props }) => {
 		if( i === currentIndex ) { return }
 		updateVersionOfInterest( sOptions[ i ].version );
 		localStorage.setItem( V_INTEREST_LOCALSTORAGE_KEY, ( sOptions[ i ].version as SemVer ).join?.( '.' ) ?? sOptions[ i ].version );
+		navigate( 0 );
 	}, [ sOptions ]);
 
 	return ( <SelectTab { ...{ currentIndex, onTabChange, options, ...props } } /> );
