@@ -4,8 +4,8 @@ import Anchor from '../../../partials/anchor';
 
 const ConceptStorePage : React.FC<{className? : string}> = ({ className }) => (
     <article className={ `concept-store-page ${ className }` }>
-        <h1>Store</h1>
-        <h3>What is the store?</h3>
+        <h1>Change Stream Store</h1>
+        <h3>What is the change stream store?</h3>
         <p>An Eagle Eye context <code>store</code> is the client's portal into the context's underlying state.</p>
         <p>It exposes <strong>3</strong> properties namely:</p>
         <p>

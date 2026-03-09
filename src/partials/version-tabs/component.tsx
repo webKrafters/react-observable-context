@@ -8,7 +8,6 @@ import React, {
 
 import {
 	graphql,
-	navigate,
 	useStaticQuery
 } from 'gatsby';
 
@@ -187,7 +186,13 @@ const VersionTabs : FC<Props> = ({ options: sOptions, ...props }) => {
 		if( i === currentIndex ) { return }
 		updateVersionOfInterest( sOptions[ i ].version );
 		localStorage.setItem( V_INTEREST_LOCALSTORAGE_KEY, ( sOptions[ i ].version as SemVer ).join?.( '.' ) ?? sOptions[ i ].version );
-		navigate( 0 );
+		location.hash &&
+		document.getElementById(
+			location.hash.slice( 1 )
+		)?.scrollIntoView({ 
+			behavior: 'smooth',
+			block: 'start'
+		});
 	}, [ sOptions ]);
 
 	return ( <SelectTab { ...{ currentIndex, onTabChange, options, ...props } } /> );

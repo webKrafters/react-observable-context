@@ -177,9 +177,9 @@ function BodyCurrent() {
                 <CodeBlock>{ containerCode }</CodeBlock>
             </Paragraph>
             <div className="snippet-intro" id="connect-usage">
-                <h3>Consuming the context change stream</h3>
+                <h3>Joining the context change stream</h3>
                 <Paragraph>Context change stream is a reactive store whose data are automatically changing to reflect most recent changes affecting them. </Paragraph>
-                <Paragraph>There are two ways of consuming the Eagle Eye context change stream: The HOC method and the React Hook method.</Paragraph>
+                <Paragraph>There are two ways of joining the Eagle Eye context change stream: The HOC method and the React Hook method.</Paragraph>
                 <Paragraph>Let's tackle the HOC method first. This method uses the context's <code>connect(...)</code> property holding an HOC function to wire up the context change stream to your consumer component.</Paragraph>
                 <Paragraph>It embodies the "set-it-and-forget-it" paradigm. Just set up a list of property paths to state slices to observe { '(' }see <Anchor to="/concepts/selector-map">Selector Map</Anchor>{ ')' }. The context takes care of the rest.</Paragraph>
                 <Paragraph>The following is a sample of the HOC consumer method.</Paragraph>
@@ -189,8 +189,8 @@ function BodyCurrent() {
                 <CodeBlock>{ connectorCode_7_0_0 }</CodeBlock>
             </Paragraph>
             <div className="snippet-intro" id="usecontext-usage">
-                <h3>Consuming the context chang stream (React Hook method)</h3>
-                <Paragraph>The following shows how to consume the Eagle Eye context stream using the hook method.</Paragraph>
+                <h3>Joining the context change stream (React Hook method)</h3>
+                <Paragraph>The following shows how to join the Eagle Eye context stream using the hook method.</Paragraph>
                 <Paragraph>This method uses the context's <code>useStream(...)</code> property holding the hook function to expose the context change stream to your consumer component.</Paragraph>
                 <Paragraph><NotePad>In addition to setting up a map of property paths to state slices to observe { '(' }see <Anchor to="/concepts/selector-map">Selector Map</Anchor>{ ')' }, the consumer compoent may have to be wrapped in a <code>React.memo(...)</code> HOC to shield it from cascading rerenders from parent/anscestor components.</NotePad></Paragraph>
             </div>

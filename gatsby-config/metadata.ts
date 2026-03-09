@@ -19,7 +19,7 @@ export default {
         themeColor: '#da4'
     },
     language: 'en',
-    siteUrl: 'https://eagleeye.js.org',
+    siteUrl: 'https://react-observable-context.js.org',
     title: pkgJson.name
         .replace( /-dev$/i, '-jS' )
         .split( /-+/ )
@@ -28,7 +28,7 @@ export default {
     url: {
         demo: 'https://codesandbox.io/s/github/webKrafters/react-observable-context-app',
         npm: 'https://www.npmjs.com/package/@webkrafters/react-observable-context',
-        repo: "https://github.com/webKrafters/eagleeye.js.git",
+        repo: "https://github.com/webKrafters/react-observable-context.js.git",
         site: pkgJson.homepage
     },
     versionOfInterest: {

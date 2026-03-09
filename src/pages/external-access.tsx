@@ -163,7 +163,7 @@ export default ExternalAccessPage;
 function BodyCurrent() {
     return (
         <>  
-            <Paragraph>The context, once instantiated, has a store property which is accessible from any where whether within the react component tree or in a native runtime environment.</Paragraph>
+            <Paragraph>The context, once created, has a store property which is accessible from any where whether within the react component tree or in a native runtime environment.</Paragraph>
             <h3>How do I access the store externally?</h3>
             <Paragraph>This is done by simply utilizing the context <code>store</code> property.</Paragraph>
             <Paragraph>For external access to the context, <strong>4</strong> store methods have been exposed. Namely:</Paragraph>
@@ -172,23 +172,27 @@ function BodyCurrent() {
                 <li><strong><code>store.resetState()</code>:</strong> Please see descriptions in the <Anchor to="/concepts/store/resetstate">store</Anchor> page. Since v6.0.0, may accept a parameterless invocation resulting in a noop.</li>
                 <li><strong><code>store.setState()</code>:</strong> Please see descriptions in the <Anchor to="/concepts/store/setstate">store</Anchor> page.</li>
                 <li>
-                    <strong><code>store.subscribe(...)</code></strong>
+                    <strong><code>store.subscribe(...)</code></strong><br />
                     <table>
                         <tr>
                             <td style={{ paddingRight: '0.5rem', verticalAlign: 'top' }}>-</td>
-                            <td>Provides an API for manual subscription to the state.</td>
-                        </tr>
-                        <tr>
-                            <td style={{ paddingRight: '0.5rem', verticalAlign: 'top' }}>-</td>
-                            <td>Accepts a "data-updated" event type and an observer function.</td>
+                            <td>Provides the API for manual subscription to the context's change and close events.</td>
                         </tr>
                         <tr>
                             <td style={{ paddingRight: '0.5rem', verticalAlign: 'top' }}>-</td>
                             <td>Returns a parameterless void function - the <b><u>unsubcriber</u></b>.</td>
                         </tr>
+                        <tr id="subscribing-to-context-disposal">
+                            <td style={{ paddingRight: '0.5rem', verticalAlign: 'top' }}>-</td>
+                            <td>Accepts a <b>"closing"</b> event type and an observer function to be called before context deactivation.</td>
+                        </tr>
+                        <tr id="subscribing-to-context-state-update">
+                            <td style={{ paddingRight: '0.5rem', verticalAlign: 'top' }}>-</td>
+                            <td>Accepts a <b>"data-updated"</b> event type and an observer function for state changes.</td>
+                        </tr>
                     </table>
                     <pre>{ RESET_STATE_SAMPLE_v7_0_0 }</pre>
-                    <b>Observer Callback Params</b><br />
+                    <b><u>"data-updated"</u>  event listener params</b><br />
                     <ol>
                         <li><u>changes:</u> an object or array holding the original change request payload(s).</li>
                         <li><u>changedPaths:</u> an array of tokenized property paths belonging to state properties changed during this request.</li>
