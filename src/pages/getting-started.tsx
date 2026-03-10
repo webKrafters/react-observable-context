@@ -352,7 +352,7 @@ function BodyPre7_0_0() {
             </Paragraph>
             <Paragraph className="snippet-box">
                 <CodeBlock isInline>
-                    npm install --save react-eagleeye
+                    npm install --save @webkrafters/react-observable-context
                 </CodeBlock>
             </Paragraph>
             <Paragraph className="snippet-intro" id="create-context-usage">
