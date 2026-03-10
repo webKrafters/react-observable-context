@@ -214,7 +214,7 @@ function eqVersions<
 
 export function fromLocalStorage( storageKey : string ) {
 	let v = localStorage.getItem( storageKey ) as string;
-	if( v?.indexOf( '.' ) !== -1 ) {
+	if( !!v && v.indexOf( '.' ) !== -1 ) {
 		const [ w, y, z, ...rest ] = v.split( '.' );
 		const ver = [ w, y ];
 		const [ v3, ...descStart ] = z.split( '-' );
