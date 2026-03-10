@@ -21,7 +21,7 @@
     "react-dom": "^18.2.0",
     "sass": "^1.74.1"
   },
-  "description": "Eagle eye context state manager dev site.",
+  "description": "React Observable Context state manager dev site.",
   "devDependencies": {
     "@types/node": "^20.11.19",
     "@types/react": "^18.2.55",
