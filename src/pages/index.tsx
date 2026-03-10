@@ -25,7 +25,7 @@ export type Props = PageProps<{
 
 const IndexPage : React.FC<Props> = ({ className, data }) => (
 	<article className={ `index-page ${ className }` }>
-		<h1>Welcome to Eagle Eye JS!</h1>
+		<h1>Welcome to React Observable Context JS!</h1>
 		<Paragraph>An intuitive reactive context based React state manager. </Paragraph>
 		<div>
 			<label>Official:{ ' ' }
@@ -60,7 +60,7 @@ const IndexPage : React.FC<Props> = ({ className, data }) => (
 		<div>
 			<label>License: <span>MIT</span></label>
 		</div>
-		<h2>Eagle Eye. Why now?</h2>
+		<h2>React Observable Context. Why now?</h2>
 		<ul>
 			<li>Auto-immutable update-friendly context. See <Anchor to="/concepts/store/setstate"><code>store.setState</code></Anchor>.</li>
 			<li>A context bearing an observable consumer <Anchor to="/concepts/store">store</Anchor>.</li>
@@ -89,7 +89,7 @@ export const query = graphql`
 
 export const Head : HeadFC = () => (
 	<meta
-		content="Welcome to Eagle Eye context!"
+		content="Welcome to React Observable Context!"
 		name="description"
 	/>
 );
