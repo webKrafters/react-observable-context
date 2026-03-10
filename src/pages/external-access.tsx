@@ -273,7 +273,7 @@ function BodyPre7_0_0({ children } : { children : ReactNode }) {
                 <CodeBlock>{ externalAccessCode }</CodeBlock>
             </div>
             <Alert title="Pro Tips">
-                <Paragraph>Store references are simply ReactJS references to the Eagle Eye Provider component. Therefore, after <code>unmounting</code> the <code>Provider</code> component, the <code>storeRef.current</code> becomes empty. So therefore:</Paragraph>
+                <Paragraph>Store references are simply ReactJS references to the React Observable Context Provider component. Therefore, after <code>unmounting</code> the <code>Provider</code> component, the <code>storeRef.current</code> becomes empty. So therefore:</Paragraph>
                 <ListItem><div>if the need exists to maintain the store beyond the life of the Provider, then keep a reference to the state snapshot returned by the last valid <code>storeRef.current.getState()</code> call.</div></ListItem>
                 <ListItem><div>be sure to unsubscribe all external subscribers attached to the <code>Provider</code>'s store reference, at or prior to the <code>unmount</code> phase of the <code>Provider</code> component.</div></ListItem>
                 <Paragraph>State references are always snapshots of the state at the time of access. In essence, the state returned by <code>storeRef.current.getState()</code> are not affected by subsequent updates to the store's state. Any updates to this acquired state never affects the context's state. So therefore, the <strong>4</strong> considerations:</Paragraph>
