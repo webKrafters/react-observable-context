@@ -1,5 +1,5 @@
 {
-  "alias": "eagleeye.js",
+  "alias": "react-observable-context.doc",
   "author": {
     "email": "stephen.isienyi@webkrafting.com",
     "name": "Stephen Isienyi"
@@ -32,7 +32,7 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "homepage": "https://eagleeye.js.org",
+  "homepage": "https://react-observable-context.js.org",
   "keywords": [
     "react js",
     "react.js",
@@ -42,7 +42,7 @@
   ],
   "license": "ISC",
   "main": "index.js",
-  "name": "eagleeye-dev",
+  "name": "react-observable-context-dev",
   "overrides": {
     "react-server-dom-webpack@0.0.0-experimental-c8b778b7f-20220825": {
       "react": "^18.2.0",
@@ -52,7 +52,7 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/webKrafters/eagleeye.git"
+    "url": "https://github.com/webKrafters/react-observable-context.git"
   },
   "scripts": {
     "build": "gatsby clean && gatsby build && node ./bundle-site",
@@ -62,8 +62,8 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "qa-start": "npm run build && gatsby serve",
     "serve": "gatsby serve",
-    "start": "gatsby develop",
+    "start": "gatsby develops",
     "typecheck": "tsc --noEmit"
   },
-  "version": "0.3.0"
+  "version": "0.3.1"
 }
