@@ -26,7 +26,7 @@ export type Props = PageProps<{
 const IndexPage : React.FC<Props> = ({ className, data }) => (
 	<article className={ `index-page ${ className }` }>
 		<h1>Welcome to React Observable Context JS!</h1>
-		<Paragraph>An intuitive reactive context based React state manager. </Paragraph>
+		<Paragraph>An intuitive reactive context based React state manager. No provider component required. Create once: use everywhere both in and out of the React component tree system.</Paragraph>
 		<div>
 			<label>Official:{ ' ' }
 				<Anchor to={ data?.site.siteMetadata.url.npm as string }>
