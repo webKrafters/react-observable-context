@@ -1,12 +1,13 @@
 import React from 'react';
 
 import Anchor from '../../../partials/anchor';
+import Name from '../../../partials/name';
 
 const ConceptStorePage : React.FC<{className? : string}> = ({ className }) => (
     <article className={ `concept-store-page ${ className }` }>
         <h1>Change Stream Store</h1>
         <h3>What is the change stream store?</h3>
-        <p>An Eagle Eye context <code>store</code> is the client's portal into the context's underlying state.</p>
+        <p>A <Name /> <code>store</code> is the client's portal into the context's underlying state.</p>
         <p>It exposes <strong>3</strong> properties namely:</p>
         <p>
             <strong id="data" style={{ marginRight: '0.5rem' }}>1.</strong><strong style={{ marginRight: '0.25rem' }}>data: </strong> 

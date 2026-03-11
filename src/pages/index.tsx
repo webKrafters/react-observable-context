@@ -9,6 +9,7 @@ import { graphql } from 'gatsby';
 import Anchor from '../partials/anchor';
 import CodeBlock from '../partials/code-block';
 import License from '../partials/license-link';
+import Name from '../partials/name';
 import Paragraph from '../partials/paragraph';
 
 import '../partials/contents/index-page/style.scss';
@@ -27,13 +28,13 @@ export type Props = PageProps<{
 const IndexPage : React.FC<Props> = ({ className, data }) => {
 	return (
 		<article className={ `index-page ${ className }` }>
-			<h1>Welcome to React Observable Context JS!</h1>
+			<h1>Welcome to <Name /> JS!</h1>
 			<Paragraph>An intuitive reactive context based React state manager. No provider component required. Create once: use everywhere both in and out of the React component tree system.</Paragraph>
 			<Paragraph>
 				<label>
 					<b>Official:{ ' ' }</b>
 					<Anchor to={ data?.site.siteMetadata.url.npm as string }>
-						React-Observable-Context
+						<Name />
 					</Anchor>
 				</label>
 			</Paragraph>
@@ -67,7 +68,7 @@ const IndexPage : React.FC<Props> = ({ className, data }) => {
 					<License />
 				</label>
 			</Paragraph>
-			<h2>React Observable Context. Why now?</h2>
+			<h2><Name />. Why now?</h2>
 			<ul>
 				<li>Auto-immutable update-friendly context. See <Anchor to="/concepts/store/setstate"><code>store.setState</code></Anchor>.</li>
 				<li>A context bearing an observable consumer <Anchor to="/concepts/store">store</Anchor>.</li>

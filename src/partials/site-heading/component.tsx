@@ -8,6 +8,7 @@ import { graphql, useStaticQuery } from 'gatsby';
 import { StaticImage } from 'gatsby-plugin-image';
 
 import Anchor from '../anchor';
+import Name from '../name';
 import ToggleSwitch from '../toggle-switch';
 
 import AuxSiderToggleable from '../toggle-switch/container/aux-sider';
@@ -84,7 +85,7 @@ const Component : React.FC<Props> = props => {
           </span>
           <span className="name">
             <Anchor hideIcon to={ npmUrl }>
-              React-Observable-Context
+              <Name />
             </Anchor>
           </span>
         </div>

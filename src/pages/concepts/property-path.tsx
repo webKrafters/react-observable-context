@@ -3,6 +3,7 @@ import React from 'react';
 import Alert from '../../partials/alert';
 import Anchor from '../../partials/anchor';
 import CodeBlock from '../../partials/code-block';
+import Name from '../../partials/name';
 import Paragraph from '../../partials/paragraph';
 
 const ConceptPropertyPathPage : React.FC<{className? : string}> = ({ className }) => (
@@ -12,7 +13,7 @@ const ConceptPropertyPathPage : React.FC<{className? : string}> = ({ className }
             <h3>What is a Property Path?</h3>
             <div>
                 <Paragraph>A property path is a dot-notation string leading to a specific property within an object.</Paragraph>
-                <Paragraph>The React Observable Context recognizes any property path abiding by the <strong><i><u>Lodash</u></i></strong> property path specifications. Such property paths may also contain negative integers.</Paragraph>
+                <Paragraph>The <Name /> recognizes any property path abiding by the <strong><i><u>Lodash</u></i></strong> property path specifications. Such property paths may also contain negative integers.</Paragraph>
                 <Paragraph><strong>Negative</strong> integer { '(' }<i>-N</i>{ ')' } in a property path indicates an array index derived at runtime by counting <code>abs(-N)</code> steps backward from array length.</Paragraph>
                 <h3 id="property-path-example">Ex. Given the following object:</h3>
                 <CodeBlock>{ '{ a: { c: { e: 5, f: [ 0, 2, 4 ] } } }' }</CodeBlock>

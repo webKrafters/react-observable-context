@@ -2,6 +2,7 @@ import React from 'react';
 
 import Anchor from '../partials/anchor';
 import ListItem from '../partials/list-item';
+import Name from '../partials/name';
 import VersionTabs, { SemVer } from '../partials/version-tabs';
 
 const semver_7_0_0 : SemVer = [ 7, 0, 0 ];
@@ -28,7 +29,7 @@ function BodyCurrent(){
         <>
             <div id="cache">
                 <h3>cache</h3>
-                <ListItem><div>is a property provideing access to the underlying immutable cache managed by this context.</div></ListItem>
+                <ListItem><div>is a property providing access to the underlying immutable cache managed by this <Name /> instance.</div></ListItem>
             </div>
             <div id="closed">
                 <h3>closed</h3>
@@ -38,9 +39,9 @@ function BodyCurrent(){
             </div>
             <div id="connect">
                 <h3>connect</h3>
-                <ListItem><div>is a function property of the React Observable Context object, accepting an optional <Anchor to="/concepts/selector-map">selector map</Anchor> parameter; and returning a reusable connector function.</div></ListItem>
+                <ListItem><div>is a function property of the <Name /> instance, accepting an optional <Anchor to="/concepts/selector-map">selector map</Anchor> parameter; and returning a reusable connector function.</div></ListItem>
                 <ListItem><div>The connector function takes a client as a parameter and returns an HOC.</div></ListItem>
-                <ListItem><div>Any client intending to observe similar selector map from within the context object may be passed to this connector.</div></ListItem>
+                <ListItem><div>Any client intending to observe similar selector map from within the <Name /> instance may be passed to this connector.</div></ListItem>
                 <ListItem><div>The HOC injects the context's change stream <Anchor to="/concepts/store">store</Anchor> to the client and handles all of the context usage requirements.</div></ListItem>
                 <ListItem><div>The injected <Anchor to="/concepts/store">store</Anchor> monitors changes in the underlying state slices referenced by the selector map.</div></ListItem>
                 <ListItem><div>A change in any of the referenced state slices automatically triggers an update of the related <code>store.data</code> property and a subsequent render of the client.</div></ListItem>
@@ -48,8 +49,8 @@ function BodyCurrent(){
             </div>
             <div id="create-context">
                 <h3>createEagleEye</h3>
-                <ListItem><div>is a function accepting three optional parameters { '(' }to wit: the initial state object or an <Anchor to="https://auto-immutable.js.org/getting-started/">AutoImmutable</Anchor> instance bearing this initial state object, the <Anchor to="/concepts/prehooks">prehooks</Anchor> and the <Anchor to="/concepts/storage">storage</Anchor>{ ')' } and returning a React Observable Context object.</div></ListItem>
-                <ListItem><div>The returned object is the store-bearing context.</div></ListItem>
+                <ListItem><div>is a function accepting three optional parameters { '(' }to wit: the initial state object or an <Anchor to="https://auto-immutable.js.org/getting-started/">AutoImmutable</Anchor> instance bearing this initial state object, the <Anchor to="/concepts/prehooks">prehooks</Anchor> and the <Anchor to="/concepts/storage">storage</Anchor>{ ')' } and returning a React Observable Context instance.</div></ListItem>
+                <ListItem><div>The returned instance is the store-bearing context.</div></ListItem>
                 <ListItem><div>The context's <Anchor to="/external-access">store</Anchor> is directly accessible through its <code>store</code> property.</div></ListItem>
                 <ListItem><div>A change stream <Anchor to="/concepts/store">store</Anchor> for this <code>context</code> can be obtained either by utilizing its <Anchor to="/api#connect">connect</Anchor> function property or by expressing its <Anchor to="/api#usecontext">useStream</Anchor> property as a react component hook.</div></ListItem>
             </div>
@@ -65,7 +66,7 @@ function BodyCurrent(){
             </div>
             <div id="usecontext">
                 <h3>useStream</h3>
-                <ListItem><div>is a property of the React Observable Context object which can be expressed as a react hook.</div></ListItem>
+                <ListItem><div>is a property of the <Name /> instance which can be expressed as a react hook.</div></ListItem>
                 <ListItem><div>It accepts an optional <Anchor to="/concepts/selector-map">selector map</Anchor> parameter; and returns a change stream context <Anchor to="/concepts/store">store</Anchor>.</div></ListItem>
                 <ListItem><div>The injected <Anchor to="/concepts/store">store</Anchor> monitors changes in the underlying state slices referenced by the selector map.</div></ListItem>
                 <ListItem><div>A change in any of the referenced state slices automatically triggers an update of the related <code>store.data</code> property and a subsequent render of the client.</div></ListItem>
@@ -82,7 +83,7 @@ function BodyPre_7_0_0(){
         <>
             <div id="connect">
                 <h3>connect</h3>
-                <ListItem><div>is a function taking a React Observable Context object and an optional <Anchor to="/concepts/selector-map">selector map</Anchor> parameters; and returning a reusable connector function.</div></ListItem>
+                <ListItem><div>is a function taking a <Name /> object and an optional <Anchor to="/concepts/selector-map">selector map</Anchor> parameters; and returning a reusable connector function.</div></ListItem>
                 <ListItem><div>The connector function takes a client as a parameter and returns an HOC.</div></ListItem>
                 <ListItem><div>Any client using similar context object and selector map may be passed to this connector.</div></ListItem>
                 <ListItem><div>The HOC injects the context <Anchor to="/concepts/store">store</Anchor> to the client and handles all of the context usage requirements.</div></ListItem>
@@ -92,7 +93,7 @@ function BodyPre_7_0_0(){
             </div>
             <div id="create-context">
                 <h3>createContext</h3>
-                <ListItem><div>is a zero-parameter function returning a React Observable Context object.</div></ListItem>
+                <ListItem><div>is a zero-parameter function returning a <Name /> object.</div></ListItem>
                 <ListItem><div>The returned object is the store-bearing context.</div></ListItem>
                 <ListItem><div>To access the context's <Anchor to="/concepts/store">store</Anchor>, pass the context as a <code>context</code> parameter to either the <Anchor to="/api#connect">connect</Anchor> function or the <Anchor to="/api#usecontext">useContext</Anchor> hook.</div></ListItem>
             </div>
@@ -102,7 +103,7 @@ function BodyPre_7_0_0(){
             </div>
             <div id="usecontext">
                 <h3>useContext</h3>
-                <ListItem><div>is a hook taking a React Observable Context object and an optional <Anchor to="/concepts/selector-map">selector map</Anchor> parameters; and returning the context <Anchor to="/concepts/store">store</Anchor>.</div></ListItem>
+                <ListItem><div>is a hook taking a <Name /> object and an optional <Anchor to="/concepts/selector-map">selector map</Anchor> parameters; and returning the context <Anchor to="/concepts/store">store</Anchor>.</div></ListItem>
                 <ListItem><div>The injected <Anchor to="/concepts/store">store</Anchor> monitors changes in the underlying state slices referenced by the selector map.</div></ListItem>
                 <ListItem><div>A change in any of the referenced state slices automatically triggers an update of the related <code>store.data</code> property and a subsequent render of the client.</div></ListItem>
                 <ListItem><div>The <Anchor to="/api#connect">connect</Anchor> function is axiomatically the more conducive method for consuming this conetxt.</div></ListItem>

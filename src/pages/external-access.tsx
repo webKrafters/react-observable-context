@@ -6,6 +6,7 @@ import Alert from '../partials/alert';
 import Anchor from '../partials/anchor';
 import Header from '../partials/segment-header';
 import ListItem from '../partials/list-item';
+import Name from '../partials/name';
 import Paragraph from '../partials/paragraph';
 import VersionTabs, { SemVer } from '../partials/version-tabs';
 
@@ -163,7 +164,7 @@ export default ExternalAccessPage;
 function BodyCurrent() {
     return (
         <>  
-            <Paragraph>The context, once created, has a store property which is accessible from any where whether within the react component tree or in a native runtime environment.</Paragraph>
+            <Paragraph>The <Name /> instance, once created, has a store property which is accessible from any where whether within the react component tree or in a native runtime environment.</Paragraph>
             <h3>How do I access the store externally?</h3>
             <Paragraph>This is done by simply utilizing the context <code>store</code> property.</Paragraph>
             <Paragraph>For external access to the context, <strong>4</strong> store methods have been exposed. Namely:</Paragraph>
@@ -227,7 +228,7 @@ function BodyCurrent() {
 function BodyPre7_0_0({ children } : { children : ReactNode }) {
     return (
         <>  
-            <Paragraph>Normally, the context must be rendered within the component tree in order to make its store accessible - any attempt to the contrary leads to a <code>UsageError</code>.</Paragraph>
+            <Paragraph>Normally, the <Name /> must be rendered within the component tree in order to make its store accessible - any attempt to the contrary leads to a <code>UsageError</code>.</Paragraph>
             <Paragraph>However, once rendered, its store becomes accessible both within its context component tree and externally.</Paragraph>
             <h3>How do I access the store externally?</h3>
             <Paragraph>This is done by obtaining a reference to the Provider component. Once obtained, its <code>current</code> property { '(' }i.e. which holds the referenced store object{ ')' } can be passed around to other parts of the application.</Paragraph>
@@ -273,7 +274,7 @@ function BodyPre7_0_0({ children } : { children : ReactNode }) {
                 <CodeBlock>{ externalAccessCode }</CodeBlock>
             </div>
             <Alert title="Pro Tips">
-                <Paragraph>Store references are simply ReactJS references to the React Observable Context Provider component. Therefore, after <code>unmounting</code> the <code>Provider</code> component, the <code>storeRef.current</code> becomes empty. So therefore:</Paragraph>
+                <Paragraph>Store references are simply ReactJS references to the <Name /> Provider component. Therefore, after <code>unmounting</code> the <code>Provider</code> component, the <code>storeRef.current</code> becomes empty. So therefore:</Paragraph>
                 <ListItem><div>if the need exists to maintain the store beyond the life of the Provider, then keep a reference to the state snapshot returned by the last valid <code>storeRef.current.getState()</code> call.</div></ListItem>
                 <ListItem><div>be sure to unsubscribe all external subscribers attached to the <code>Provider</code>'s store reference, at or prior to the <code>unmount</code> phase of the <code>Provider</code> component.</div></ListItem>
                 <Paragraph>State references are always snapshots of the state at the time of access. In essence, the state returned by <code>storeRef.current.getState()</code> are not affected by subsequent updates to the store's state. Any updates to this acquired state never affects the context's state. So therefore, the <strong>4</strong> considerations:</Paragraph>

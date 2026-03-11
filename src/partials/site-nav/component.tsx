@@ -6,6 +6,7 @@ import BrowserStatus from './with-status/browser';
 import ServerStatus from './with-status/server';
 
 import Anchor from '../anchor';
+import Name from '../name';
 
 import './style.scss';
 
@@ -33,7 +34,7 @@ const Component : React.FC = () => (
 	<nav className="site-nav">
 		<NavLink to="/">Introduction</NavLink>
 		<NavLink className="group-link" to="/getting-started">Getting Started</NavLink>
-		<NavLinkIndent1 to="/getting-started#create-context-usage">Creating context</NavLinkIndent1>
+		<NavLinkIndent1 to="/getting-started#create-context-usage">Creating <Name /></NavLinkIndent1>
 		<NavLinkIndent1 to="/getting-started#provider-usage">Setting up the Provider</NavLinkIndent1>
 		<NavLinkIndent1 to="/getting-started#connect-usage">Consuming context { '(' }hoc method{ ')' }</NavLinkIndent1>
 		<NavLinkIndent1 to="/getting-started#usecontext-usage">Consuming context { '(' }hook with memo method{ ')' }</NavLinkIndent1>

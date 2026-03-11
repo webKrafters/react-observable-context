@@ -1,7 +1,7 @@
 import React from 'react';
 
 import Anchor from '../../../partials/anchor';
-
+import Name from '../../../partials/name';
 import ListItem from '../../../partials/list-item';
 
 const ConceptStoreResetStatePage : React.FC<{className? : string}> = ({ className }) => (
@@ -11,7 +11,7 @@ const ConceptStoreResetStatePage : React.FC<{className? : string}> = ({ classNam
             <strong>Signature:</strong>
             <pre>{ `(propertyPaths?: Array<string>) => void;` }</pre>
         </p>
-        <h3>What does the store resetState method do?</h3>
+        <h3>What does the <Name /> store resetState method do?</h3>
         <ListItem><p>Resets slices of state to their initial state values as desired.</p></ListItem>
         <ListItem><p>Accepts an array of property paths referencing the desired slices of state to reset.</p></ListItem>
         <ListItem><p>Performs a total state reset when <Anchor to="/concepts/property-path#fullstate-selectorkey"><code>@@STATE</code></Anchor> is present in the property paths array.</p></ListItem>

@@ -7,6 +7,7 @@ import React from 'react';
 import Anchor from '../partials/anchor';
 import CodeBlock from '../partials/code-block';
 import Header from '../partials/segment-header';
+import Name from '../partials/name';
 import NotePad from '../partials/pad/note';
 import Paragraph from '../partials/paragraph';
 import VersionTabs, { SemVer } from '../partials/version-tabs';
@@ -152,7 +153,7 @@ function BodyCurrent() {
     return (
         <>
             <Paragraph className="snippet-intro" id="install">
-                 React Observable Context is now an independent state manager, which once created, can be deployed at any location in all parts of the application without the need for a Provider component. 
+                <Name /> is now an independent state manager, which once created, can be deployed at any location in all parts of the application without the need for a Provider component. 
             </Paragraph>
             <Paragraph className="snippet-box">
                 <CodeBlock isInline>
@@ -160,7 +161,7 @@ function BodyCurrent() {
                 </CodeBlock>
             </Paragraph>
             <Paragraph className="snippet-intro" id="create-context-usage">
-                <h3>Creating the context store</h3>
+                <h3>Creating the <Name /> store</h3>
                 To obtain a fresh context store, just call the <code>createEagleEye(...)</code> function. 
             </Paragraph>
             <Paragraph className="snippet-box">
@@ -168,18 +169,18 @@ function BodyCurrent() {
                 <CodeBlock>{ creatorCode_7_0_0 }</CodeBlock>
             </Paragraph>
             <div className="snippet-intro" id="provider-usage">
-                <h3>Providing the context store</h3>
-                <Paragraph>Simply accessing the <code>store</code> property of the React Observable Context from anywhere on an application makes available the internal store. The Provider component is no longer required for this.</Paragraph>
-                <Paragraph>Further readings on the React Observable Context Provider could be found <Anchor to="/concepts/provider">here</Anchor>.</Paragraph>
+                <h3>Providing the <Name /> store</h3>
+                <Paragraph>Simply accessing the <code>store</code> property of the <Name /> from anywhere on an application makes available the internal store. The Provider component is no longer required for this.</Paragraph>
+                <Paragraph>Further readings on the <Name /> Provider could be found <Anchor to="/concepts/provider">here</Anchor>.</Paragraph>
             </div>
             <Paragraph className="snippet-box">
                 <Header>container.js</Header>
                 <CodeBlock>{ containerCode }</CodeBlock>
             </Paragraph>
             <div className="snippet-intro" id="connect-usage">
-                <h3>Joining the context change stream</h3>
-                <Paragraph>Context change stream is a reactive store whose data are automatically changing to reflect most recent changes affecting them. </Paragraph>
-                <Paragraph>There are two ways of joining the React Observable Context change stream: The HOC method and the React Hook method.</Paragraph>
+                <h3>Joining the <Name /> change stream</h3>
+                <Paragraph><Name /> change stream is a reactive store whose data are automatically changing to reflect most recent changes affecting them. </Paragraph>
+                <Paragraph>There are two ways of joining the <Name /> change stream: The HOC method and the React Hook method.</Paragraph>
                 <Paragraph>Let's tackle the HOC method first. This method uses the context's <code>connect(...)</code> property holding an HOC function to wire up the context change stream to your consumer component.</Paragraph>
                 <Paragraph>It embodies the "set-it-and-forget-it" paradigm. Just set up a list of property paths to state slices to observe { '(' }see <Anchor to="/concepts/selector-map">Selector Map</Anchor>{ ')' }. The context takes care of the rest.</Paragraph>
                 <Paragraph>The following is a sample of the HOC consumer method.</Paragraph>
@@ -189,8 +190,8 @@ function BodyCurrent() {
                 <CodeBlock>{ connectorCode_7_0_0 }</CodeBlock>
             </Paragraph>
             <div className="snippet-intro" id="usecontext-usage">
-                <h3>Joining the context change stream (React Hook method)</h3>
-                <Paragraph>The following shows how to join the React Observable Context stream using the hook method.</Paragraph>
+                <h3>Joining the <Name /> change stream (React Hook method)</h3>
+                <Paragraph>The following shows how to join the <Name /> stream using the hook method.</Paragraph>
                 <Paragraph>This method uses the context's <code>useStream(...)</code> property holding the hook function to expose the context change stream to your consumer component.</Paragraph>
                 <Paragraph><NotePad>In addition to setting up a map of property paths to state slices to observe { '(' }see <Anchor to="/concepts/selector-map">Selector Map</Anchor>{ ')' }, the consumer compoent may have to be wrapped in a <code>React.memo(...)</code> HOC to shield it from cascading rerenders from parent/anscestor components.</NotePad></Paragraph>
             </div>
@@ -199,7 +200,7 @@ function BodyCurrent() {
                 <CodeBlock>{ useContextCode_7_0_0 }</CodeBlock>
             </Paragraph>
             <Paragraph className="snippet-intro">
-                The React Observable Context runs decoupled from its embodying application, simply providing an active place for the application to accumulate, access, update and delete its various states as needed in ways that maintains immutabiliity and integrity of state data. The following is a contrived snippet to demonstrate.
+                The <Name /> runs decoupled from its embodying application, simply providing an active place for the application to accumulate, access, update and delete its various states as needed in ways that maintains immutabiliity and integrity of state data. The following is a contrived snippet to demonstrate.
             </Paragraph>
             <Paragraph className="snippet-box">
                 <Header>app.js</Header>
@@ -348,7 +349,7 @@ function BodyPre7_0_0() {
     return (
         <>
             <Paragraph className="snippet-intro" id="install">
-                 React Observable Context and the React.Context API share a similar setup flow. Let us begin by installing the React Observable Context package.
+                <Name /> and the React.Context API share a similar setup flow. Let us begin by installing the React Observable Context package.
             </Paragraph>
             <Paragraph className="snippet-box">
                 <CodeBlock isInline>
@@ -356,7 +357,7 @@ function BodyPre7_0_0() {
                 </CodeBlock>
             </Paragraph>
             <Paragraph className="snippet-intro" id="create-context-usage">
-                <h3>Creating the context store</h3>
+                <h3>Creating the <Name /> store</h3>
                 To obtain a fresh context store, just call the parameterless <code>createContext()</code> function. 
             </Paragraph>
             <Paragraph className="snippet-box">
@@ -364,17 +365,17 @@ function BodyPre7_0_0() {
                 <CodeBlock>{ creatorCode }</CodeBlock>
             </Paragraph>
             <div className="snippet-intro" id="provider-usage">
-                <h3>Providing the context store</h3>
+                <h3>Providing the <Name /> store</h3>
                 <Paragraph>Similar to the React.Context API, you can make the context store available to any section of the component tree by wrapping it in the context store's Provider.</Paragraph>
-                <Paragraph>Further readings on the React Observable Context Provider could be found <Anchor to="/concepts/provider">here</Anchor>.</Paragraph>
+                <Paragraph>Further readings on the <Name /> Provider could be found <Anchor to="/concepts/provider">here</Anchor>.</Paragraph>
             </div>
             <Paragraph className="snippet-box">
                 <Header>provider-demo.js</Header>
                 <CodeBlock>{ providerCode }</CodeBlock>
             </Paragraph>
             <div className="snippet-intro" id="connect-usage">
-                <h3>Consuming the context store</h3>
-                <Paragraph>There are two ways of consuming the React Observable Context store: The HOC method and the React Hook method.</Paragraph>
+                <h3>Consuming the <Name /> store</h3>
+                <Paragraph>There are two ways of consuming the <Name /> store: The HOC method and the React Hook method.</Paragraph>
                 <Paragraph>Let's tackle the HOC method first. This method uses the <code>connect(...)</code> HOC function to wire up the context store to your consumer component.</Paragraph>
                 <Paragraph>It embodies the "set-it-and-forget-it" paradigm. Just set up a list of property paths to state slices to observe { '(' }see <Anchor to="/concepts/selector-map">Selector Map</Anchor>{ ')' }. Context takes care of the rest.</Paragraph>
                 <Paragraph>The following is a sample of the HOC consumer method.</Paragraph>
@@ -384,8 +385,8 @@ function BodyPre7_0_0() {
                 <CodeBlock>{ connectorCode }</CodeBlock>
             </Paragraph>
             <div className="snippet-intro" id="usecontext-usage">
-                <h3>Consuming the context store (React Hook method)</h3>
-                <Paragraph>The following shows how to consume the React Observable Context store through the hook method.</Paragraph>
+                <h3>Consuming the <Name /> store (React Hook method)</h3>
+                <Paragraph>The following shows how to consume the <Name /> store through the hook method.</Paragraph>
                 <Paragraph>This method uses the <code>useContext(...)</code> function to expose the store to the consumer component.</Paragraph>
                 <Paragraph><NotePad>In addition to setting up a map of property paths to state slices to observe { '(' }see <Anchor to="/concepts/selector-map">Selector Map</Anchor>{ ')' }, the consumer compoent may have to be wrapped in a <code>React.memo(...)</code> HOC to shield it from cascading rerenders from parent/anscestor components.</NotePad></Paragraph>
             </div>
@@ -394,7 +395,7 @@ function BodyPre7_0_0() {
                 <CodeBlock>{ useContextCode }</CodeBlock>
             </Paragraph>
             <Paragraph className="snippet-intro">
-                Wiring up your React Observable Context to the rest of the application is identical to the React.Context API. The following is a contrived snippet to demonstrate.
+                Wiring up your <Name /> to the rest of the application is identical to the React.Context API. The following is a contrived snippet to demonstrate.
             </Paragraph>
             <Paragraph className="snippet-box">
                 <Header>app.js</Header>
