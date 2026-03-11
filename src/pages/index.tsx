@@ -37,7 +37,7 @@ const IndexPage : React.FC<Props> = ({ className, data }) => {
 					</Anchor>
 				</label>
 			</Paragraph>
-			<div className="installation">
+			<Paragraph className="installation">
 				<header>Installation:</header>
 				<label>
 					<b>Main:</b>
@@ -52,7 +52,7 @@ const IndexPage : React.FC<Props> = ({ className, data }) => {
 						npm install --save react-eagleeye
 					</CodeBlock>
 				</label>
-			</div>
+			</Paragraph>
 			<Paragraph>
 				<label>
 					<b>Play with a demo app here on:{ ' ' }</b>
