@@ -1,4 +1,4 @@
-import React, { FC, memo } from 'react';
+import React, { memo, useState } from 'react';
 
 import {
 	graphql,
@@ -9,20 +9,11 @@ import Anchor from '../anchor';
 
 const Component = memo(() => {
 	const { site } = useStaticQuery(
-   		graphql`
-     		query licenseInfo {
-				site {
-					siteMetadata {
-						url {
-							repo
-						}
-					}
-				}
-			}
-		`
+   		graphql`query licenseInfo { site { siteMetadata { url { repo } } } }`
   	);
+	const [ licUrl ] = useState( () => `${ site.siteMetadata.url.repo.slice( 0, -4 ) }/blob/master/LICENSE` );
  	return (
-		<Anchor to={ site.siteMetadata.url.repo.slice( 0, -4 )  + "/blob/master/LICENSE" }>
+		<Anchor to={ licUrl }>
 			GPLv3
 		</Anchor>
 	);
