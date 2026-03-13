@@ -15,6 +15,11 @@
         .page-main {
             padding-bottom: 2.5rem;
         }
+        > .version-of-interest {
+            font-weight: 700;
+            position: absolute;
+            right: 3.375rem;
+        }
     }
     .aux-sider {
         @media ( max-width: 1399px ) {

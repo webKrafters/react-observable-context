@@ -13,7 +13,8 @@ import DarkmodeProvider, { ValueCtx as DarkmodeValueCtx } from './src/partials/d
 import VersionOfInterestProvider, { ValueCtx as VersionOfInterest } from './src/partials/version-tabs/context';
 
 import Layout from './src/partials/layouts/index';
-import { fromLocalStorage, Version } from './src/partials/version-tabs/component';
+import { Version } from './src/partials/version-tabs/utils/calc-version-vmodel';
+import { fromLocalStorage } from './src/partials/version-tabs/component';
 
 export const onRouteUpdate : GatsbyBrowser[ "onRouteUpdate" ] = ({
     location: { href }, prevLocation

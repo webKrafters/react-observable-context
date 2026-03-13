@@ -31,6 +31,7 @@ import hasHandheldWidth from '../../util/is-handheld-portrait';
 import SiteFaqs from '../site-faqs';
 import SiteNav from '../site-nav';
 import SiteTags from '../site-tags';
+import VersionOfInterest from '../version-of-interest';
 
 import AuxSiderToggleable from '../toggle-switch/container/aux-sider';
 
@@ -115,6 +116,7 @@ const NoSider : React.FC<Pick<Props, "children" | "isAuxCollapsed" | "onToggleAu
                     />
                 ) }
             </div>
+            <VersionOfInterest />
             { page }
         </main>
     );
