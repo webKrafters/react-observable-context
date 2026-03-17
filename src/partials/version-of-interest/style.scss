@@ -1,0 +1,24 @@
+.version-of-interest {
+	> span { cursor: pointer }
+	> .edit-form  {
+		display: flex;
+		flex-direction: column;
+		margin-top: 0.25rem;
+		> :first-child {
+			align-items: self-start;
+			display: flex;
+			input {
+				border: 1px solid var( --border-color );
+				border-radius: 0;
+				margin: 0 0.125rem 1px 0.5rem;
+				padding: 0 .75rem;
+			}
+			.anticon {
+				cursor: pointer;
+				&-check-square { color: #1890ff }
+				&-close-square { color: red }
+			}
+		}
+		.error { color: red }
+	}
+}

@@ -2,6 +2,7 @@ import React, {
 	FC,
 	useCallback,
 	useContext,
+	useEffect,
 	useMemo,
 	useState
 } from 'react';
@@ -58,16 +59,30 @@ const VersionTabs : FC<Props> = ({ options: sOptions, ...props }) => {
 	
 	const { currentIndex, options } = useMemo(
 		() => calcVersionVModel(
-			versionOfInterest as SemVer,
+			versionOfInterest as SemVer ?? 'Latest',
 			sOptions
 		),
 		[ sOptions ]
 	);
 
+	useEffect(() => {
+		localStorage.setItem(
+			V_INTEREST_LOCALSTORAGE_KEY,
+			( versionOfInterest as SemVer ).join?.( '.' ) ?? versionOfInterest
+		);
+		calcVersionVModel(
+			versionOfInterest as SemVer,
+			sOptions
+		);
+	}, [ versionOfInterest ]);
+
 	const onTabChange = useCallback(( i : number ) => {
 		if( i === currentIndex ) { return }
 		updateVersionOfInterest( sOptions[ i ].version );
-		localStorage.setItem( V_INTEREST_LOCALSTORAGE_KEY, ( sOptions[ i ].version as SemVer ).join?.( '.' ) ?? sOptions[ i ].version );
+		localStorage.setItem(
+			V_INTEREST_LOCALSTORAGE_KEY,
+			( sOptions[ i ].version as SemVer ).join?.( '.' ) ?? sOptions[ i ].version
+		);
 		location.hash &&
 		document.getElementById(
 			location.hash.slice( 1 )
