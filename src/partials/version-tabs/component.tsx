@@ -14,10 +14,16 @@ import {
 
 import SelectTab from '../../partials/select-tab';
 
-import { UpdateCtx, ValueCtx } from './context';
+import { UpdateCtx, ValueCtx } from '../../contexts/version-of-interest';
+import { ValueCtx as BasePkgCtx } from '../../contexts/base-pkg';
 
 import {
 	calcVersionVModel,
+	eqVersions,
+	SEMVER_STR_PREFIX,
+	strVersions,
+	Version,
+	VersionRange,
 	type Content,
 	type SemVer
 } from './utils/calc-version-vmodel';
@@ -48,41 +54,38 @@ const VersionTabs : FC<Props> = ({ options: sOptions, ...props }) => {
 	
 	const updateVersionOfInterest = useContext( UpdateCtx );
 	const versionOfInterest = useContext( ValueCtx );
-	
-	useState(() => {
-		versionOfInterest === null && updateVersionOfInterest(
-			typeof window !== 'undefined' && !!window.localStorage 
-				? ( fromLocalStorage( V_INTEREST_LOCALSTORAGE_KEY ) ?? defaultValue )
-				: defaultValue
-		);
-	});
-	
-	const { currentIndex, options } = useMemo(
-		() => calcVersionVModel(
-			versionOfInterest as SemVer ?? 'Latest',
-			sOptions
-		),
-		[ sOptions ]
-	);
+	const { version } = useContext( BasePkgCtx );
+
+	useState(() => versionOfInterest === null && updateVersionOfInterest((
+		typeof window !== 'undefined' && !!window.localStorage 
+			? ( fromLocalStorage( V_INTEREST_LOCALSTORAGE_KEY ) ?? version ?? defaultValue )
+			: version ?? defaultValue
+	) as SemVer ));
+
+	const [ shownVersion, setShownVersion ] = useState(() => sanitizeVersion( versionOfInterest, version ));
 
 	useEffect(() => {
+		const newVersion = sanitizeVersion( versionOfInterest, version );
+		if( eqVersions( newVersion, shownVersion ).equals ) { return }
 		localStorage.setItem(
 			V_INTEREST_LOCALSTORAGE_KEY,
-			( versionOfInterest as SemVer ).join?.( '.' ) ?? versionOfInterest
+			( newVersion as SemVer ).join?.( '.' ) ?? versionOfInterest
 		);
-		calcVersionVModel(
-			versionOfInterest as SemVer,
-			sOptions
-		);
+		setShownVersion( newVersion );
 	}, [ versionOfInterest ]);
+	
+	const { currentIndex, options } = useMemo(
+		() => calcVersionVModel( shownVersion as SemVer, sOptions ),
+		[ shownVersion, sOptions ]
+	);
 
-	const onTabChange = useCallback(( i : number ) => {
-		if( i === currentIndex ) { return }
-		updateVersionOfInterest( sOptions[ i ].version );
-		localStorage.setItem(
-			V_INTEREST_LOCALSTORAGE_KEY,
-			( sOptions[ i ].version as SemVer ).join?.( '.' ) ?? sOptions[ i ].version
-		);
+	const onTabChange = useCallback(({ label } : typeof options[ 0 ]) => {
+		let { props: { children: version } } = label as JSX.Element;
+		if( !strVersions.includes( version ) ) {
+			version = ( version as string ).slice( SEMVER_STR_PREFIX.length ).split( '.' ).map( n => +n );
+		}
+		!eqVersions( versionOfInterest as SemVer, version ).equals &&
+		updateVersionOfInterest( version );
 		location.hash &&
 		document.getElementById(
 			location.hash.slice( 1 )
@@ -111,3 +114,20 @@ export function fromLocalStorage( storageKey : string ) {
 	}
 	return v;
 }
+
+function sanitizeVersion(
+	versionOfInterest : SemVer|string,
+	latestVersion? : SemVer
+) : Version;
+function sanitizeVersion(
+	versionOfInterest : any,
+	latestVersion? : any
+) : Version {
+	let thisVersion : Version = versionOfInterest;
+	if( !Array.isArray( thisVersion ) ) { return thisVersion }
+	if( !latestVersion || VersionRange.gt(
+		thisVersion, latestVersion as SemVer
+	) ) { return 'Latest' }
+	return thisVersion;
+}
+

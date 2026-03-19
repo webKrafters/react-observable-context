@@ -1,6 +1,6 @@
 import React, { Children, createContext, useState } from 'react';
 
-import metadata from '../../../gatsby-config/metadata';
+import metadata from '../../gatsby-config/metadata';
 
 export interface Props {
     children?: React.ReactNode;

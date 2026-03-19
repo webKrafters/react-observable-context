@@ -23,7 +23,7 @@ import { Button } from 'antd';
 
 import CloseOutlinedIcon from '@ant-design/icons/CloseOutlined';
 
-import { ValueCtx } from '../../page-context';
+import { ValueCtx } from '../../contexts/page';
 
 import findElementInPath from '../../util/find-element';
 import hasHandheldWidth from '../../util/is-handheld-portrait';

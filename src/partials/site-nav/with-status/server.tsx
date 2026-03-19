@@ -2,7 +2,7 @@ import type { Props } from '../../anchor';
 
 import React, { useContext, useMemo } from 'react';
 
-import { ValueCtx as PageCtxValue } from '../../../page-context';
+import { ValueCtx as PageCtxValue } from '../../../contexts/page';
 
 const WithStatus : React.FC<Props> = typeof window !== 'undefined'
     ? () => ( <div className="error-link">Invalid server nav link.</div> )

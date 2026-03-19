@@ -1,8 +1,8 @@
 import React, { Children, createContext, useState } from 'react';
 
-import metadata from '../../../gatsby-config/metadata';
+import metadata from '../../gatsby-config/metadata';
 
-import { SemVer, Version } from './utils/calc-version-vmodel';
+import { SemVer, Version } from '../partials/version-tabs/utils/calc-version-vmodel';
 
 export interface Props {
     children?: React.ReactNode;
@@ -17,6 +17,12 @@ const Provider : React.FC<Props> = ({
     initValue = metadata.versionOfInterest.defaultValue
 }) => {
     const [ versionOfInteret, setVersionOfInterest ] = useState( () => initValue );
+    
+    const t = React.useCallback(( v : any ) => {
+        console.info( 'waht is our new version >>>>> ', v );
+        setVersionOfInterest( v );
+    }, []);
+    
     return (
         <UpdateCtx.Provider value={ setVersionOfInterest }>
             <ValueCtx.Provider value={ versionOfInteret }>

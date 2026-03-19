@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 
-import RedMessageBox from '../../red-msg-box';
+import RedMessageBox from '../../msg-box/red-msg-box';
 
 const DepecateAlert : FC = () => (
 	<RedMessageBox>

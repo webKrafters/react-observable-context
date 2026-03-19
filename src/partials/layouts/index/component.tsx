@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useState } from 'react';
 
 import isHandheldWidth from '../../../util/is-handheld-portrait';
 
-import { ValueCtx } from '../../../page-context';
+import { ValueCtx } from '../../../contexts/page';
 
 import SiteBody from '../../site-body';
 import SiteFooting from '../../site-footing';

@@ -6,7 +6,7 @@ import useCurrentYear from '../../hooks/current-year';
 
 import Anchor from '../anchor';
 
-import { ValueCtx } from '../dark-mode-settings/context';
+import { ValueCtx } from '../../contexts/dark-mode';
 
 import DarkModeSettings from '../dark-mode-settings';
 

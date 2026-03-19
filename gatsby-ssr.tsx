@@ -4,11 +4,13 @@ import React from 'react';
 
 import metadata, { NO_SIDER_URI_PATTERN } from './gatsby-config/metadata';
 
-import PageProvider from './src/page-context';
+import BasePackageProvider from './src/contexts/base-pkg';
 
-import DarkmodeProvider from './src/partials/dark-mode-settings/context';
+import PageProvider from './src/contexts/page';
 
-import VersionOfInterestProvider from './src/partials/version-tabs/context';
+import DarkmodeProvider from './src/contexts/dark-mode';
+
+import VersionOfInterestProvider from './src/contexts/version-of-interest';
 
 import Layout from './src/partials/layouts/index/index';
 
@@ -43,14 +45,16 @@ export const wrapPageElement : GatsbySSR[ 'wrapPageElement' ] = ({ element, prop
 );
 
 export const wrapRootElement : GatsbySSR[ 'wrapRootElement' ] = ({ element, pathname }) => (
-    <PageProvider initState={{
-        location: { href: pathname } as PageProps[ 'location' ],
-        isNoSiderPage: NO_SIDER_URI_PATTERN.test( pathname ?? '' )
-    }}>
-        <DarkmodeProvider>
-            <VersionOfInterestProvider>
-                { element }
-            </VersionOfInterestProvider>
-        </DarkmodeProvider>
-    </PageProvider>
+    <BasePackageProvider>
+        <PageProvider initState={{
+            location: { href: pathname } as PageProps[ 'location' ],
+            isNoSiderPage: NO_SIDER_URI_PATTERN.test( pathname ?? '' )
+        }}>
+            <DarkmodeProvider>
+                <VersionOfInterestProvider>
+                    { element }
+                </VersionOfInterestProvider>
+            </DarkmodeProvider>
+        </PageProvider>
+    </BasePackageProvider>
 );

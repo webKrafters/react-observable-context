@@ -1,16 +1,22 @@
 import type { GatsbyBrowser } from 'gatsby';
 
-import type { PageProps } from './src/page-context';
+import type { PageProps } from './src/contexts/page';
 
-import React, { useContext, useEffect, useLayoutEffect } from 'react';
+import React, {
+    useContext,
+    useEffect,
+    useLayoutEffect
+} from 'react';
 
 import metadata, { NO_SIDER_URI_PATTERN } from './gatsby-config/metadata';
 
-import PageProvider, { UpdaterCtx as PageCtxUpdater } from './src/page-context';
+import BasePackageProvider from './src/contexts/base-pkg';
 
-import DarkmodeProvider, { ValueCtx as DarkmodeValueCtx } from './src/partials/dark-mode-settings/context';
+import PageProvider, { UpdaterCtx as PageCtxUpdater } from './src/contexts/page';
 
-import VersionOfInterestProvider, { ValueCtx as VersionOfInterest } from './src/partials/version-tabs/context';
+import DarkmodeProvider, { ValueCtx as DarkmodeValueCtx } from './src/contexts/dark-mode';
+
+import VersionOfInterestProvider from './src/contexts/version-of-interest';
 
 import Layout from './src/partials/layouts/index';
 import { Version } from './src/partials/version-tabs/utils/calc-version-vmodel';
@@ -51,23 +57,25 @@ export const wrapPageElement : GatsbyBrowser[ 'wrapPageElement' ] = ({ element, 
 );
 
 export const wrapRootElement : GatsbyBrowser[ 'wrapRootElement' ] = ({ element, pathname  }) => (
-    <PageProvider initState={{
-        isNoSiderPage: NO_SIDER_URI_PATTERN.test(
-            location?.pathname ?? pathname ?? ''
-        )
-    }}>
-        <DarkmodeProvider initValue={
-            window.localStorage?.getItem( metadata.darkmode.key ) !== 'false'
-                ? metadata.darkmode.defaultValue
-                : false
-        }>
-            <VersionOfInterestProvider initValue={( 
-                fromLocalStorage( metadata.versionOfInterest.key ) ?? metadata.versionOfInterest.defaultValue
-            ) as Version }>
-                { element }
-            </VersionOfInterestProvider>
-        </DarkmodeProvider>
-    </PageProvider>
+    <BasePackageProvider>
+        <PageProvider initState={{
+            isNoSiderPage: NO_SIDER_URI_PATTERN.test(
+                location?.pathname ?? pathname ?? ''
+            )
+        }}>
+            <DarkmodeProvider initValue={
+                window.localStorage?.getItem( metadata.darkmode.key ) !== 'false'
+                    ? metadata.darkmode.defaultValue
+                    : false
+            }>
+                <VersionOfInterestProvider initValue={( 
+                    fromLocalStorage( metadata.versionOfInterest.key ) ?? metadata.versionOfInterest.defaultValue
+                ) as Version }>
+                    { element }
+                </VersionOfInterestProvider>
+            </DarkmodeProvider>
+        </PageProvider>
+    </BasePackageProvider>
 );
 
 function sanitizePageTitle() {

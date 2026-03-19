@@ -21,7 +21,7 @@ export interface Content {
 
 interface IProps {
 	currentIndex? : number;
-	onTabChange?: (newTabIndex : number) => void;
+	onTabChange?: (newTab : Content) => void;
 	options : Array<Content>;
 }
 
@@ -31,12 +31,12 @@ const SelectTab : NamedExoticComponent<Props> = forwardRef<
 	HTMLDivElement, Props
 >(({ className, onTabChange = noop, options, currentIndex = 0, ...props }, ref ) => {
 	const [ content, setContent ] = useState( options[ currentIndex ] );
-	useEffect(() => {
-		onTabChange( currentIndex );
-		setContent( options[ currentIndex ] );
-	}, [ options, currentIndex ]);
+	useEffect(
+		() => setContent( options[ currentIndex ] ),
+		[ options, currentIndex ]
+	);
 	const onSelect = useCallback(( opt: Content ) => {
-		onTabChange( options.findIndex( c => c.label === opt.label ) );
+		onTabChange( opt );
 		setContent( opt );
 	}, [ onTabChange ]);
 	return (

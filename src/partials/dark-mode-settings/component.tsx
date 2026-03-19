@@ -7,7 +7,7 @@ import SunFilledIcon from '@ant-design/icons/SunFilled';
 
 import { Button } from 'antd';
 
-import { UpdateCtx, ValueCtx } from './context';
+import { UpdateCtx, ValueCtx } from '../../contexts/dark-mode';
 
 import './style.scss';
 

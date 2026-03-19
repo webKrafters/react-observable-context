@@ -1,5 +1,7 @@
 import pkgJson from '../package.json';
 
+export const basePkgName = '@webkrafters/react-observable-context';
+
 export const NO_SIDER_URI_PATTERN = /^$/; // /^(?:\/(?:quick-start\/?)?(?:\?.*)?)?$/;
 
 export default {

@@ -17,9 +17,10 @@ export interface VersionVModel {
 
 import React from 'react';
 
-const strVersions = Object.freeze([ 'Latest', 'Legacy' ]);
+export const SEMVER_STR_PREFIX = 'As of v';
+export const strVersions = Object.freeze([ 'Latest', 'Legacy' ]);
 
-class VersionRange {
+export class VersionRange {
 	static gt( a : SemVer, b : SemVer ){
 		for( let i = 0; i < 3; i++ ) {
 			if( a[ i ] === b[ i ] ) { continue }
@@ -82,11 +83,11 @@ export function calcVersionVModel(
 			value: v.documentation
 		};
 		if( res.currentIndex > -1 ) {
-			r.label = ( <b>{ !Array.isArray( v.version ) ? v.version : `As of v${ ( v.version as Array<number> ).join( '.' ) }` }</b> );
+			r.label = ( <b>{ !Array.isArray( v.version ) ? v.version : `${ SEMVER_STR_PREFIX }${ ( v.version as Array<number> ).join( '.' ) }` }</b> );
 		} else {
 			const c = eqVersions( v.version, currVersion );
 			if( c.equals ) { res.currentIndex = i }
-			r.label = ( <b>{ !c.isArrayV1 ? v.version : `As of v${ ( v.version as Array<number> ).join( '.' ) }` }</b> );
+			r.label = ( <b>{ !c.isArrayV1 ? v.version : `${ SEMVER_STR_PREFIX }${ ( v.version as Array<number> ).join( '.' ) }` }</b> );
 		}
 		return r;
 	});
@@ -164,7 +165,7 @@ export function calcVersionVModel(
 	return res;
 }
 
-function eqVersions<
+export function eqVersions<
 	COMPARER extends Version = "Latest",
 	COMPRAHEND extends Version = "Latest"
 >( v1 : COMPARER, v2 : COMPRAHEND ) {

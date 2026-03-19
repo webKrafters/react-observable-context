@@ -13,7 +13,7 @@ import ToggleSwitch from '../toggle-switch';
 
 import AuxSiderToggleable from '../toggle-switch/container/aux-sider';
 
-import { ValueCtx } from '../../page-context';
+import { ValueCtx } from '../../contexts/page';
 
 import DarkModeSetting from '../dark-mode-settings';
 

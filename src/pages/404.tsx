@@ -1,6 +1,6 @@
 import type {  HeadFC } from 'gatsby';
 
-import type { PageProps } from '../page-context';
+import type { PageProps } from '../contexts/page';
 
 import React, { useCallback, useMemo } from 'react';
 

@@ -20,5 +20,11 @@
 			}
 		}
 		.error { color: red }
+		.loading {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin-left: 1rem;
+		}
 	}
 }
