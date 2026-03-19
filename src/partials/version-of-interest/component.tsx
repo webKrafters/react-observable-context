@@ -83,7 +83,7 @@ const EditForm : FC<{
 							<CloseSquareFilled
 								onClick={ close }
 								role="button"
-								title="Escapes"
+								title="Esc"
 							/>
 						</>
 					)

@@ -21,10 +21,9 @@
 		}
 		.error { color: red }
 		.loading {
-			display: flex;
 			align-items: center;
+			display: flex;
 			justify-content: center;
-			margin-left: 1rem;
 		}
 	}
 }
