@@ -28,9 +28,9 @@ export default {
         .map(( t : string ) => `${ t[ 0 ].toUpperCase() }${ t.substring( 1 ) }` )
         .join( ' ' ),
     url: {
-        demo: 'https://codesandbox.io/s/github/webKrafters/react-observable-context-app',
-        npm: 'https://www.npmjs.com/package/@webkrafters/react-observable-context',
-        repo: "https://github.com/webKrafters/react-observable-context.js.git",
+        demo: `https://codesandbox.io/s/github/${ basePkgName.slice( 1 ) }-app`,
+        npm: `https://www.npmjs.com/package/${ basePkgName }`,
+        repo: `https://github.com/${ basePkgName.slice( 1 ) }.js.git`,
         site: pkgJson.homepage
     },
     versionOfInterest: {
