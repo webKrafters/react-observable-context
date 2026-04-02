@@ -10,6 +10,7 @@ import Anchor from '../partials/anchor';
 import CodeBlock from '../partials/code-block';
 import License from '../partials/license-link';
 import Name from '../partials/name';
+import NotePad from '../partials/pad/note';
 import Paragraph from '../partials/paragraph';
 
 import '../partials/contents/index-page/style.scss';
@@ -29,6 +30,7 @@ const IndexPage : React.FC<Props> = ({ className, data }) => {
 	return (
 		<article className={ `index-page ${ className }` }>
 			<h1>Welcome to <Name /> JS!</h1>
+			<NotePad>Compatible with earlier React versions { '[' }16.8.x - 18.x.x{ ']' }. For React versions starting from 19.2.0, please use the <Anchor to="https://react-eagleeye.js.org">React Eagle Eye</Anchor>.</NotePad>
 			<Paragraph>An intuitive reactive context based React state manager. No provider component required. Create once: use everywhere both in and out of the React component tree system.</Paragraph>
 			<Paragraph>Supports for framework-agnostic state sharing among applications OOB. Simply create an <Anchor to="https://auto-immutable.js.org/intro/">Auto Immutable</Anchor> instance to pass around as the <code>value</code> argument for this or any <Anchor to="https://eagleeye.js.org">Eagle Eye</Anchor> based state manager instances.</Paragraph>
 			<Paragraph>
