@@ -71,7 +71,7 @@ const App = () => {
 }
 export default App;`
 
-const externalAccessCode =
+const getExternalAccessCode = ( version : SemVer ) =>
 `class Monitor {
     private _onEvent;
     private _store;
@@ -88,7 +88,11 @@ const externalAccessCode =
         if( !store ) { return }
         this._store = store;
         this._onEvent( this._store.getState() );
-        this._unsub = store.subscribe(
+        ${ version[ 0 ] !== 7
+            ? `this._unsub = store.subscribe(`
+            : `this._unsub = store.subscribe(
+              'data-updated',`
+        }
             () => this._onEvent( this._store.getState() )
         );
     }
@@ -211,7 +215,7 @@ function BodyCurrent() {
             <div className="snippet-box">
                 <Header>debug-monitor.js</Header>
                 <div>Using a simple class instance to montor and report changes in the store in realtime.</div>
-                <CodeBlock>{ externalAccessCode }</CodeBlock>
+                <CodeBlock>{ getExternalAccessCode( semver7_0_0 ) }</CodeBlock>
             </div>
             <Alert title="Pro Tips">
                 <Paragraph>State references are always snapshots of the state at the time of access. In essence, the state returned by <code>context.store.getState(...)</code> are not affected by subsequent updates to the store's state. Any updates to this acquired state never affects the context's state. So therefore, the <strong>4</strong> considerations:</Paragraph>
@@ -271,7 +275,7 @@ function BodyPre7_0_0({ children } : { children : ReactNode }) {
             <div className="snippet-box">
                 <Header>debug-monitor.js</Header>
                 <div>Using a simple class instance to montor and report changes in the store in realtime.</div>
-                <CodeBlock>{ externalAccessCode }</CodeBlock>
+                <CodeBlock>{ getExternalAccessCode( semver6_0_0 ) }</CodeBlock>
             </div>
             <Alert title="Pro Tips">
                 <Paragraph>Store references are simply ReactJS references to the <Name /> Provider component. Therefore, after <code>unmounting</code> the <code>Provider</code> component, the <code>storeRef.current</code> becomes empty. So therefore:</Paragraph>
