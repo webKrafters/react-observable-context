@@ -26,7 +26,7 @@ function BodyCurrent(){
         <>
             <h3>About the Storage</h3>
             <p>The <Name /> allows for a user-defined Storage object to be provided for maintaining the integrity of the initial context state at a location of the user's choosing.</p>
-            <p>This, it accepts, either via its <code>createEagleEye{ '(...)' }</code> optional third parameter or by setting its <code>prehooks</code> property.</p>
+            <p>This, it accepts, either via its <code>createEagleEye{ '(...)' }</code> optional third parameter or by setting its <code>storage</code> property.</p>
             <Common />
         </>
     );
